@@ -9,25 +9,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 
 @Composable
-fun HomeScreen() {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        BackgroundGradient()
+fun HomeScreen(bottomPadding: Dp) {
+    BaseScreen() {
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 30.dp)
@@ -36,6 +32,10 @@ fun HomeScreen() {
             WatchNextCard()
             Spacer(Modifier.height(40.dp))
             LogsList()
+            Spacer(
+                Modifier.statusBarsPadding().navigationBarsPadding()
+            )
+            /*        Spacer(Modifier.height(20.dp))*/
         }
     }
 }
@@ -100,7 +100,9 @@ fun LogsList() {
 
         rows.forEach { rowItems ->
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 rowItems.forEach { index ->
@@ -132,7 +134,7 @@ fun LogsList() {
     }
 }
 
-@Composable
+/*@Composable
 fun BackgroundGradient() {
     // Define the gradient colors
     val lightGrey = Color(0xFF37414A)
@@ -142,4 +144,4 @@ fun BackgroundGradient() {
 
     // Create a vertical gradient brush
     Box(modifier = Modifier.background(Brush.verticalGradient(gradientColors)))
-}
+}*/

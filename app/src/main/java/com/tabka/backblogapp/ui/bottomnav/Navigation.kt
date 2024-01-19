@@ -1,7 +1,9 @@
 package com.tabka.backblogapp.ui.bottomnav
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ContentAlpha
@@ -25,8 +27,8 @@ fun Navigation() {
     val navController = rememberNavController()
     Scaffold(
         bottomBar = { BottomBar(navController = navController) }
-    ) {
-        BottomNavGraph(navController = navController)
+    ) { innerPadding ->
+        BottomNavGraph(navController = navController, bottomPadding = innerPadding.calculateBottomPadding())
     }
 }
 
