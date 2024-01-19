@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Bottom Navigation Bar -->
+    <color name="bottomnav">#232323</color>
+    <color name="bottomnav_icon">#9F9F9F</color>
+    <color name="bottomnav_icon_selected">@color/white</color>
+
 </resources>
