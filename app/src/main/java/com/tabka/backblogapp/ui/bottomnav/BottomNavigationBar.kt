@@ -1,4 +1,4 @@
-package com.tabka.backblogapp.bottomnav
+package com.tabka.backblogapp.ui.bottomnav
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home

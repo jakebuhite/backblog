@@ -1,4 +1,4 @@
-package com.tabka.backblogapp.bottomnav
+package com.tabka.backblogapp.ui.bottomnav
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.RowScope
