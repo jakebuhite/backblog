@@ -2,6 +2,7 @@ package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,34 +17,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 
 @Composable
-fun HomeScreen(bottomPadding: Dp) {
-    BaseScreen() {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 30.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            WatchNextCard()
-            Spacer(Modifier.height(40.dp))
-            LogsList()
-            Spacer(
-                Modifier.statusBarsPadding().navigationBarsPadding()
-            )
-            /*        Spacer(Modifier.height(20.dp))*/
-        }
+fun HomeScreen() {
+    val pageTitle = "What's Next?"
+    BaseScreen(pageTitle) {
+        WatchNextCard()
+        Spacer(Modifier.height(40.dp))
+        LogsList()
+        /*Spacer(Modifier.height(40.dp))*/
     }
 }
 
 @Composable
 fun WatchNextCard() {
-    Text("What's Next?", style = MaterialTheme.typography.headlineLarge)
-
     // Load img
     val whatNextImg = painterResource(id = R.drawable.sample_what_next)
     Image(
