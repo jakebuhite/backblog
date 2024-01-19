@@ -11,11 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tabka.backblogapp.bottomnav.Navigation
+import com.tabka.backblogapp.ui.screens.HomeScreen
 import com.tabka.backblogapp.ui.theme.BackBlogAppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             BackBlogAppTheme {
                 // A surface container using the 'background' color from the theme
@@ -23,27 +25,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    HomeScreen()
                     Navigation()
                 }
             }
         }
-    }
-}
-
-data class Message(val author: String, val body: String)
-
-@Composable
-fun MessageCard(msg: Message) {
-    Text(text = msg.author)
-    Text(text = msg.body)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMessageCard() {
-    BackBlogAppTheme {
-        MessageCard(
-            msg = Message("Lexi", "Hey, take a look at Jetpack Compose, it's great!")
-        )
     }
 }
