@@ -1,51 +1,50 @@
 package com.tabka.backblogapp.ui.screens
 
-import androidx.compose.foundation.BorderStroke
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.ScrollableDefaults
-
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.ColorFilter.Companion.tint
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.models.LogData
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddToPhotos
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
+
+private val TAG = "HomeScreen"
+private val logViewModel: LogViewModel = LogViewModel()
 
 @Composable
 fun HomeScreen() {
+    val allLogs = logViewModel.allLogs.collectAsState().value
     val pageTitle = "What's Next?"
+
     BaseScreen(pageTitle) {
         WatchNextCard()
         Spacer(Modifier.height(40.dp))
-        LogsList()
-        /*Spacer(Modifier.height(40.dp))*/
+        MyLogsSection(allLogs)
     }
 }
 
@@ -132,28 +131,20 @@ fun WatchNextCard() {
             }
         }
     }
-
-   /* // Watch Next data
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(text = "Tenet", style = MaterialTheme.typography.headlineMedium)
-            Text(text = "PG-13 2020", style = MaterialTheme.typography.bodySmall)
-        }
-        Spacer(Modifier.weight(1f))
-        Image(
-            painter = painterResource(id = R.drawable.check_icon),
-            contentDescription = "Check icon",
-            modifier = Modifier.size(40.dp)
-        )
-    }*/
 }
 
+// This function creates the "My Logs" header, as well as the button to create a new log
+// This function then calls ListLogs, which will list each log the user has
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun LogsList() {
-    // My Logs Title
+fun MyLogsSection(allLogs: List<LogData>?) {
+
+    val sheetState = rememberModalBottomSheetState()
+    var isSheetOpen by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    // My logs heading
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -165,6 +156,8 @@ fun LogsList() {
         ) {
             Text("My Logs", style = MaterialTheme.typography.headlineMedium)
         }
+
+        // Add Log Button
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -173,26 +166,72 @@ fun LogsList() {
             horizontalAlignment = Alignment.End
         ) {
             Image(
-                painter = painterResource(id = R.drawable.newlog),
-                contentDescription = "New Log button",
+                imageVector = Icons.Default.AddToPhotos,
+                contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp)
+                modifier = Modifier
+                    .size(35.dp)
+                    .clickable { isSheetOpen = true },
+                colorFilter = tint(color = colorResource(id = R.color.sky_blue))
             )
+        }
+
+        // Add Log Menu
+        var logName by remember { mutableStateOf("") }
+
+        if (isSheetOpen) {
+            ModalBottomSheet(
+                sheetState = sheetState,
+                onDismissRequest = { isSheetOpen = false },
+                containerColor = colorResource(id = R.color.bottomnav),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val focusManager = LocalFocusManager.current
+
+                // Log Name
+                TextField(
+                    value = logName,
+                    onValueChange = { logName = it },
+                    label = { Text("Log Name") },
+                    singleLine = true,
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus() }
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                // Create Button
+                Button(
+                    onClick = {
+                        createLog(logName)
+                        isSheetOpen = false
+                        logName = ""
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.sky_blue),
+                        disabledContainerColor = colorResource(id = R.color.sky_blue)
+                    )
+                ) {
+                    Text("Create Log")
+                }
+            }
         }
     }
 
     Spacer(modifier = Modifier.height(15.dp))
 
-    // Grid of logs
-    val logItems = (1..10).toList()
+    listLogs(allLogs)
+}
 
+@Composable
+fun listLogs(allLogs: List<LogData>?) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
         val itemsPerRow = 2
-        val rows = logItems.chunked(itemsPerRow)
+        val rows = allLogs?.chunked(itemsPerRow)
 
-        rows.forEach { rowItems ->
+        rows?.forEach { rowItems ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -218,7 +257,7 @@ fun LogsList() {
 
                             // Text overlay
                             Text(
-                                text = "Item $index",
+                                text = "${index.name}",
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = Color.White,
                                 textAlign = TextAlign.Center,
@@ -242,30 +281,9 @@ fun LogsList() {
     }
 }
 
-    /*Box(
-                      modifier = Modifier
-                          .size(180.dp),
-                      contentAlignment = Alignment.Center
-                  ) {
-                      // Background image with alpha
-                      Image(
-                          painter = painterResource(id = R.drawable.sample_log),
-                          contentDescription = null,
-                          modifier = Modifier
-                              .fillMaxSize()
-                              .clip(MaterialTheme.shapes.medium)
-                              .background(Color.Black.copy(alpha = 0.35f))
-                      )
-*/
+@RequiresApi(Build.VERSION_CODES.O)
+fun createLog(logName: String) {
+    Log.d(TAG, logName)
+    logViewModel.createLog(logName)
+}
 
-/*@Composable
-fun BackgroundGradient() {
-    // Define the gradient colors
-    val lightGrey = Color(0xFF37414A)
-    val darkGrey = Color(0xFF191919)
-
-    val gradientColors = listOf(lightGrey, darkGrey)
-
-    // Create a vertical gradient brush
-    Box(modifier = Modifier.background(Brush.verticalGradient(gradientColors)))
-}*/

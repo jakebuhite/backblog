@@ -207,13 +207,14 @@ class FriendsRepository {
                 logData = LogData(
                     logId = it.id,
                     name = it.getString("name"),
+                    priority = it.getString("priority")?.toIntOrNull(),
+                    status = it.getString("status"),
                     creationDate = it.getString("creation_date"),
                     lastModifiedDate = it.getString("last_modified_date"),
-                    status = it.getString("status"),
-                    owner = it.data?.get("owner") as? Map<String, Any>?,
-                    collaborators = it.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                     movieIds = it.data?.get("movie_ids") as Map<String, Boolean>?,
-                    watchedIds = it.data?.get("watched_ids") as Map<String, Boolean>?
+                    watchedIds = it.data?.get("watched_ids") as Map<String, Boolean>?,
+                    owner = it.data?.get("owner") as? Map<String, Any>?,
+                    collaborators = it.data?.get("collaborators") as Map<String, Map<String, Int>>?
                 )
             }
             .addOnFailureListener {

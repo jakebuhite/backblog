@@ -2,9 +2,13 @@ package com.tabka.backblogapp.ui.bottomnav
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.PeopleAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import com.tabka.backblogapp.R
 
 sealed class BottomNavigationBar(
     val route: String,
@@ -12,7 +16,7 @@ sealed class BottomNavigationBar(
 ) {
     object Home: BottomNavigationBar(
         route = "home",
-        icon = Icons.Default.Home
+        icon = Icons.Default.Layers
     )
     object Search: BottomNavigationBar(
         route = "search",
@@ -20,6 +24,6 @@ sealed class BottomNavigationBar(
     )
     object Friends: BottomNavigationBar(
         route = "friends",
-        icon = Icons.Default.Person
+        icon = Icons.Default.PeopleAlt
     )
 }
