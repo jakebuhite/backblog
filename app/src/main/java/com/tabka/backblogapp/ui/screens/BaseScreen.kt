@@ -15,10 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ButtonElevation
@@ -46,6 +44,7 @@ fun BaseScreen(title: String, content: @Composable () -> Unit) {
         color = MaterialTheme.colorScheme.background
     ) {
         BackgroundGradient()
+
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -80,6 +79,11 @@ fun backButton(visible: Boolean) {
 
 @Composable
 fun pageTitle(title: String) {
+    Text(title, style = MaterialTheme.typography.headlineLarge)
+}
+
+@Composable
+fun PageTitle(title: String) {
     Text(title, style = MaterialTheme.typography.headlineLarge)
 }
 
