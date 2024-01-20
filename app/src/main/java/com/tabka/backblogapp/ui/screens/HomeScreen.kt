@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.ScrollableDefaults
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,24 +39,20 @@ import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 
 @Composable
-fun HomeScreen(bottomPadding: Dp) {
+fun HomeScreen() {
     val pageTitle = "What's Next?"
     BaseScreen(pageTitle) {
-            WatchNextCard()
-            Spacer(Modifier.height(40.dp))
-            LogsList()
-            Spacer(
-                Modifier
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-            )
-        }
-        Spacer(Modifier.height(20.dp))
+        WatchNextCard()
+        Spacer(Modifier.height(40.dp))
+        LogsList()
+        /*Spacer(Modifier.height(40.dp))*/
+    }
 }
 
 @Preview
 @Composable
 fun WatchNextCard() {
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {

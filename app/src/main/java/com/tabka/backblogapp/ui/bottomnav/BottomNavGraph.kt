@@ -9,13 +9,13 @@ import androidx.navigation.compose.composable
 import com.tabka.backblogapp.ui.screens.HomeScreen
 
 @Composable
-fun BottomNavGraph(navController: NavHostController, bottomPadding: Dp) {
+fun BottomNavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
         startDestination = BottomNavigationBar.Home.route
     ) {
         composable(route = BottomNavigationBar.Home.route) {
-            HomeScreen(bottomPadding)
+            HomeScreen()
         }
         composable(route = BottomNavigationBar.Search.route) {
             //SearchScreen()
