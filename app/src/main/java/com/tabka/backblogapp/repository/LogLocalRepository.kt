@@ -1,31 +1,20 @@
 package com.tabka.backblogapp.repository
 
-import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.tabka.backblogapp.BackBlog
 import com.tabka.backblogapp.models.LogData
 import com.tabka.backblogapp.util.JsonUtility
 
 class LogLocalRepository {
     private val tag = "LocalStorageLogsRepo"
-    private lateinit var jsonUtility: JsonUtility
+    private var jsonUtility: JsonUtility = JsonUtility(BackBlog.appContext!!)
 
-    private val userLogsList = MutableLiveData<List<LogData>>()
-
-    fun init(context: Context) {
-        jsonUtility = JsonUtility(context)
+    fun getLogs(): List<LogData> {
+        return jsonUtility.readFromFile()
     }
 
-    fun getLogs(): LiveData<List<LogData>> {
-        val logs = jsonUtility.readFromFile()
-        userLogsList.value = logs
-
-        Log.d(tag, logs.toString())
-        return userLogsList
-    }
-
-    fun addLog(log: LogData) {
+    fun createLog(log: LogData) {
         jsonUtility.appendToFile(log)
     }
 

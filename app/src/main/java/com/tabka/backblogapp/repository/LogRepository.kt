@@ -40,6 +40,7 @@ class LogRepository {
                     logData = LogData(
                         logId = doc.getString("log_id"),
                         name = doc.getString("name"),
+                        priority = doc.getString("priority")?.toIntOrNull(),
                         creationDate = doc.getString("creation_date"),
                         lastModifiedDate = doc.getString("last_modified_date"),
                         status = doc.getString("status"),
@@ -73,6 +74,7 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
+                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
                             status = doc.getString("status"),
@@ -95,6 +97,7 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
+                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
                             status = doc.getString("status"),
@@ -177,6 +180,7 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
+                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
                             status = doc.getString("status"),
@@ -199,6 +203,7 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
+                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
                             status = doc.getString("status"),
@@ -248,6 +253,7 @@ class LogRepository {
                 logData = LogData(
                     logId = doc.getString("log_id"),
                     name = doc.getString("name"),
+                    priority = doc.getString("priority")?.toIntOrNull(),
                     creationDate = doc.getString("creation_date"),
                     lastModifiedDate = doc.getString("last_modified_date"),
                     status = doc.getString("status"),

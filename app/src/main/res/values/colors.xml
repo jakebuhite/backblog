@@ -13,4 +13,6 @@
     <color name="bottomnav_icon">#9F9F9F</color>
     <color name="bottomnav_icon_selected">@color/white</color>
 
+    <color name="sky_blue">#3891E1</color>
+
 </resources>
