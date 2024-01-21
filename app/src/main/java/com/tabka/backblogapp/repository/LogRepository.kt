@@ -40,11 +40,10 @@ class LogRepository {
                     logData = LogData(
                         logId = doc.getString("log_id"),
                         name = doc.getString("name"),
-                        priority = doc.getString("priority")?.toIntOrNull(),
                         creationDate = doc.getString("creation_date"),
                         lastModifiedDate = doc.getString("last_modified_date"),
-                        status = doc.getString("status"),
-                        owner = doc.data?.get("owner") as Map<String, Any>?,
+                        isVisible = doc.getBoolean("is_visible"),
+                        owner = doc.data?.get("owner") as Map<String, Int>?,
                         collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                         movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                         watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
@@ -74,11 +73,10 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
-                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
-                            status = doc.getString("status"),
-                            owner = doc.data?.get("owner") as Map<String, Any>?,
+                            isVisible = doc.getBoolean("is_visible"),
+                            owner = doc.data?.get("owner") as Map<String, Int>?,
                             collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                             movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                             watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
@@ -97,11 +95,10 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
-                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
-                            status = doc.getString("status"),
-                            owner = doc.data?.get("owner") as Map<String, Any>?,
+                            isVisible = doc.getBoolean("is_visible"),
+                            owner = doc.data?.get("owner") as Map<String, Int>?,
                             collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                             movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                             watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
@@ -141,7 +138,7 @@ class LogRepository {
 
             // Add the modified properties to updatedUserObj
             log.name?.let { updatedLogObj["name"] = it }
-            log.status?.let { updatedLogObj["status"] = it }
+            log.isVisible?.let { updatedLogObj["is_visible"] = it }
             log.movieIds?.let { updatedLogObj["movie_ids"] = it }
             log.watchedIds?.let { updatedLogObj["watched_ids"] = it }
 
@@ -180,11 +177,10 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
-                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
-                            status = doc.getString("status"),
-                            owner = doc.data?.get("owner") as Map<String, Any>?,
+                            isVisible = doc.getBoolean("is_visible"),
+                            owner = doc.data?.get("owner") as Map<String, Int>?,
                             collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                             movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                             watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
@@ -203,11 +199,10 @@ class LogRepository {
                         LogData(
                             logId = doc.getString("log_id"),
                             name = doc.getString("name"),
-                            priority = doc.getString("priority")?.toIntOrNull(),
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
-                            status = doc.getString("status"),
-                            owner = doc.data?.get("owner") as Map<String, Any>?,
+                            isVisible = doc.getBoolean("is_visible"),
+                            owner = doc.data?.get("owner") as Map<String, Int>?,
                             collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                             movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                             watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
@@ -253,11 +248,10 @@ class LogRepository {
                 logData = LogData(
                     logId = doc.getString("log_id"),
                     name = doc.getString("name"),
-                    priority = doc.getString("priority")?.toIntOrNull(),
                     creationDate = doc.getString("creation_date"),
                     lastModifiedDate = doc.getString("last_modified_date"),
-                    status = doc.getString("status"),
-                    owner = doc.data?.get("owner") as Map<String, Any>?,
+                    isVisible = doc.getBoolean("is_visible"),
+                    owner = doc.data?.get("owner") as Map<String, Int>?,
                     collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                     movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                     watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
