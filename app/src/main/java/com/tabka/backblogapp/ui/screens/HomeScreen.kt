@@ -4,7 +4,11 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -27,114 +31,158 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.IntOffset
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 
 
 private val TAG = "HomeScreen"
 private val logViewModel: LogViewModel = LogViewModel()
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen() {
     val allLogs = logViewModel.allLogs.collectAsState().value
-    val pageTitle = "What's Next?"
+    var pageTitle = "What's Next?"
 
     BaseScreen(pageTitle) {
-        WatchNextCard()
+        // If logs exist
+        if (!allLogs.isNullOrEmpty()) {
+            WatchNextCard(allLogs[0])
+
+        }
         Spacer(Modifier.height(40.dp))
         MyLogsSection(allLogs)
     }
 }
 
-@Preview
+
 @Composable
-fun WatchNextCard() {
+fun WatchNextCard(priorityLog: LogData) {
 
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Priority Log title
-        Row() {
-            Text("From Personal Log", style = MaterialTheme.typography.titleSmall)
-        }
+
+        PriorityLogTitle(priorityLog.name!!)
 
         Spacer(modifier = Modifier.height(5.dp))
 
-        // Next Movie image
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
+        val movieId = priorityLog.movieIds?.keys?.firstOrNull()
+        if (movieId != null) {
+            // val movie: MovieData = Get movie by Id
+
+            // Change to movie
+            NextMovie(movieId)
+            Spacer(modifier = Modifier.height(5.dp))
+            NextMovieInfo(movieId)
+        } else {
+            NextMovie(null)
+            Spacer(modifier = Modifier.height(5.dp))
+        }
+    }
+}
+
+
+@Composable
+fun PriorityLogTitle(logName: String) {
+    Row() {
+        Text("From $logName", style = MaterialTheme.typography.titleSmall)
+    }
+}
+
+
+@Composable
+fun NextMovie(movie: String?) {
+
+    var image = R.drawable.icon_empty_log
+
+    if (movie != null) {
+     /*   if (movie.backdrop != null) {
+            image = URL of movie.backdrop
+        } else {
+            //image = URL of movie.half_sheet
+        }*/
+    }
+
+    // Next movie image
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-            ) {
-                Box(
-                    modifier = Modifier.height(200.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.tenetdefault),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(5.dp))
-
-        // Movie Title, Rating, Year, Complete button
-        Row(modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            // Movie information
-            Column(modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-            )
-            {
-                // Title
-                Row() {
-                    Text(text = "Tenet", style = MaterialTheme.typography.headlineMedium)
-                }
-
-                Row() {
-                    // Rating
-                    Column() {
-                        Text(text = "PG-13", style = MaterialTheme.typography.bodySmall)
-                    }
-
-                    Spacer(modifier = Modifier.width(5.dp))
-
-                    // Release Date
-                    Column(
-                    ) {
-                        Text(text = "2022", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-
-            // Complete button
-            Column(modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-                horizontalAlignment = Alignment.End
+            Box(
+                modifier = Modifier.height(200.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.checkbutton2),
-                    contentDescription = "Check icon",
-                    modifier = Modifier.size(40.dp)
+                    painter = painterResource(id = image),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
 }
 
+
+@Composable
+fun NextMovieInfo(movie: String) {
+
+    Row(modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        // Movie information
+        Column(modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+        )
+        {
+            // Title
+            Row() {
+                Text(text = "Tenet", style = MaterialTheme.typography.headlineMedium)
+            }
+
+            Row() {
+                // Rating
+                Column() {
+                    Text(text = "PG-13", style = MaterialTheme.typography.bodySmall)
+                }
+
+                Spacer(modifier = Modifier.width(5.dp))
+
+                // Release Date
+                Column(
+                ) {
+                    Text(text = "2022", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        // Complete button
+        Column(modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight(),
+            horizontalAlignment = Alignment.End
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.checkbutton2),
+                contentDescription = "Check icon",
+                modifier = Modifier.size(40.dp)
+            )
+        }
+    }
+}
+
+
 // This function creates the "My Logs" header, as well as the button to create a new log
 // This function then calls ListLogs, which will list each log the user has
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MyLogsSection(allLogs: List<LogData>?) {
@@ -220,11 +268,12 @@ fun MyLogsSection(allLogs: List<LogData>?) {
 
     Spacer(modifier = Modifier.height(15.dp))
 
-    listLogs(allLogs)
+    ListLogs(allLogs)
 }
 
+
 @Composable
-fun listLogs(allLogs: List<LogData>?) {
+fun ListLogs(allLogs: List<LogData>?) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -240,7 +289,8 @@ fun listLogs(allLogs: List<LogData>?) {
             ) {
                 rowItems.forEach { index ->
                     Card(
-                        modifier = Modifier.size(175.dp),
+                        modifier = Modifier
+                            .size(175.dp),
                         shape = RoundedCornerShape(20.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                     ) {
@@ -269,7 +319,6 @@ fun listLogs(allLogs: List<LogData>?) {
                                             color = Color.Black,
                                             cornerRadius = CornerRadius(20.dp.toPx()),
                                             alpha = 0.75f
-
                                         )
                                     }
                             )
@@ -281,9 +330,9 @@ fun listLogs(allLogs: List<LogData>?) {
     }
 }
 
+
 @RequiresApi(Build.VERSION_CODES.O)
 fun createLog(logName: String) {
-    Log.d(TAG, logName)
     logViewModel.createLog(logName)
 }
 
