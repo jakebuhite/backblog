@@ -3,7 +3,7 @@ package com.tabka.backblogapp.util
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.tabka.backblogapp.models.LogData
+import com.tabka.backblogapp.network.models.LogData
 import java.io.IOException
 import java.lang.reflect.Type
 

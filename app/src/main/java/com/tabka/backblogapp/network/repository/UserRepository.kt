@@ -1,13 +1,13 @@
-package com.tabka.backblogapp.repository
+package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
-import com.tabka.backblogapp.models.FriendRequestData
-import com.tabka.backblogapp.models.LogRequestData
-import com.tabka.backblogapp.models.UserData
+import com.tabka.backblogapp.network.models.FriendRequestData
+import com.tabka.backblogapp.network.models.LogRequestData
+import com.tabka.backblogapp.network.models.UserData
 
 class UserRepository {
     private val db = Firebase.firestore

@@ -1,9 +1,9 @@
-package com.tabka.backblogapp.repository
+package com.tabka.backblogapp.network.repository
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.tabka.backblogapp.BackBlog
-import com.tabka.backblogapp.models.LogData
+import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.util.JsonUtility
 
 class LogLocalRepository {

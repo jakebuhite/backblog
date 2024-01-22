@@ -1,10 +1,10 @@
-package com.tabka.backblogapp.repository
+package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
-import com.tabka.backblogapp.models.LogData
+import com.tabka.backblogapp.network.models.LogData
 
 class LogRepository {
 
@@ -43,7 +43,7 @@ class LogRepository {
                         creationDate = doc.getString("creation_date"),
                         lastModifiedDate = doc.getString("last_modified_date"),
                         isVisible = doc.getBoolean("is_visible"),
-                        owner = doc.data?.get("owner") as Map<String, Int>?,
+                        owner = doc.data?.get("owner") as Map<String, Any>?,
                         collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                         movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                         watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
@@ -76,7 +76,7 @@ class LogRepository {
                             creationDate = doc.getString("creation_date"),
                             lastModifiedDate = doc.getString("last_modified_date"),
                             isVisible = doc.getBoolean("is_visible"),
-                            owner = doc.data?.get("owner") as Map<String, Int>?,
+                            owner = doc.data?.get("owner") as Map<String, Any>?,
                             collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                             movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                             watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
@@ -92,17 +92,17 @@ class LogRepository {
                 if (!it.isEmpty) {
                     logs.addAll(it.documents.map { doc ->
                         @Suppress("UNCHECKED_CAST")
-                        LogData(
-                            logId = doc.getString("log_id"),
-                            name = doc.getString("name"),
-                            creationDate = doc.getString("creation_date"),
-                            lastModifiedDate = doc.getString("last_modified_date"),
-                            isVisible = doc.getBoolean("is_visible"),
-                            owner = doc.data?.get("owner") as Map<String, Int>?,
-                            collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                            movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                            watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                        )
+                        (LogData(
+        logId = doc.getString("log_id"),
+        name = doc.getString("name"),
+        creationDate = doc.getString("creation_date"),
+        lastModifiedDate = doc.getString("last_modified_date"),
+        isVisible = doc.getBoolean("is_visible"),
+        owner = doc.data?.get("owner") as Map<String, Any>?,
+        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
+        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
+        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
+    ))
                     })
                 }
             }
@@ -174,17 +174,17 @@ class LogRepository {
                 if (!it.isEmpty) {
                     logs.addAll(it.documents.map { doc ->
                         @Suppress("UNCHECKED_CAST")
-                        LogData(
-                            logId = doc.getString("log_id"),
-                            name = doc.getString("name"),
-                            creationDate = doc.getString("creation_date"),
-                            lastModifiedDate = doc.getString("last_modified_date"),
-                            isVisible = doc.getBoolean("is_visible"),
-                            owner = doc.data?.get("owner") as Map<String, Int>?,
-                            collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                            movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                            watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                        )
+                        (LogData(
+        logId = doc.getString("log_id"),
+        name = doc.getString("name"),
+        creationDate = doc.getString("creation_date"),
+        lastModifiedDate = doc.getString("last_modified_date"),
+        isVisible = doc.getBoolean("is_visible"),
+        owner = doc.data?.get("owner") as Map<String, Any>?,
+        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
+        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
+        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
+    ))
                     })
                 }
             }
@@ -196,17 +196,17 @@ class LogRepository {
                 if (!it.isEmpty) {
                     logs.addAll(it.documents.map { doc ->
                         @Suppress("UNCHECKED_CAST")
-                        LogData(
-                            logId = doc.getString("log_id"),
-                            name = doc.getString("name"),
-                            creationDate = doc.getString("creation_date"),
-                            lastModifiedDate = doc.getString("last_modified_date"),
-                            isVisible = doc.getBoolean("is_visible"),
-                            owner = doc.data?.get("owner") as Map<String, Int>?,
-                            collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                            movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                            watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                        )
+                        (LogData(
+        logId = doc.getString("log_id"),
+        name = doc.getString("name"),
+        creationDate = doc.getString("creation_date"),
+        lastModifiedDate = doc.getString("last_modified_date"),
+        isVisible = doc.getBoolean("is_visible"),
+        owner = doc.data?.get("owner") as Map<String, Any>?,
+        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
+        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
+        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
+    ))
                     })
                 }
             }
@@ -251,7 +251,7 @@ class LogRepository {
                     creationDate = doc.getString("creation_date"),
                     lastModifiedDate = doc.getString("last_modified_date"),
                     isVisible = doc.getBoolean("is_visible"),
-                    owner = doc.data?.get("owner") as Map<String, Int>?,
+                    owner = doc.data?.get("owner") as Map<String, Any>?,
                     collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                     movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
                     watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
