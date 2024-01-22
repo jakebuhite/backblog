@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -19,6 +21,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val key : String = gradleLocalProperties(rootDir).getProperty("MOVIE_SECRET")
+        buildConfigField("String", "MOVIE_SECRET", "\"${key}\"")
     }
 
     buildTypes {
@@ -38,6 +43,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
     composeOptions {
@@ -63,6 +69,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha10")
     implementation("androidx.compose.material:material:1.4.2")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation(platform("com.google.firebase:firebase-bom:32.7.1"))
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")

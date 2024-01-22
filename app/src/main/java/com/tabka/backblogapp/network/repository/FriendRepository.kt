@@ -1,19 +1,19 @@
-package com.tabka.backblogapp.repository
+package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
-import com.tabka.backblogapp.models.FriendRequestData
-import com.tabka.backblogapp.models.LogData
-import com.tabka.backblogapp.models.LogRequestData
-import com.tabka.backblogapp.models.UserData
+import com.tabka.backblogapp.network.models.FriendRequestData
+import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.LogRequestData
+import com.tabka.backblogapp.network.models.UserData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
-class FriendsRepository {
+class FriendRepository {
 
     private val db = Firebase.firestore
     private val tag = "FriendsRepo"
@@ -96,14 +96,14 @@ class FriendsRepository {
                     if (friendDoc.exists()) {
                         // Create User object for friend and add it to the list
                         @Suppress("UNCHECKED_CAST")
-                        UserData(
-                            userId = friendDoc.id,
-                            username = friendDoc.getString("username"),
-                            joinDate = friendDoc.getString("join_date"),
-                            avatarPreset = friendDoc.getLong("avatar_preset")?.toInt(),
-                            friends = friendDoc.data?.get("friends") as? Map<String, Boolean>,
-                            blocked = friendDoc.data?.get("blocked") as? Map<String, Boolean>
-                        )
+                        (UserData(
+        userId = friendDoc.id,
+        username = friendDoc.getString("username"),
+        joinDate = friendDoc.getString("join_date"),
+        avatarPreset = friendDoc.getLong("avatar_preset")?.toInt(),
+        friends = friendDoc.data?.get("friends") as? Map<String, Boolean>,
+        blocked = friendDoc.data?.get("blocked") as? Map<String, Boolean>
+    ))
                     } else {
                         null
                     }
@@ -194,7 +194,6 @@ class FriendsRepository {
             .addOnFailureListener { e -> Log.w(tag, "Error updating user document", e) }
     }
 
-    // Add collaborator to user doc
     private fun addCollaborator(userId: String, logId: String) {
         val logRef = db.collection("logs").document(logId)
 
@@ -209,7 +208,7 @@ class FriendsRepository {
                     name = it.getString("name"),
                     creationDate = it.getString("creation_date"),
                     lastModifiedDate = it.getString("last_modified_date"),
-                    status = it.getString("status"),
+                    isVisible = it.getBoolean("status"),
                     owner = it.data?.get("owner") as? Map<String, Any>?,
                     collaborators = it.data?.get("collaborators") as Map<String, Map<String, Int>>?,
                     movieIds = it.data?.get("movie_ids") as Map<String, Boolean>?,
