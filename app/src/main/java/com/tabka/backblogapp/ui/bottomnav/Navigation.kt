@@ -1,7 +1,9 @@
 package com.tabka.backblogapp.ui.bottomnav
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ContentAlpha
@@ -11,12 +13,17 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tabka.backblogapp.R
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 fun Navigation() {
     val navController = rememberNavController()
     Scaffold(
+        modifier = Modifier.background(color = colorResource(R.color.bottomnav)),
         bottomBar = { BottomBar(navController = navController) }
     ) {
         BottomNavGraph(navController = navController)
@@ -40,7 +48,11 @@ fun BottomBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    BottomNavigation {
+    BottomNavigation(
+        /*modifier = Modifier.background(color = colorResource(R.color.bottomnav))*/
+        backgroundColor = colorResource(id = R.color.bottomnav),
+        contentColor = colorResource(id = R.color.bottomnav_icon_selected)
+    ) {
         screens.forEach { screen ->
             AddItem(
                 screen = screen,
@@ -57,17 +69,21 @@ fun RowScope.AddItem(
     currentDestination: NavDestination?,
     navController: NavHostController
 ) {
+    val selectedIconColor = 
+    
     BottomNavigationItem(
         icon = {
             Icon(
                 imageVector = screen.icon,
-                contentDescription = "Navigation Icon"
+                contentDescription = "Navigation Icon",
+                modifier = Modifier.size(26.dp)
             )
         },
         selected = currentDestination?.hierarchy?.any {
             it.route == screen.route
         } == true,
-        unselectedContentColor = LocalContentColor.current.copy(alpha = ContentAlpha.disabled),
+        /*unselectedContentColor = LocalContentColor.current.copy(alpha = ContentAlpha.disabled),*/
+        unselectedContentColor = colorResource(id = R.color.bottomnav_icon),
         onClick = {
             navController.navigate(screen.route) {
                 popUpTo(navController.graph.findStartDestination().id)
