@@ -4,14 +4,10 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
-import com.tabka.backblogapp.models.LogData
-import com.tabka.backblogapp.repository.LogLocalRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.repository.LogLocalRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID

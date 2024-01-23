@@ -15,15 +15,15 @@ sealed class BottomNavigationBar(
     val icon: ImageVector
 ) {
     object Home: BottomNavigationBar(
-        route = "home",
+        route = "home_nav",
         icon = Icons.Default.Layers
     )
     object Search: BottomNavigationBar(
-        route = "search",
+        route = "search_nav",
         icon = Icons.Default.Search
     )
     object Friends: BottomNavigationBar(
-        route = "friends",
+        route = "friends_nav",
         icon = Icons.Default.PeopleAlt
     )
 }

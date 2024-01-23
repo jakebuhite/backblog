@@ -7,13 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 
 @Composable
-fun SearchScreen(navController: NavController) {
+fun FriendsScreen(navController: NavController) {
     val hasBackButton = false
-    val pageTitle = "Search"
+    val pageTitle = "Friends"
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        Text("Click here to go to results page",
-            modifier = Modifier.clickable { navController.navigate("search_results") }
+        Text("Click here to go nowhere",
+            /*modifier = Modifier.clickable { navController.navigate("search_movie_details_128") }*/
         )
     }
 }

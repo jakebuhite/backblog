@@ -2,6 +2,7 @@ package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,9 +25,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.alpha
+import androidx.navigation.NavController
 
 @Composable
-fun BaseScreen(title: String, content: @Composable () -> Unit) {
+fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title: String, content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -38,7 +41,7 @@ fun BaseScreen(title: String, content: @Composable () -> Unit) {
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            backButton(true)
+            backButton(navController, isBackButtonVisible)
             pageTitle(title)
             content()
             Spacer(modifier = Modifier.height(70.dp))
@@ -46,15 +49,14 @@ fun BaseScreen(title: String, content: @Composable () -> Unit) {
     }
 }
 
-@Preview
 @Composable
-fun previewBackButton()
-{
-    backButton(visible = true)
-}
-@Composable
-fun backButton(visible: Boolean) {
+fun backButton(navController: NavController, visible: Boolean) {
     val icon = painterResource(R.drawable.button_back_arrow)
+
+    var alpha = 0f
+    if (visible) {
+        alpha = 1f
+    }
 
     Image(
         painter = icon,
@@ -62,6 +64,8 @@ fun backButton(visible: Boolean) {
         modifier = Modifier
             .size(36.dp)
             .clip(CircleShape)
+            .alpha(alpha)
+            .clickable { navController.popBackStack() }
     )
 }
 

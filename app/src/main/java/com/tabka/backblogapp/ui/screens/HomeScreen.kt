@@ -1,14 +1,9 @@
 package com.tabka.backblogapp.ui.screens
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -23,17 +18,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
-import com.tabka.backblogapp.models.LogData
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.unit.IntOffset
+import androidx.navigation.NavController
+import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 
 
@@ -43,24 +37,27 @@ private val logViewModel: LogViewModel = LogViewModel()
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
     val allLogs = logViewModel.allLogs.collectAsState().value
-    var pageTitle = "What's Next?"
 
-    BaseScreen(pageTitle) {
+    val hasBackButton = false
+    val pageTitle = "What's Next?"
+
+
+    BaseScreen(navController, hasBackButton, pageTitle) {
         // If logs exist
         if (!allLogs.isNullOrEmpty()) {
-            WatchNextCard(allLogs[0])
+            WatchNextCard(navController, allLogs[0])
 
         }
         Spacer(Modifier.height(40.dp))
-        MyLogsSection(allLogs)
+        MyLogsSection(navController, allLogs)
     }
 }
 
 
 @Composable
-fun WatchNextCard(priorityLog: LogData) {
+fun WatchNextCard(navController: NavController, priorityLog: LogData) {
 
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -75,11 +72,11 @@ fun WatchNextCard(priorityLog: LogData) {
             // val movie: MovieData = Get movie by Id
 
             // Change to movie
-            NextMovie(movieId)
+            NextMovie(navController, movieId)
             Spacer(modifier = Modifier.height(5.dp))
             NextMovieInfo(movieId)
         } else {
-            NextMovie(null)
+            NextMovie(navController, null)
             Spacer(modifier = Modifier.height(5.dp))
         }
     }
@@ -95,7 +92,7 @@ fun PriorityLogTitle(logName: String) {
 
 
 @Composable
-fun NextMovie(movie: String?) {
+fun NextMovie(navController: NavController, movie: String?) {
 
     var image = R.drawable.icon_empty_log
 
@@ -114,7 +111,8 @@ fun NextMovie(movie: String?) {
     ) {
         Card(
             shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+            modifier = Modifier.clickable{ navController.navigate("home_movie_details_0") }
         ) {
             Box(
                 modifier = Modifier.height(200.dp)
@@ -185,7 +183,7 @@ fun NextMovieInfo(movie: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun MyLogsSection(allLogs: List<LogData>?) {
+fun MyLogsSection(navController: NavController, allLogs: List<LogData>?) {
 
     val sheetState = rememberModalBottomSheetState()
     var isSheetOpen by rememberSaveable {
@@ -268,12 +266,12 @@ fun MyLogsSection(allLogs: List<LogData>?) {
 
     Spacer(modifier = Modifier.height(15.dp))
 
-    ListLogs(allLogs)
+    ListLogs(navController, allLogs)
 }
 
 
 @Composable
-fun ListLogs(allLogs: List<LogData>?) {
+fun ListLogs(navController: NavController, allLogs: List<LogData>?) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -290,7 +288,8 @@ fun ListLogs(allLogs: List<LogData>?) {
                 rowItems.forEach { index ->
                     Card(
                         modifier = Modifier
-                            .size(175.dp),
+                            .size(175.dp)
+                            .clickable { navController.navigate("home_log_details_${index.logId}") },
                         shape = RoundedCornerShape(20.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                     ) {
