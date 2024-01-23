@@ -130,6 +130,7 @@ class MovieRepository(private val movieApiService: ApiService) {
         val formattedQuery = query.replace(" ", "%20")
         val includeAdult = false
         val language = "en-US"
+        Log.d("Movies", "here")
 
         val call = movieApiService.searchMovies(formattedQuery, includeAdult, language, page)
 
@@ -137,14 +138,17 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
                 if (response.isSuccessful) {
                     val movieSearchData = response.body()
+                    Log.d("Movies", "$movieSearchData")
                     onResponse(movieSearchData)
                 } else {
                     // Handle error
+                    Log.d("Movies", "Error: ${response.code()} - ${response.message()}")
                     println("Error: ${response.code()} - ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<MovieSearchData>, t: Throwable) {
+                Log.d("Movies", "Failure: ${t.message}")
                 onFailure("Failure: ${t.message}")
             }
         })
