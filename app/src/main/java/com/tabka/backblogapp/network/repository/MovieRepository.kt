@@ -127,12 +127,12 @@ class MovieRepository(private val movieApiService: ApiService) {
     }
 
     fun searchMovie(query: String, page: Int, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {
-        val formattedQuery = query.replace(" ", "%20")
         val includeAdult = false
         val language = "en-US"
-        Log.d("Movies", "here")
 
-        val call = movieApiService.searchMovies(formattedQuery, includeAdult, language, page, "Bearer " + BuildConfig.MOVIE_SECRET)
+        Log.d(tag, query)
+
+        val call = movieApiService.searchMovies(query, includeAdult, language, page, "Bearer " + BuildConfig.MOVIE_SECRET)
 
         call.enqueue(object : Callback<MovieSearchData> {
             override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
