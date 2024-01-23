@@ -14,7 +14,7 @@ import java.util.UUID
 
 class LogViewModel(): ViewModel() {
     private val TAG = "LogViewModel"
-    private val localRepository = LogLocalRepository()
+    private val localLogRepository = LogLocalRepository()
 
     private val _allLogs = MutableStateFlow<List<LogData>?>(emptyList())
     val allLogs = _allLogs.asStateFlow()
@@ -25,7 +25,7 @@ class LogViewModel(): ViewModel() {
 
     private fun loadLogs() {
         Log.d(TAG, "Load Logs")
-        _allLogs.value = localRepository.getLogs()
+        _allLogs.value = localLogRepository.getLogs()
        /* sortLogsByOwnerPriority()*/
     }
 
@@ -55,7 +55,7 @@ class LogViewModel(): ViewModel() {
             lastModifiedDate = formattedDate
         )
         Log.d(TAG, "Creating Log: $log")
-        localRepository.createLog(log)
+        localLogRepository.createLog(log)
         loadLogs()
     }
 
