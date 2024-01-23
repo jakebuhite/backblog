@@ -21,6 +21,7 @@ interface ApiService {
         @Query("query") query: String,
         @Query("include_adult") includeAdult: Boolean,
         @Query("language") language: String,
-        @Query("page") page: Int
+        @Query("page") page: Int,
+        @Header("Authorization") authorization: String
     ): Call<MovieSearchData>
 }
