@@ -1,161 +1,133 @@
 package com.tabka.backblogapp.network.repository
 
 import android.util.Log
-import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
-class FriendRepository {
-
-    private val db = Firebase.firestore
+class FriendRepository(private val db: FirebaseFirestore) {
     private val tag = "FriendsRepo"
 
-    fun addLogRequest(senderId: String, targetId: String, logId: String) {
-        val logRequestData = LogRequestData(
-            senderId = senderId,
-            targetId = targetId,
-            logId = logId,
-            requestDate = System.currentTimeMillis().toString(),
-            isComplete = false
-        )
-
-        db.collection("log_requests").add(logRequestData)
-            .addOnSuccessListener { Log.d(tag, "Log request successfully written!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error writing log request document", e) }
+    suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): Result<Unit> = coroutineScope {
+        try {
+            val logRef = db.collection("log_requests")
+            val logRequestData = LogRequestData(
+                senderId = senderId,
+                targetId = targetId,
+                logId = logId,
+                requestDate = requestDate,
+                isComplete = false
+            )
+            logRef.add(logRequestData).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    fun addFriendRequest(senderId: String, targetId: String) {
-        val friendRequestData = FriendRequestData(
-            senderId = senderId,
-            targetId = targetId,
-            requestDate = System.currentTimeMillis().toString(),
-            isComplete = false
-        )
+    suspend fun addFriendRequest(senderId: String, targetId: String, requestDate: String): Result<Unit> = coroutineScope {
+        try {
+            val collectionReference = db.collection("friend_requests")
+            val friendRequestData = FriendRequestData(
+                senderId = senderId,
+                targetId = targetId,
+                requestDate = requestDate,
+                isComplete = false
+            )
 
-        db.collection("friend_requests").add(friendRequestData)
-            .addOnSuccessListener { Log.d(tag, "Friend request successfully written!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error writing friend request document", e) }
+            collectionReference.add(friendRequestData).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    suspend fun getFriends(userId: String): MutableList<UserData>? {
-        // Get user data
-        var userData: UserData? = null
-
-        val docRef = db.collection("users").document(userId)
+    suspend fun getFriends(userId: String): List<UserData> = withContext(Dispatchers.IO) {
+        val usersCollection = db.collection("users")
 
         try {
-            // Fetch the document
-            val document = docRef.get().await()
+            val userDocument = usersCollection.document(userId).get().await()
 
-            if (document.exists()) {
+            val friendsMap = userDocument.data?.get("friends") as Map<String, Boolean>?
+            val friendIds = friendsMap?.keys ?: emptySet()
+
+            val friendUserDataList = mutableListOf<UserData>()
+
+            for (friendId in friendIds) {
+                val friendDocument = usersCollection.document(friendId).get().await()
+
                 @Suppress("UNCHECKED_CAST")
-                userData = UserData(
-                    userId = document.id,
-                    username = document.getString("username"),
-                    joinDate = document.getString("join_date"),
-                    avatarPreset = document.getLong("avatar_preset")?.toInt(),
-                    friends = document.data?.get("friends") as? Map<String, Boolean>?,
-                    blocked = document.data?.get("blocked") as? Map<String, Boolean>?
+                val friendUserData = UserData(
+                    userId = friendDocument.id,
+                    username = friendDocument.getString("name"),
+                    joinDate = friendDocument.getString("join_date"),
+                    avatarPreset = friendDocument.getLong("avatar_preset")?.toInt() ?: 0,
+                    friends = friendDocument.data?.get("friends") as Map<String, Boolean>?,
+                    blocked = friendDocument.data?.get("blocked") as Map<String, Boolean>?
                 )
-            } else {
-                Log.d(tag, "No such document")
-            }
-        } catch (exception: Exception) {
-            Log.d(tag, "get failed with ", exception)
-        }
 
-        // Return if no user to obtain friend data from
-        if (userData == null) {
-            return userData
-        }
-
-        val friendsData = mutableListOf<UserData>()
-
-        // Check if the user has friends
-        val friendIds = (userData.friends)?.keys?.toList() ?: emptyList()
-        if (friendIds.isEmpty()) {
-            return friendsData
-        }
-
-        coroutineScope {
-            // Use async to fetch friend data concurrently
-            val deferredFriends = friendIds.map { friendId ->
-                async {
-                    // Fetch friend's user data
-                    val friendRef = db.collection("users").document(friendId)
-                    val friendDoc = friendRef.get().await()
-
-                    if (friendDoc.exists()) {
-                        // Create User object for friend and add it to the list
-                        @Suppress("UNCHECKED_CAST")
-                        (UserData(
-        userId = friendDoc.id,
-        username = friendDoc.getString("username"),
-        joinDate = friendDoc.getString("join_date"),
-        avatarPreset = friendDoc.getLong("avatar_preset")?.toInt(),
-        friends = friendDoc.data?.get("friends") as? Map<String, Boolean>,
-        blocked = friendDoc.data?.get("blocked") as? Map<String, Boolean>
-    ))
-                    } else {
-                        null
-                    }
-                }
+                friendUserDataList.add(friendUserData)
             }
 
-            // Await the results and add them to friendsData
-            friendsData.addAll(deferredFriends.awaitAll().filterNotNull())
+            return@withContext friendUserDataList
+        } catch (e: Exception) {
+            throw e
         }
-
-        return friendsData
     }
 
-    fun updateFriendRequest(friendRequestId: String, isAccepted: Boolean) {
+    suspend fun updateFriendRequest(friendRequestId: String, isAccepted: Boolean): Result<Unit> = coroutineScope {
         val reqRef = db.collection("friend_requests").document(friendRequestId)
 
-        // Mark as complete
-        reqRef.update(mapOf("is_complete" to true))
-            .addOnSuccessListener { Log.d(tag, "Friend request successfully updated!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error writing friend request document", e) }
+        try {
+            // Mark as complete
+            reqRef.update(mapOf("is_complete" to true)).await()
 
-        if (isAccepted) {
-            reqRef.get()
-                .addOnSuccessListener{
-                    if (it.exists()) {
-                        addFriendToUser(it.getString("sender_id")!!, it.getString("target_id")!!)
-                    } else {
-                        Log.d(tag, "Unable to find friend request!")
-                    }
+            if (isAccepted) {
+                // Perform operations sequentially without async
+                val friendRequestData = reqRef.get().await().data
+
+                friendRequestData?.let {
+                    addFriendToUser(it["sender_id"].toString(), it["target_id"].toString())
                 }
-                .addOnFailureListener{ e -> Log.w(tag, "Error writing friend request document", e) }
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            println("Error writing friend request document $e")
+            Result.failure(e)
         }
     }
 
-    fun updateLogRequest(logRequestId: String, isAccepted: Boolean) {
+    suspend fun updateLogRequest(logRequestId: String, isAccepted: Boolean) {
         val reqRef = db.collection("log_requests").document(logRequestId)
 
         // Mark as complete
         reqRef.update(mapOf("is_complete" to true))
             .addOnSuccessListener { Log.d(tag, "Log request successfully updated!") }
             .addOnFailureListener { e -> Log.w(tag, "Error writing log request document", e) }
+            .await()
 
         if (isAccepted) {
             reqRef.get()
                 .addOnSuccessListener{
                     if (it.exists()) {
-                        addCollaborator(it.getString("target_id")!!, it.getString("log_id")!!)
+                        runBlocking {
+                            addCollaborator(it.getString("target_id")!!, it.getString("log_id")!!)
+                        }
                     } else {
                         Log.d(tag, "Unable to find log request!")
                     }
                 }
                 .addOnFailureListener{ e -> Log.w(tag, "Error writing log request document", e) }
+                .await()
         }
     }
 
@@ -187,14 +159,19 @@ class FriendRepository {
             .addOnFailureListener { e -> Log.w(tag, "Error updating user document", e) }
     }
 
-    private fun addFriendToUser(userId: String, friendId: String) {
-        db.collection("users").document(userId)
-            .update("friends.$friendId", true)
-            .addOnSuccessListener { Log.d(tag, "Friend successfully added!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error updating user document", e) }
+    private suspend fun addFriendToUser(userId: String, friendId: String): Result<Unit> = coroutineScope {
+        try {
+            db.collection("users").document(userId)
+                .update("friends.$friendId", true)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            println("Error updating user document $e")
+            Result.failure(e)
+        }
     }
 
-    private fun addCollaborator(userId: String, logId: String) {
+    private suspend fun addCollaborator(userId: String, logId: String) {
         val logRef = db.collection("logs").document(logId)
 
         // Get log data
@@ -218,6 +195,7 @@ class FriendRepository {
             .addOnFailureListener {
                     e -> Log.w(tag, "Error reading log document", e)
             }
+            .await()
 
         // Return if no user to obtain friend data from
         if (logData == null) {

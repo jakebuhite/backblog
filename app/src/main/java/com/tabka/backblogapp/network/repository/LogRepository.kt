@@ -5,6 +5,10 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.LogData
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.tasks.await
+
 
 class LogRepository {
 
@@ -30,7 +34,7 @@ class LogRepository {
     }
 
     // TODO - Append movie data, Add half sheet
-    fun getLog(logId: String): LogData? {
+    suspend fun getLog(logId: String): LogData? {
         var logData: LogData? = null
         db.collection("logs").document(logId).get()
             .addOnSuccessListener { doc ->
@@ -53,62 +57,68 @@ class LogRepository {
                 }
             }
             .addOnFailureListener { e -> Log.w(tag, "Error reading log", e) }
+            .await()
 
         return logData
     }
 
     // TODO - Add half sheet
-    fun getLogs(userId: String): List<LogData> {
+    suspend fun getLogs(userId: String): List<LogData> = coroutineScope {
         // Query logs based on the owner_id field
         val logRef = db.collection("logs")
 
         val logs: MutableList<LogData> = mutableListOf()
 
         // Query for user-owned logs
-        logRef.whereEqualTo("owner.user_id", userId).get()
-            .addOnSuccessListener {
-                if (!it.isEmpty) {
-                    logs.addAll(it.documents.map { doc ->
-                        @Suppress("UNCHECKED_CAST")
-                        LogData(
-                            logId = doc.getString("log_id"),
-                            name = doc.getString("name"),
-                            creationDate = doc.getString("creation_date"),
-                            lastModifiedDate = doc.getString("last_modified_date"),
-                            isVisible = doc.getBoolean("is_visible"),
-                            owner = doc.data?.get("owner") as Map<String, Any>?,
-                            collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                            movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                            watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                        )
-                    })
-                }
+        val userOwned = async {
+            try {
+                val snapshot = logRef.whereEqualTo("owner.user_id", userId).get().await()
+                logs.addAll(snapshot.documents.map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    LogData(
+                        logId = doc.getString("log_id"),
+                        name = doc.getString("name"),
+                        creationDate = doc.getString("creation_date"),
+                        lastModifiedDate = doc.getString("last_modified_date"),
+                        isVisible = doc.getBoolean("is_visible"),
+                        owner = doc.data?.get("owner") as Map<String, Any>?,
+                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
+                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
+                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
+                    )
+                })
+            } catch (e: Exception) {
+                Log.w(tag, "Error receiving logs document", e)
             }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving logs document", e) }
+        }
 
         // Query for user in collaborators
-        logRef.orderBy("collaborators.${userId}").get()
-            .addOnSuccessListener {
-                if (!it.isEmpty) {
-                    logs.addAll(it.documents.map { doc ->
-                        @Suppress("UNCHECKED_CAST")
-                        (LogData(
-        logId = doc.getString("log_id"),
-        name = doc.getString("name"),
-        creationDate = doc.getString("creation_date"),
-        lastModifiedDate = doc.getString("last_modified_date"),
-        isVisible = doc.getBoolean("is_visible"),
-        owner = doc.data?.get("owner") as Map<String, Any>?,
-        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-    ))
-                    })
-                }
+        val userCollab = async {
+            try {
+                val snapshot = logRef.orderBy("collaborators.${userId}").get().await()
+                logs.addAll(snapshot.documents.map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    LogData(
+                        logId = doc.getString("log_id"),
+                        name = doc.getString("name"),
+                        creationDate = doc.getString("creation_date"),
+                        lastModifiedDate = doc.getString("last_modified_date"),
+                        isVisible = doc.getBoolean("is_visible"),
+                        owner = doc.data?.get("owner") as Map<String, Any>?,
+                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
+                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
+                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
+                    )
+                })
+            } catch (e: Exception) {
+                Log.w(tag, "Error receiving logs document", e)
             }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving logs document", e) }
+        }
 
-        return logs
+        userOwned.await()
+        userCollab.await()
+
+        logs
     }
 
     fun updateLog(logId: String, updateData: Map<String, Any?>) {
@@ -164,55 +174,57 @@ class LogRepository {
     }
 
     // TODO - Get first movie id, add half sheet
-    fun getPublicLogs(userId: String): List<LogData> {
+    suspend fun getPublicLogs(userId: String): List<LogData> = coroutineScope {
         val logRef = db.collection("logs")
         val logs: MutableList<LogData> = mutableListOf()
 
         // Query for user-owned logs
-        logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("status", "PUBLIC").get()
-            .addOnSuccessListener {
-                if (!it.isEmpty) {
-                    logs.addAll(it.documents.map { doc ->
-                        @Suppress("UNCHECKED_CAST")
-                        (LogData(
-        logId = doc.getString("log_id"),
-        name = doc.getString("name"),
-        creationDate = doc.getString("creation_date"),
-        lastModifiedDate = doc.getString("last_modified_date"),
-        isVisible = doc.getBoolean("is_visible"),
-        owner = doc.data?.get("owner") as Map<String, Any>?,
-        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-    ))
-                    })
-                }
+        val userOwned = async {
+            try {
+                val snapshot = logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("status", "PUBLIC").get().await()
+                logs.addAll(snapshot.documents.map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    LogData(
+                        logId = doc.getString("log_id"),
+                        name = doc.getString("name"),
+                        creationDate = doc.getString("creation_date"),
+                        lastModifiedDate = doc.getString("last_modified_date"),
+                        isVisible = doc.getBoolean("is_visible"),
+                        owner = doc.data?.get("owner") as Map<String, Any>?,
+                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
+                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
+                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
+                    )
+                })
+            } catch (e: Exception) {
+                Log.w(tag, "Error receiving logs document", e)
             }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving logs document", e) }
+        }
 
         // Query for user in collaborators
-        logRef.orderBy("collaborators.${userId}").whereEqualTo("status", "PUBLIC").get()
-            .addOnSuccessListener {
-                if (!it.isEmpty) {
-                    logs.addAll(it.documents.map { doc ->
-                        @Suppress("UNCHECKED_CAST")
-                        (LogData(
-        logId = doc.getString("log_id"),
-        name = doc.getString("name"),
-        creationDate = doc.getString("creation_date"),
-        lastModifiedDate = doc.getString("last_modified_date"),
-        isVisible = doc.getBoolean("is_visible"),
-        owner = doc.data?.get("owner") as Map<String, Any>?,
-        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-    ))
-                    })
-                }
+        val userCollab = async {
+            try {
+                val snapshot = logRef.orderBy("collaborators.${userId}").whereEqualTo("status", "PUBLIC").get().await()
+                logs.addAll(snapshot.documents.map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    LogData(
+                        logId = doc.getString("log_id"),
+                        name = doc.getString("name"),
+                        creationDate = doc.getString("creation_date"),
+                        lastModifiedDate = doc.getString("last_modified_date"),
+                        isVisible = doc.getBoolean("is_visible"),
+                        owner = doc.data?.get("owner") as Map<String, Any>?,
+                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
+                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
+                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
+                    )
+                })
+            } catch (e: Exception) {
+                Log.w(tag, "Error receiving logs document", e)
             }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving logs document", e) }
+        }
 
-        return logs
+        logs
     }
 
     fun updateUserLogOrder(userId: String, logIds: List<Pair<String, Boolean>>) {
@@ -236,7 +248,7 @@ class LogRepository {
             .addOnFailureListener { e -> Log.w(tag, "Error writing log order", e) }
     }
 
-    fun addCollaborators(logId: String, collaborators: List<String>) {
+    suspend fun addCollaborators(logId: String, collaborators: List<String>) {
         val logRef = db.collection("logs").document(logId)
 
         // Get log data
@@ -258,6 +270,7 @@ class LogRepository {
                 )
             }
             .addOnFailureListener { e -> Log.w(tag, "Error receiving log", e) }
+            .await()
 
         if (logData == null) {
             return

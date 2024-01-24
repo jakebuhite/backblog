@@ -8,6 +8,10 @@ import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.tasks.await
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -28,7 +32,7 @@ class MovieRepository(private val movieApiService: ApiService) {
             .addOnFailureListener { e -> Log.w(tag, "Error writing log document", e) }
     }
 
-    fun markMovieAsWatched(logId: String, movieId: String) {
+    suspend fun markMovieAsWatched(logId: String, movieId: String) {
         var logData: LogData? = null
         db.collection("logs").document(logId).get()
             .addOnSuccessListener { doc ->
@@ -47,6 +51,7 @@ class MovieRepository(private val movieApiService: ApiService) {
                 )
             }
             .addOnFailureListener { e -> Log.w(tag, "Error receiving log document", e) }
+            .await()
 
         if (logData == null) {
             return
@@ -77,7 +82,7 @@ class MovieRepository(private val movieApiService: ApiService) {
             .addOnFailureListener { e -> Log.w(tag, "Error writing log document", e) }
     }
 
-    fun unMarkMovieAsWatched(logId: String, movieId: String) {
+    suspend fun unMarkMovieAsWatched(logId: String, movieId: String) {
         var logData: LogData? = null
         db.collection("logs").document(logId).get()
             .addOnSuccessListener { doc ->
@@ -96,6 +101,7 @@ class MovieRepository(private val movieApiService: ApiService) {
                 )
             }
             .addOnFailureListener { e -> Log.w(tag, "Error receiving log document", e) }
+            .await()
 
         if (logData == null) {
             return
@@ -154,10 +160,12 @@ class MovieRepository(private val movieApiService: ApiService) {
         })
     }
 
-    fun getWatchNextMovie(userId: String): Map<String, MovieData> {
+    suspend fun getWatchNextMovie(userId: String): Map<String, MovieData> {
         // Log Id -> Movie Data
         val logRepository = LogRepository()
-        val logs: List<LogData> = logRepository.getLogs(userId)
+        val logs: List<LogData> = CoroutineScope(Dispatchers.Main).async {
+            logRepository.getLogs(userId)
+        }.await()
 
         if (logs.isEmpty()) {
             return emptyMap()
