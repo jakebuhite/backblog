@@ -1,6 +1,7 @@
 package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -29,7 +30,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.navigation.NavController
 
 @Composable
-fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title: String, content: @Composable () -> Unit) {
+fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title: String, content: @Composable (scrollState: ScrollState) -> Unit) {
+
+    val scrollState = rememberScrollState()
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -39,14 +43,15 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
             backButton(navController, isBackButtonVisible)
             pageTitle(title)
-            content()
+            content(scrollState)
             Spacer(modifier = Modifier.height(70.dp))
         }
     }
+    
 }
 
 @Composable
