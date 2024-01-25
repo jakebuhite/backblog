@@ -1,6 +1,15 @@
 package com.tabka.backblogapp.ui.screens
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
@@ -11,11 +20,28 @@ private val TAG = "MovieDetailsScreen"
 @Composable
 fun MovieDetailsScreen(navController: NavController, logId: String?) {
     val movieDetailsViewModel: MovieDetailsViewModel = viewModel()
-    val movie = movieDetailsViewModel.movie!!
+    val movie = movieDetailsViewModel.movie.collectAsState().value
 
     val hasBackButton = true
-    val pageTitle = movie
+    // Empty bc the BaseScreen placeholder is in the wrong spot for this screen's title
+    val pageTitle = ""
+
 
     BaseScreen(navController, hasBackButton, pageTitle) {
+        if (movie != null) {
+            Text(movie.originalTitle!!)
+            Text(movie.releaseDate!!)
+            if ((movie.watchProviders != null) && (movie.watchProviders.results != null)) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    movie.watchProviders.results.forEach { provider ->
+                        Text(
+                            "${provider.key}"
+                        )
+                    }
+                }
+            }
+        }
     }
 }
