@@ -15,23 +15,22 @@ class UserRepository {
     private val auth = Firebase.auth
     private val tag = "FriendsRepo"
 
-    fun addUser(userId: String, username: String, avatarPreset: Int?) {
-        // If no avatar preset provided, select default
-        val avatar = avatarPreset ?: 1
+    suspend fun addUser(userId: String, username: String, avatarPreset: Int) {
+        try {
+            val userData = UserData(
+                userId = userId,
+                username = username,
+                joinDate = System.currentTimeMillis().toString(),
+                avatarPreset = avatarPreset,
+                friends = emptyMap(),
+                blocked = emptyMap()
+            )
 
-        // Get all user data
-        val userData = UserData(
-            userId = userId,
-            username = username,
-            joinDate = System.currentTimeMillis().toString(),
-            avatarPreset = avatar,
-            friends = emptyMap(),
-            blocked = emptyMap()
-        )
-
-        db.collection("users").document(userId).set(userData)
-            .addOnSuccessListener { Log.d(tag, "User successfully written!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error writing user document", e) }
+            db.collection("users").document(userId).set(userData).await()
+            Log.d(tag, "User successfully written!")
+        } catch (e: Exception) {
+            Log.w(tag, "Error writing user document", e)
+        }
     }
 
     suspend fun getUser(userId: String): UserData? {
