@@ -41,7 +41,9 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
             backButton(navController, isBackButtonVisible)
+            Spacer(modifier = Modifier.height(40.dp))
             pageTitle(title)
             content()
             Spacer(modifier = Modifier.height(70.dp))

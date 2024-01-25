@@ -135,9 +135,10 @@ fun NextMovie(navController: NavController, movie: String?) {
             .fillMaxWidth()
     ) {
         Card(
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-            modifier = Modifier.clickable{ navController.navigate("home_movie_details_0") }
+            shape = RoundedCornerShape(5.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
+            modifier = Modifier.clickable{ navController.navigate("home_movie_details_0")
+            }
         ) {
             Box(
                 modifier = Modifier.height(200.dp)
@@ -146,7 +147,7 @@ fun NextMovie(navController: NavController, movie: String?) {
                     painter = painterResource(id = image),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
@@ -274,9 +275,11 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?) {
                 // Create Button
                 Button(
                     onClick = {
-                        createLog(logName)
-                        isSheetOpen = false
-                        logName = ""
+                        if (!logName.isNullOrEmpty()) {
+                            createLog(logName)
+                            isSheetOpen = false
+                            logName = ""
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(id = R.color.sky_blue),
@@ -375,9 +378,9 @@ fun DraggableCard(
                 }
             )
             .clickable { navController.navigate("home_log_details_${logData.logId}") },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(5.dp),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (draggedItemIndex.value == index) 15.dp else 10.dp
+            defaultElevation = if (draggedItemIndex.value == index) 20.dp else 15.dp
         )
     ) {
         Box(
@@ -391,6 +394,15 @@ fun DraggableCard(
                 contentScale = ContentScale.Crop
             )
 
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        color = Color.Black.copy(alpha = 0.75f), // Transparent black color
+                        shape = RoundedCornerShape(5.dp)
+                    )
+            )
+
             // Text overlay
             Text(
                 text = logData.name!!,
@@ -398,15 +410,10 @@ fun DraggableCard(
                 color = Color.White,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .size(175.dp)
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .align(Alignment.Center)
                     .wrapContentHeight(align = Alignment.CenterVertically)
-                    .drawBehind {
-                        drawRoundRect(
-                            color = Color.Black,
-                            cornerRadius = CornerRadius(20.dp.toPx()),
-                            alpha = 0.75f
-                        )
-                    }
             )
         }
     }
