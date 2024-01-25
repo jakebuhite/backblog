@@ -8,6 +8,7 @@ import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
+import kotlinx.coroutines.tasks.await
 
 class UserRepository {
     private val db = Firebase.firestore
@@ -33,7 +34,7 @@ class UserRepository {
             .addOnFailureListener { e -> Log.w(tag, "Error writing user document", e) }
     }
 
-    fun getUser(userId: String): UserData? {
+    suspend fun getUser(userId: String): UserData? {
         var userData : UserData? = null
 
         db.collection("users").document(userId).get()
@@ -52,11 +53,12 @@ class UserRepository {
                 }
             }
             .addOnFailureListener { e -> Log.w(tag, "Error receiving user document", e) }
+            .await()
 
         return userData
     }
 
-    fun updateUser(userId: String, updateData: Map<String, Any?>) {
+    suspend fun updateUser(userId: String, updateData: Map<String, Any?>) {
         val updatedUserObj = mutableMapOf<String, Any>()
 
         // Add the modified properties to updatedUserObj
@@ -70,20 +72,22 @@ class UserRepository {
             db.collection("users").document(userId).update(updatedUserObj)
                 .addOnSuccessListener { Log.d(tag, "User successfully written!") }
                 .addOnFailureListener { e -> Log.w(tag, "Error writing user document", e) }
+                .await()
         }
 
         // Check if password is provided in the request body
         updateData["password"]?.let {
             auth.currentUser!!.updatePassword(updateData["password"] as String)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        Log.d(tag, "User password updated.")
-                    }
+                .addOnSuccessListener {
+                    Log.d(tag, "User password updated.")
+                }
+                .addOnFailureListener {
+                    Log.d(tag, "Failed to update user password.")
                 }
         }
     }
 
-    fun getLogRequests(userId: String): List<LogRequestData> {
+    suspend fun getLogRequests(userId: String): List<LogRequestData> {
         var logRequests = emptyList<DocumentSnapshot>()
 
         db.collection("log_requests")
@@ -94,6 +98,7 @@ class UserRepository {
                 logRequests = it.documents
             }
             .addOnFailureListener { e -> Log.w(tag, "Error receiving log request document", e) }
+            .await()
 
         val logRequestData = logRequests.map { e ->
             LogRequestData(
@@ -108,7 +113,7 @@ class UserRepository {
         return logRequestData
     }
 
-    fun getFriendRequests(userId: String): List<FriendRequestData> {
+    suspend fun getFriendRequests(userId: String): List<FriendRequestData> {
         var friendRequests = emptyList<DocumentSnapshot>()
 
         db.collection("friend_requests")
@@ -119,6 +124,7 @@ class UserRepository {
                 friendRequests = it.documents
             }
             .addOnFailureListener { e -> Log.w(tag, "Error receiving friend request document", e) }
+            .await()
 
         val friendRequestData = friendRequests.map { e ->
             FriendRequestData(
