@@ -209,7 +209,7 @@ class MovieRepository(private val movieApiService: ApiService) {
         return result
     }
 
-    private fun getMovieById(movieId: String, onResponse: (MovieData?) -> Unit, onFailure: (String) -> Unit) {
+    fun getMovieById(movieId: String, onResponse: (MovieData?) -> Unit, onFailure: (String) -> Unit) {
         val call = movieApiService.getMovieDetails(
             movieId = movieId,
             appendToResponse = "images,release_dates,watch/providers,credits",

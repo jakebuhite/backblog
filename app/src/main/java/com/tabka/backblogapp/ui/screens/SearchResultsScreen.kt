@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,6 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
+import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
 import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
@@ -44,15 +47,16 @@ fun SearchResultsScreen(navController: NavController) {
     val pageTitle = "Results"
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        SearchBar()
+        SearchBar(navController)
 /*        Text("Click here to go to movie details page",
             modifier = Modifier.clickable { navController.navigate("search_movie_details_128") }
         )*/
     }
 }
 
-/*@Composable
-fun SearchBar() {
+/*
+@Composable
+fun SearchBar(navController: NavController) {
     val searchResultsViewModel: SearchResultsViewModel = viewModel()
     var text by remember { mutableStateOf("") }
 
@@ -78,20 +82,29 @@ fun SearchBar() {
 
     val movieResults =  searchResultsViewModel.movieResults.collectAsState().value
     if (!movieResults.isNullOrEmpty()) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            movieResults.forEach { movie ->
-                Text("${movie.originalTitle}")
-            }
-        }
+        ListMovieResults(navController, movieResults)
     } else if (text.isNotEmpty()){
         Text("No results")
     }
+}
+
+@Composable
+fun ListMovieResults(navController: NavController, movieResults: List<MovieSearchResult>) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        movieResults.forEach { movie ->
+            Text(
+                "${movie.originalTitle}",
+                modifier = Modifier
+                    .height(100.dp)
+                    .clickable { navController.navigate("search_movie_details_${movie.id}") }
+            )
+        }
 }*/
 
 @Composable
-fun SearchBar() {
+fun SearchBar(navController: NavController) {
     val searchResultsViewModel: SearchResultsViewModel = viewModel()
     var text by remember { mutableStateOf("") }
 
