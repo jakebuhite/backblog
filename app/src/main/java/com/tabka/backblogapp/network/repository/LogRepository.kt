@@ -5,9 +5,14 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.util.DataResult
+import com.tabka.backblogapp.util.FirebaseError
+import com.tabka.backblogapp.util.FirebaseExceptionType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 
 class LogRepository {
@@ -15,300 +20,234 @@ class LogRepository {
     private val db = Firebase.firestore
     private val tag = "FriendsRepo"
 
-    fun addLog(name: String, isVisible: Boolean, ownerId: String) {
-        // Get all log data
-        val logData = mapOf(
-            "name" to name,
-            "creation_date" to System.currentTimeMillis().toString(),
-            "last_modified_date" to System.currentTimeMillis().toString(),
-            "is_visible" to isVisible,
-            "owner" to mapOf("user_id" to ownerId, "priority" to 0),
-            "collaborators" to emptyMap<String, Map<String, Int>>(),
-            "movie_ids" to emptyMap<String, Boolean>(),
-            "watched_ids" to emptyMap<String, Boolean>()
-        )
+    suspend fun addLog(name: String, isVisible: Boolean, ownerId: String): DataResult<Boolean> {
+        return try {
+            // Get all log data
+            val logData = mapOf(
+                "name" to name,
+                "creation_date" to System.currentTimeMillis().toString(),
+                "last_modified_date" to System.currentTimeMillis().toString(),
+                "is_visible" to isVisible,
+                "owner" to mapOf("user_id" to ownerId, "priority" to 0),
+                "collaborators" to emptyMap<String, Map<String, Int>>(),
+                "movie_ids" to emptyMap<String, Boolean>(),
+                "watched_ids" to emptyMap<String, Boolean>()
+            )
 
-        db.collection("logs").add(logData)
-            .addOnSuccessListener { Log.d(tag, "Log successfully written!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error writing log document", e) }
+            db.collection("logs").add(logData).await()
+
+            Log.d(tag, "Log successfully written!")
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error writing log document", e)
+            DataResult.Failure(e)
+        }
     }
 
-    // TODO - Append movie data, Add half sheet
-    suspend fun getLog(logId: String): LogData? {
-        var logData: LogData? = null
-        db.collection("logs").document(logId).get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    Log.d(tag, "Log successfully written!")
-                    @Suppress("UNCHECKED_CAST")
-                    logData = LogData(
-                        logId = doc.getString("log_id"),
-                        name = doc.getString("name"),
-                        creationDate = doc.getString("creation_date"),
-                        lastModifiedDate = doc.getString("last_modified_date"),
-                        isVisible = doc.getBoolean("is_visible"),
-                        owner = doc.data?.get("owner") as Map<String, Any>?,
-                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                    )
-                } else {
-                    Log.d(tag, "Log not found.")
+    suspend fun getLog(logId: String): DataResult<LogData> {
+        return try {
+            val doc = db.collection("logs").document(logId).get().await()
+            if (doc.exists()) {
+                Log.d(tag, "Log successfully written!")
+                DataResult.Success(Json.decodeFromString(Json.encodeToString(doc)))
+            } else {
+                Log.d(tag, "Log not found.")
+                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
+            }
+        } catch (e: Exception) {
+            Log.w(tag, "Error reading log", e)
+            DataResult.Failure(e)
+        }
+    }
+
+    suspend fun getLogs(userId: String, private: Boolean): DataResult<List<LogData>> {
+        return try {
+            coroutineScope {
+                // Query logs based on the owner_id field
+                val logRef = db.collection("logs")
+                val logs: MutableList<LogData> = mutableListOf()
+
+                val userOwned = async {
+                    try {
+                        val snapshot = if (private) {
+                            logRef.whereEqualTo("owner.user_id", userId)
+                        } else {
+                            logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("status", "PUBLIC")
+                        }.get().await()
+                        logs.addAll(snapshot.documents.map { doc ->
+                            Json.decodeFromString(Json.encodeToString(doc.data))
+                        })
+                    } catch (e: Exception) {
+                        Log.w(tag, "Error receiving logs document (userOwned)", e)
+                        return@async DataResult.Failure(e)
+                    }
                 }
+
+                val userCollab = async {
+                    try {
+                        val snapshot = if (private) {
+                            logRef.orderBy("collaborators.${userId}")
+                        } else {
+                            logRef.orderBy("collaborators.${userId}").whereEqualTo("status", "PUBLIC")
+                        }.get().await()
+                        logs.addAll(snapshot.documents.map { doc ->
+                            Json.decodeFromString(Json.encodeToString(doc.data))
+                        })
+                    } catch (e: Exception) {
+                        Log.w(tag, "Error receiving logs document (userCollab)", e)
+                        return@async DataResult.Failure(e)
+                    }
+                }
+
+                userOwned.await()
+                userCollab.await()
+
+                DataResult.Success(logs)
             }
-            .addOnFailureListener { e -> Log.w(tag, "Error reading log", e) }
-            .await()
-
-        return logData
-    }
-
-    // TODO - Add half sheet
-    suspend fun getLogs(userId: String): List<LogData> = coroutineScope {
-        // Query logs based on the owner_id field
-        val logRef = db.collection("logs")
-
-        val logs: MutableList<LogData> = mutableListOf()
-
-        // Query for user-owned logs
-        val userOwned = async {
-            try {
-                val snapshot = logRef.whereEqualTo("owner.user_id", userId).get().await()
-                logs.addAll(snapshot.documents.map { doc ->
-                    @Suppress("UNCHECKED_CAST")
-                    LogData(
-                        logId = doc.getString("log_id"),
-                        name = doc.getString("name"),
-                        creationDate = doc.getString("creation_date"),
-                        lastModifiedDate = doc.getString("last_modified_date"),
-                        isVisible = doc.getBoolean("is_visible"),
-                        owner = doc.data?.get("owner") as Map<String, Any>?,
-                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                    )
-                })
-            } catch (e: Exception) {
-                Log.w(tag, "Error receiving logs document", e)
-            }
-        }
-
-        // Query for user in collaborators
-        val userCollab = async {
-            try {
-                val snapshot = logRef.orderBy("collaborators.${userId}").get().await()
-                logs.addAll(snapshot.documents.map { doc ->
-                    @Suppress("UNCHECKED_CAST")
-                    LogData(
-                        logId = doc.getString("log_id"),
-                        name = doc.getString("name"),
-                        creationDate = doc.getString("creation_date"),
-                        lastModifiedDate = doc.getString("last_modified_date"),
-                        isVisible = doc.getBoolean("is_visible"),
-                        owner = doc.data?.get("owner") as Map<String, Any>?,
-                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                    )
-                })
-            } catch (e: Exception) {
-                Log.w(tag, "Error receiving logs document", e)
-            }
-        }
-
-        userOwned.await()
-        userCollab.await()
-
-        logs
-    }
-
-    fun updateLog(logId: String, updateData: Map<String, Any?>) {
-        val updatedLogObj = mutableMapOf<String, Any>()
-
-        // Add the modified properties to updatedUserObj
-        updateData["name"]?.let { updatedLogObj["name"] = it }
-        updateData["status"]?.let { updatedLogObj["status"] = it }
-        updateData["movie_ids"]?.let { updatedLogObj["movie_ids"] = it }
-        updateData["watched_ids"]?.let { updatedLogObj["watched_ids"] = it }
-
-        if (updatedLogObj.isNotEmpty()) {
-            // Update Firestore user document
-            updatedLogObj["last_modified_date"] = System.currentTimeMillis().toString()
-            db.collection("logs").document(logId).update(updatedLogObj)
-                .addOnSuccessListener { Log.d(tag, "Log successfully updated!") }
-                .addOnFailureListener { e -> Log.w(tag, "Error updating log document", e) }
+        } catch (e: Exception) {
+            Log.w(tag, "Error fetching logs", e)
+            DataResult.Failure(e)
         }
     }
 
-    fun updateLogsBatch(logs: List<LogData>) {
-        val batch = db.batch()
-
-        // Iterate through each log in the array
-        logs.forEach { log ->
+    suspend fun updateLog(logId: String, updateData: Map<String, Any?>): DataResult<Boolean> {
+        try {
+            val logRef = db.collection("logs").document(logId)
             val updatedLogObj = mutableMapOf<String, Any>()
 
             // Add the modified properties to updatedUserObj
-            log.name?.let { updatedLogObj["name"] = it }
-            log.isVisible?.let { updatedLogObj["is_visible"] = it }
-            log.movieIds?.let { updatedLogObj["movie_ids"] = it }
-            log.watchedIds?.let { updatedLogObj["watched_ids"] = it }
+            updateData["name"]?.let { updatedLogObj["name"] = it }
+            updateData["status"]?.let { updatedLogObj["status"] = it }
+            updateData["movie_ids"]?.let { updatedLogObj["movie_ids"] = it }
+            updateData["watched_ids"]?.let { updatedLogObj["watched_ids"] = it }
 
-            // Update log in the batch
             if (updatedLogObj.isNotEmpty()) {
                 // Update Firestore user document
                 updatedLogObj["last_modified_date"] = System.currentTimeMillis().toString()
-                batch.update(db.collection("logs").document(log.logId!!), updatedLogObj)
+                logRef.update(updatedLogObj).await()
             }
-        }
 
-        // Commit the batch
-        batch.commit()
-            .addOnSuccessListener { Log.d(tag, "Logs successfully updated!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error batch updating log documents", e) }
+            Log.d(tag, "Log successfully updated!")
+            return DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating log", e)
+            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
+        }
     }
 
-    fun deleteLog(logId: String) {
-        // Delete log
-        db.collection("logs").document(logId).delete()
-            .addOnSuccessListener { Log.d(tag, "Log successfully deleted!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error deleting log", e) }
+    suspend fun updateLogsBatch(logs: List<LogData>): DataResult<Boolean> {
+        try {
+            val batch = db.batch()
+
+            // Iterate through each log in the array
+            logs.forEach { log ->
+                val updatedLogObj = mutableMapOf<String, Any>()
+
+                // Add the modified properties to updatedUserObj
+                log.name?.let { updatedLogObj["name"] = it }
+                log.isVisible?.let { updatedLogObj["is_visible"] = it }
+                log.movieIds?.let { updatedLogObj["movie_ids"] = it }
+                log.watchedIds?.let { updatedLogObj["watched_ids"] = it }
+
+                // Update log in the batch
+                if (updatedLogObj.isNotEmpty()) {
+                    // Update Firestore user document
+                    updatedLogObj["last_modified_date"] = System.currentTimeMillis().toString()
+                    batch.update(db.collection("logs").document(log.logId!!), updatedLogObj)
+                }
+            }
+
+            // Commit the batch
+            batch.commit().await()
+
+            Log.d(tag, "Logs successfully updated!")
+            return DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating logs", e)
+            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
+        }
     }
 
-    // TODO - Get first movie id, add half sheet
-    suspend fun getPublicLogs(userId: String): List<LogData> = coroutineScope {
-        val logRef = db.collection("logs")
-        val logs: MutableList<LogData> = mutableListOf()
-
-        // Query for user-owned logs
-        val userOwned = async {
-            try {
-                val snapshot = logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("status", "PUBLIC").get().await()
-                logs.addAll(snapshot.documents.map { doc ->
-                    @Suppress("UNCHECKED_CAST")
-                    LogData(
-                        logId = doc.getString("log_id"),
-                        name = doc.getString("name"),
-                        creationDate = doc.getString("creation_date"),
-                        lastModifiedDate = doc.getString("last_modified_date"),
-                        isVisible = doc.getBoolean("is_visible"),
-                        owner = doc.data?.get("owner") as Map<String, Any>?,
-                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                    )
-                })
-            } catch (e: Exception) {
-                Log.w(tag, "Error receiving logs document", e)
-            }
+    suspend fun deleteLog(logId: String): DataResult<Boolean> {
+        return try {
+            db.collection("logs").document(logId).delete().await()
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error deleting log", e)
+            DataResult.Failure(e)
         }
-
-        // Query for user in collaborators
-        val userCollab = async {
-            try {
-                val snapshot = logRef.orderBy("collaborators.${userId}").whereEqualTo("status", "PUBLIC").get().await()
-                logs.addAll(snapshot.documents.map { doc ->
-                    @Suppress("UNCHECKED_CAST")
-                    LogData(
-                        logId = doc.getString("log_id"),
-                        name = doc.getString("name"),
-                        creationDate = doc.getString("creation_date"),
-                        lastModifiedDate = doc.getString("last_modified_date"),
-                        isVisible = doc.getBoolean("is_visible"),
-                        owner = doc.data?.get("owner") as Map<String, Any>?,
-                        collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                        movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                        watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                    )
-                })
-            } catch (e: Exception) {
-                Log.w(tag, "Error receiving logs document", e)
-            }
-        }
-
-        logs
     }
 
-    fun updateUserLogOrder(userId: String, logIds: List<Pair<String, Boolean>>) {
-        val batch = db.batch()
+    suspend fun updateUserLogOrder(userId: String, logIds: List<Pair<String, Boolean>>): DataResult<Boolean> {
+        return try {
+            val batch = db.batch()
 
-        // Iterate through each log_id in the array
-        logIds.forEachIndexed { index, log ->
-            // Update log priority in the batch
-            // Boolean represents whether user owns this log
-            val logRef = db.collection("logs").document(log.first)
-            if (log.second) {
-                batch.update(logRef, mapOf("owner.priority" to index))
-            } else {
-                batch.update(logRef, mapOf("collaborators.$userId.priority" to index))
+            // Iterate through each log_id in the array
+            logIds.forEachIndexed { index, log ->
+                // Update log priority in the batch
+                // Boolean represents whether user owns this log
+                val logRef = db.collection("logs").document(log.first)
+                if (log.second) {
+                    batch.update(logRef, mapOf("owner.priority" to index))
+                } else {
+                    batch.update(logRef, mapOf("collaborators.$userId.priority" to index))
+                }
             }
-        }
 
-        // Commit the batch
-        batch.commit()
-            .addOnSuccessListener { Log.d(tag, "Log order successfully written!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error writing log order", e) }
+            // Commit the batch
+            batch.commit().await()
+
+            Log.d(tag, "Log order successfully written!")
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error writing log order", e)
+            DataResult.Failure(e)
+        }
     }
 
-    suspend fun addCollaborators(logId: String, collaborators: List<String>) {
-        val logRef = db.collection("logs").document(logId)
+    suspend fun addCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
+        return try {
+            val logRef = db.collection("logs").document(logId)
 
-        // Get log data
-        var logData: LogData? = null
-        logRef.get()
-            .addOnSuccessListener { doc ->
-                Log.d(tag, "Log successfully received!")
-                @Suppress("UNCHECKED_CAST")
-                logData = LogData(
-                    logId = doc.getString("log_id"),
-                    name = doc.getString("name"),
-                    creationDate = doc.getString("creation_date"),
-                    lastModifiedDate = doc.getString("last_modified_date"),
-                    isVisible = doc.getBoolean("is_visible"),
-                    owner = doc.data?.get("owner") as Map<String, Any>?,
-                    collaborators = doc.data?.get("collaborators") as Map<String, Map<String, Int>>?,
-                    movieIds = doc.data?.get("movie_ids") as Map<String, Boolean>?,
-                    watchedIds = doc.data?.get("watched_ids") as Map<String, Boolean>?
-                )
-            }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving log", e) }
-            .await()
+            val collabs = mutableMapOf<String, Any>()
 
-        if (logData == null) {
-            return
-        }
-
-        val collabs = mutableMapOf<String, Map<String, Int>>()
-
-        // Iterate through each collaborator in the array
-        collaborators.forEach { collaborator ->
-            // Check if the user is already a collaborator
-            if (logData!!.collaborators?.get(collaborator) != null) {
-                Log.w(tag, "User is already a collaborator for this log.")
-            } else {
+            // Iterate through each collaborator in the array
+            collaborators.forEach { collaborator ->
                 // Add collaborator to the updatedCollaborators object
-                collabs[collaborator] = mapOf("priority" to 0)
+                collabs["collaborators.${collaborator}"] = true
             }
-        }
 
-        // Add collaborators to the log
-        logRef.update(mapOf("collaborators" to FieldValue.arrayUnion(collabs)))
-            .addOnSuccessListener { Log.d(tag, "Collaborators successfully updated!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error updating collaborators", e) }
+            // Remove collaborators from the log
+            logRef.update(collabs).await()
+
+            Log.d(tag, "Collaborators successfully updated!")
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating collaborators", e)
+            DataResult.Failure(e)
+        }
     }
 
-    fun removeCollaborators(logId: String, collaborators: List<String>) {
-        val logRef = db.collection("logs").document(logId)
+    suspend fun removeCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
+        return try {
+            val logRef = db.collection("logs").document(logId)
 
-        val collabs = mutableMapOf<String, Any>()
+            val collabs = mutableMapOf<String, Any>()
 
-        // Iterate through each collaborator in the array
-        collaborators.forEach { collaborator ->
-            // Remove collaborator from the updatedCollaborators object
-            collabs["collaborators.${collaborator}"] = FieldValue.delete()
+            // Iterate through each collaborator in the array
+            collaborators.forEach { collaborator ->
+                // Remove collaborator from the updatedCollaborators object
+                collabs["collaborators.${collaborator}"] = FieldValue.delete()
+            }
+
+            // Remove collaborators from the log
+            logRef.update(collabs).await()
+
+            Log.d(tag, "Collaborators successfully updated!")
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating collaborators", e)
+            DataResult.Failure(e)
         }
-
-        // Remove collaborators from the log
-        logRef.update(collabs)
-            .addOnSuccessListener { Log.d(tag, "Collaborators successfully updated!") }
-            .addOnFailureListener { e -> Log.w(tag, "Error updating collaborators", e) }
     }
 }
