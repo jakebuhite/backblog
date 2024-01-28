@@ -2,11 +2,11 @@ package com.tabka.backblogapp.ui.bottomnav
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.unit.Dp
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,18 +22,19 @@ import com.tabka.backblogapp.ui.screens.LoginScreen
 import com.tabka.backblogapp.ui.screens.MovieDetailsScreen
 import com.tabka.backblogapp.ui.screens.SearchResultsScreen
 import com.tabka.backblogapp.ui.screens.SearchScreen
+import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
-    val startDest = remember { mutableStateOf("login") }
+    var startDest by remember { mutableStateOf("login") }
     val auth = Firebase.auth
     auth.addAuthStateListener {
-        if (auth.currentUser == null) {
-            startDest.value = "login"
+        startDest = if (auth.currentUser == null) {
+            "login"
         } else {
-            startDest.value = "friends"
+            "friends"
         }
     }
 
@@ -80,7 +81,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
         }
 
-        navigation(startDestination = startDest.value, route = BottomNavigationBar.Friends.route) {
+        navigation(startDestination = startDest, route = BottomNavigationBar.Friends.route) {
 
             composable(route = "friends") {
                 FriendsScreen(navController)
@@ -92,6 +93,10 @@ fun BottomNavGraph(navController: NavHostController) {
 
             composable(route = "signup") {
                 SignupScreen(navController)
+            }
+
+            composable(route = "settings") {
+                SettingsScreen(navController)
             }
         }
     }
