@@ -1,5 +1,6 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.graphics.Paint.Align
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -7,12 +8,17 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -32,6 +39,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
@@ -42,6 +52,7 @@ import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
 import org.burnoutcrew.reorderable.reorderable
 import kotlin.math.ceil
+import androidx.compose.material.TextField
 
 
 private val TAG = "HomeScreen"
@@ -205,7 +216,7 @@ fun NextMovieInfo(movie: String) {
 @Composable
 fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollState: ScrollState) {
 
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
     }
@@ -241,19 +252,35 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                 colorFilter = tint(color = colorResource(id = R.color.sky_blue))
             )
         }
+    }
 
-        // Add Log Menu
-        var logName by remember { mutableStateOf("") }
+    // Add Log Menu
+    var logName by remember { mutableStateOf("") }
 
-        if (isSheetOpen) {
-            ModalBottomSheet(
-                sheetState = sheetState,
-                onDismissRequest = { isSheetOpen = false },
-                containerColor = colorResource(id = R.color.bottomnav),
-                modifier = Modifier.fillMaxSize()
+    if (isSheetOpen) {
+        ModalBottomSheet(
+            sheetState = sheetState,
+            onDismissRequest = { isSheetOpen = false },
+            containerColor = colorResource(id = R.color.bottomnav),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val focusManager = LocalFocusManager.current
+
+            Row(modifier = Modifier
+                .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically) {
+                Text("New Log",
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center)
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Row(modifier = Modifier.padding(horizontal = 50.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val focusManager = LocalFocusManager.current
-
                 // Log Name
                 TextField(
                     value = logName,
@@ -262,10 +289,103 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                     singleLine = true,
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            focusManager.clearFocus() }
+                            focusManager.clearFocus()
+                        }
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color(0xFF373737),
+                        focusedLabelColor = Color(0xFF979C9E),
+                        unfocusedLabelColor = Color(0xFF979C9E),
+                        unfocusedBorderColor = Color(0xFF373737),
+                        backgroundColor = Color(0xFF373737)
+                    ),
                 )
+            }
+
+            Spacer(modifier = Modifier.height(50.dp))
+
+            // Collaborators Heading
+            Row(modifier = Modifier.padding(start = 14.dp)) {
+                Text("Collaborators", style = MaterialTheme.typography.headlineMedium)
+            }
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            LazyRow(modifier = Modifier.padding(start = 24.dp)) {
+                items(4) { index ->
+                    Column() {
+                        Image(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(60.dp),
+                            colorFilter = tint(color = colorResource(id = R.color.white))
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Add Collaborators Heading
+            Row(modifier = Modifier.padding(start = 14.dp)) {
+                Text("Add Collaborators", style = MaterialTheme.typography.headlineMedium)
+            }
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            Box(modifier = Modifier.height(265.dp)) {
+                LazyColumn(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    items(4) { index ->
+                        Row(
+                            modifier = Modifier.padding(bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            // User Icon
+                            Column(modifier = Modifier.weight(1F)) {
+                                Image(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.size(60.dp),
+                                    colorFilter = tint(color = colorResource(id = R.color.white))
+                                )
+                            }
+
+                            // Username
+                            Column(
+                                modifier = Modifier
+                                    .weight(3F)
+                                    .height(60.dp),
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text("Username", style = MaterialTheme.typography.bodyLarge)
+                            }
+
+                            // Add Button
+                            Column(
+                                modifier = Modifier
+                                    .weight(1F)
+                                    .height(60.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.add),
+                                    contentDescription = "Add Icon",
+                                    modifier = Modifier.size(25.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center) {
                 // Create Button
                 Button(
                     onClick = {
@@ -275,16 +395,21 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                             logName = ""
                         }
                     },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(horizontal = 24.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(id = R.color.sky_blue),
                         disabledContainerColor = colorResource(id = R.color.sky_blue)
-                    )
+                    ),
                 ) {
-                    Text("Create Log")
+                    Text("Create", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
+
 
     Spacer(modifier = Modifier.height(15.dp))
 
@@ -296,7 +421,10 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
 
 
 @Composable
-fun VerticalReorderGrid(navController: NavController, allLogs: List<LogData>) {
+fun VerticalReorderGrid(
+    navController: NavController,
+    allLogs: List<LogData>
+) {
 
     val logs = remember { mutableStateOf(allLogs) }
     val state = rememberReorderableLazyGridState( onMove = { from, to ->
@@ -315,7 +443,6 @@ fun VerticalReorderGrid(navController: NavController, allLogs: List<LogData>) {
         columns = GridCells.Fixed(2),
         state = state.gridState,
         modifier = Modifier
-
             .reorderable(state)
             .detectReorderAfterLongPress(state)
             .height(height),
@@ -349,9 +476,9 @@ fun VerticalReorderGrid(navController: NavController, allLogs: List<LogData>) {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                            color = Color.Black.copy(alpha = 0.75f), // Transparent black color
-                            shape = RoundedCornerShape(5.dp)
-                        )
+                                    color = Color.Black.copy(alpha = 0.75f), // Transparent black color
+                                    shape = RoundedCornerShape(5.dp)
+                                )
                       )
 
                         // Text overlay
@@ -367,9 +494,6 @@ fun VerticalReorderGrid(navController: NavController, allLogs: List<LogData>) {
                             .wrapContentHeight(align = Alignment.CenterVertically)
                        )
                     }
-                    
-                  }
-
                 }
             }
         }
