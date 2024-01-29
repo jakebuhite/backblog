@@ -3,137 +3,131 @@ package com.tabka.backblogapp.network.repository
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
+import com.tabka.backblogapp.util.DataResult
+import com.tabka.backblogapp.util.FirebaseError
+import com.tabka.backblogapp.util.FirebaseExceptionType
+import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class UserRepository {
     private val db = Firebase.firestore
     private val auth = Firebase.auth
-    private val tag = "FriendsRepo"
+    private val tag = "UsersRepo"
 
-    suspend fun addUser(userId: String, username: String, avatarPreset: Int) {
+    suspend fun addUser(userId: String, username: String, avatarPreset: Int): DataResult<Boolean> {
         try {
-            val userData = UserData(
-                userId = userId,
-                username = username,
-                joinDate = System.currentTimeMillis().toString(),
-                avatarPreset = avatarPreset,
-                friends = emptyMap(),
-                blocked = emptyMap()
+            val userData = mapOf(
+                "userId" to userId,
+                "username" to username,
+                "joinDate" to System.currentTimeMillis().toString(),
+                "avatarPreset" to avatarPreset,
+                "friends" to emptyMap<String, Boolean>(),
+                "blocked" to emptyMap<String, Boolean>()
             )
 
             db.collection("users").document(userId).set(userData).await()
+
             Log.d(tag, "User successfully written!")
+            return DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error writing user document", e)
+            return DataResult.Failure(e)
         }
     }
 
-    suspend fun getUser(userId: String): UserData? {
-        var userData : UserData? = null
+    suspend fun getUser(userId: String): DataResult<UserData> {
+        try {
+            val result = db.collection("users").document(userId).get().await()
 
-        db.collection("users").document(userId).get()
-            .addOnSuccessListener {
-                Log.d(tag, "User successfully received!")
-                if (it.exists()) {
-                    @Suppress("UNCHECKED_CAST")
-                    userData = UserData(
-                        userId = it.getString("user_id"),
-                        username = it.getString("username"),
-                        joinDate = it.getString("join_date"),
-                        avatarPreset = it.getLong("avatar_preset")!!.toInt(),
-                        friends = it.data?.get("friends") as Map<String, Boolean>?,
-                        blocked = it.data?.get("friends") as Map<String, Boolean>?
-                    )
-                }
+            return if (result != null && result.exists()) {
+                val data = result.data
+
+                val userData = Json.decodeFromString<UserData>(Json.encodeToString(data.toJsonElement()))
+
+                DataResult.Success(userData)
+            } else {
+                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
             }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving user document", e) }
-            .await()
-
-        return userData
+        } catch (e: Exception) {
+            Log.w(tag, "Error receiving user document", e)
+            return DataResult.Failure(e)
+        }
     }
 
-    suspend fun updateUser(userId: String, updateData: Map<String, Any?>) {
-        val updatedUserObj = mutableMapOf<String, Any>()
+    suspend fun updateUser(userId: String, updateData: Map<String, Any?>): DataResult<Boolean> {
+        try {
+            val updatedUserObj = mutableMapOf<String, Any>()
 
-        // Add the modified properties to updatedUserObj
-        updateData["username"]?.let { updatedUserObj["username"] = it }
-        updateData["avatarPreset"]?.let { updatedUserObj["avatar_preset"] = it }
-        updateData["friends"]?.let { updatedUserObj["friends"] = it }
-        updateData["blocked"]?.let { updatedUserObj["blocked"] = it }
+            // Add the modified properties to updatedUserObj
+            updateData["username"]?.let { updatedUserObj["username"] = it }
+            updateData["avatarPreset"]?.let { updatedUserObj["avatar_preset"] = it }
+            updateData["friends"]?.let { updatedUserObj["friends"] = it }
+            updateData["blocked"]?.let { updatedUserObj["blocked"] = it }
 
-        if (updatedUserObj.isNotEmpty()) {
-            // Update Firestore user document
-            db.collection("users").document(userId).update(updatedUserObj)
-                .addOnSuccessListener { Log.d(tag, "User successfully written!") }
-                .addOnFailureListener { e -> Log.w(tag, "Error writing user document", e) }
+            if (updatedUserObj.isNotEmpty()) {
+                // Update Firestore user document
+                db.collection("users").document(userId)
+                    .update(updatedUserObj)
+                    .await()
+            }
+
+            // Check if the password is provided in the request body
+            updateData["password"]?.let {
+                auth.currentUser!!.updatePassword(it as String).await()
+            }
+
+            return DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating user", e)
+            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
+        }
+    }
+
+    suspend fun getLogRequests(userId: String): DataResult<List<LogRequestData>> {
+        try {
+            val snapshot = db.collection("log_requests")
+                .whereEqualTo("target_id", userId)
+                .get()
                 .await()
-        }
 
-        // Check if password is provided in the request body
-        updateData["password"]?.let {
-            auth.currentUser!!.updatePassword(updateData["password"] as String)
-                .addOnSuccessListener {
-                    Log.d(tag, "User password updated.")
+            return if (!snapshot.isEmpty) {
+                val logRequests = snapshot.documents.map { document ->
+                    Json.decodeFromString<LogRequestData>(Json.encodeToString(document))
                 }
-                .addOnFailureListener {
-                    Log.d(tag, "Failed to update user password.")
-                }
+                DataResult.Success(logRequests)
+            } else {
+                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
+            }
+        } catch (e: Exception) {
+            Log.w(tag, "Error receiving log request documents", e)
+            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
         }
     }
 
-    suspend fun getLogRequests(userId: String): List<LogRequestData> {
-        var logRequests = emptyList<DocumentSnapshot>()
+    suspend fun getFriendRequests(userId: String): DataResult<List<FriendRequestData>> {
+        try {
+            val snapshot = db.collection("friend_requests")
+                .whereEqualTo("target_id", userId)
+                .get()
+                .await()
 
-        db.collection("log_requests")
-            .whereEqualTo("target_id", userId)
-            .get()
-            .addOnSuccessListener {
-                Log.d(tag, "Log request successfully received!")
-                logRequests = it.documents
+            return if (!snapshot.isEmpty) {
+                val friendRequests = snapshot.documents.map { document ->
+                    Json.decodeFromString<FriendRequestData>(Json.encodeToString(document))
+                }
+                DataResult.Success(friendRequests)
+            } else {
+                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
             }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving log request document", e) }
-            .await()
-
-        val logRequestData = logRequests.map { e ->
-            LogRequestData(
-                senderId = e.getString("sender_id"),
-                targetId = e.getString("target_id"),
-                logId = e.getString("log_id"),
-                requestDate = e.getString("request_date"),
-                isComplete = e.getBoolean("is_complete")
-            )
-        }.toMutableList()
-
-        return logRequestData
-    }
-
-    suspend fun getFriendRequests(userId: String): List<FriendRequestData> {
-        var friendRequests = emptyList<DocumentSnapshot>()
-
-        db.collection("friend_requests")
-            .whereEqualTo("target_id", userId)
-            .get()
-            .addOnSuccessListener {
-                Log.d(tag, "Friend request successfully received!")
-                friendRequests = it.documents
-            }
-            .addOnFailureListener { e -> Log.w(tag, "Error receiving friend request document", e) }
-            .await()
-
-        val friendRequestData = friendRequests.map { e ->
-            FriendRequestData(
-                senderId = e.getString("sender_id"),
-                targetId = e.getString("target_id"),
-                requestDate = e.getString("request_date"),
-                isComplete = e.getBoolean("is_complete")
-            )
-        }.toMutableList()
-
-        return friendRequestData
+        } catch (e: Exception) {
+            Log.w(tag, "Error receiving friend request documents", e)
+            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
+        }
     }
 }

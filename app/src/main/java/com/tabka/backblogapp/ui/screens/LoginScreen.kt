@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.ui.shared.AuthScreen
 import com.tabka.backblogapp.ui.shared.CardGradient
 import com.tabka.backblogapp.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -41,21 +43,22 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    val hasBackButton = false
     val authViewModel = AuthViewModel()
 
-    BaseScreen(navController, hasBackButton, "") {
+    AuthScreen(navController) {
         CardGradient {
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(12.dp)
             ) {
+                val imgId = R.drawable.img_logo_80_80
                 Image(
-                    painter = painterResource(id = R.drawable.img_logo_80_80),
+                    painter = painterResource(id = imgId),
                     contentDescription = "BackBlog logo",
                     modifier = Modifier
                         .height(80.dp)
                         .fillMaxWidth()
+                        .testTag(imgId.toString())
                 )
 
                 Text("BackBlog", style = MaterialTheme.typography.headlineLarge)
@@ -73,7 +76,8 @@ fun LoginScreen(navController: NavController) {
                     label = { Text("Email") },
                     modifier = Modifier
                         .padding(12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag("EMAIL_FIELD"),
                     textStyle = TextStyle(color = Color(0xE6FFFFFF)),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -95,7 +99,8 @@ fun LoginScreen(navController: NavController) {
                     label = { Text("Password") },
                     modifier = Modifier
                         .padding(12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag("PASSWORD_FIELD"),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     textStyle = TextStyle(color = Color(0xE6FFFFFF)),
@@ -116,7 +121,7 @@ fun LoginScreen(navController: NavController) {
                 if (visible) {
                     Text(text = statusText,
                         style = MaterialTheme.typography.bodyMedium.copy(color = statusColor),
-                        modifier = Modifier.padding(top = 6.dp))
+                        modifier = Modifier.padding(top = 6.dp).testTag("STATUS_MESSAGE"))
                 }
 
                 // Login Button

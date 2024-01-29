@@ -1,15 +1,14 @@
 package com.tabka.backblogapp.network.models
 
-import com.google.firebase.firestore.PropertyName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class UserData(
-    @PropertyName("user_id")
-    val userId: String?,
+    @SerialName("user_id") val userId: String?,
     val username: String?,
-    @PropertyName("join_date")
-    val joinDate: String?,
-    @PropertyName("avatar_preset")
-    val avatarPreset: Int?,
+    @SerialName("join_date") val joinDate: String?,
+    @SerialName("avatar_preset") val avatarPreset: Int?,
     val friends: Map<String, Boolean>?,
     val blocked: Map<String, Boolean>?
 )

@@ -35,9 +35,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -124,7 +121,7 @@ fun PriorityLogTitle(logName: String) {
 @Composable
 fun NextMovie(navController: NavController, movie: String?) {
 
-    var image = R.drawable.icon_empty_log
+    val image = R.drawable.icon_empty_log
 
     if (movie != null) {
      /*   if (movie.backdrop != null) {
@@ -498,8 +495,6 @@ fun VerticalReorderGrid(
             }
         }
     }
-}
-
 
 /*
 
