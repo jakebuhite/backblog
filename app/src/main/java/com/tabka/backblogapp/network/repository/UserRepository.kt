@@ -10,6 +10,7 @@ import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
+import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -17,7 +18,7 @@ import kotlinx.serialization.json.Json
 class UserRepository {
     private val db = Firebase.firestore
     private val auth = Firebase.auth
-    private val tag = "FriendsRepo"
+    private val tag = "UsersRepo"
 
     suspend fun addUser(userId: String, username: String, avatarPreset: Int): DataResult<Boolean> {
         try {
@@ -47,7 +48,7 @@ class UserRepository {
             return if (result != null && result.exists()) {
                 val data = result.data
 
-                val userData = Json.decodeFromString<UserData>(Json.encodeToString(data))
+                val userData = Json.decodeFromString<UserData>(Json.encodeToString(data.toJsonElement()))
 
                 DataResult.Success(userData)
             } else {
