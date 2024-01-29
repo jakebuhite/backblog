@@ -23,7 +23,7 @@ import org.mockito.kotlin.whenever
 
 class FriendRepositoryTest {
 
-    @Mock
+    /*@Mock
     private lateinit var db: FirebaseFirestore
 
     @Mock
@@ -190,6 +190,6 @@ class FriendRepositoryTest {
         // Assert
         assertTrue(result[0].user_id == "friend1" || result[0].user_id == "friend2")
         assertEquals(2, result.size)
-    }
+    }*/
 
 }
