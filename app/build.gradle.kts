@@ -36,6 +36,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            enableAndroidTestCoverage = true
+            enableUnitTestCoverage = true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -59,13 +63,13 @@ android {
 }
 
 jacoco {
-    toolVersion = "0.8.9"
+    toolVersion = "0.8.0"
 }
 
-val jacocoTestReport by tasks.registering(JacocoReport::class) {
-    dependsOn("testDebugUnitTest", "connectedDebugAndroidTest")
-
+tasks.create("jacocoTestReport", JacocoReport::class) {
+    dependsOn("testDebugUnitTest", "createDebugCoverageReport")
     reports {
+        xml.required.set(true)
         html.required.set(true)
     }
 
@@ -81,10 +85,9 @@ val jacocoTestReport by tasks.registering(JacocoReport::class) {
     classDirectories.setFrom(files(debugTree))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(fileTree(buildDir) {
-        include("jacoco/testDebugUnitTest.exec", "outputs/code_coverage/debugAndroidTest/connected/*.ec")
+        include("jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec")
     })
 }
-
 
 dependencies {
 
@@ -112,7 +115,6 @@ dependencies {
     testImplementation("org.mockito:mockito-core:3.12.4")
     testImplementation("org.mockito:mockito-inline:3.12.4")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
-    //testImplementation("io.mockk:mockk:1.13.9")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.03.00"))
