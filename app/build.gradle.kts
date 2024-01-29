@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("jacoco")
     kotlin("plugin.serialization")
 }
 
@@ -57,6 +58,34 @@ android {
     }
 }
 
+jacoco {
+    toolVersion = "0.8.9"
+}
+
+val jacocoTestReport by tasks.registering(JacocoReport::class) {
+    dependsOn("testDebugUnitTest", "connectedDebugAndroidTest")
+
+    reports {
+        html.required.set(true)
+    }
+
+    val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+        exclude("**/R.class")
+        exclude("**/R$*.class")
+        exclude("**/BuildConfig.*")
+        exclude("**/Manifest*.*")
+        exclude("**/*Test*.*")
+        exclude("android/**/*.*")
+    }
+
+    classDirectories.setFrom(files(debugTree))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(fileTree(buildDir) {
+        include("jacoco/testDebugUnitTest.exec", "outputs/code_coverage/debugAndroidTest/connected/*.ec")
+    })
+}
+
+
 dependencies {
 
     implementation("androidx.core:core-ktx:1.9.0")
@@ -78,6 +107,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation(kotlin("reflect"))
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:3.12.4")
     testImplementation("org.mockito:mockito-inline:3.12.4")

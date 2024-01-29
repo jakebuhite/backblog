@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.ui.shared.AuthScreen
 import com.tabka.backblogapp.ui.shared.CardGradient
 import com.tabka.backblogapp.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -41,10 +42,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    val hasBackButton = false
     val authViewModel = AuthViewModel()
 
-    BaseScreen(navController, hasBackButton, "") {
+    AuthScreen(navController) {
         CardGradient {
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
