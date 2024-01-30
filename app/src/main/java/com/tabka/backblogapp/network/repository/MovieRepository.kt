@@ -125,7 +125,7 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieData>, response: Response<MovieData>) {
                 if (response.isSuccessful) {
                     val movieResponse = response.body()
-                    Log.d("Moviessss", movieResponse.toString())
+                    Log.d("Movies", movieResponse.toString())
                     onResponse(movieResponse)
                 } else {
                     onFailure("Error: ${response.message()}")
@@ -166,16 +166,24 @@ class MovieRepository(private val movieApiService: ApiService) {
         })
     }
 
-    fun getMovieHalfSheet(movieId: String, onResponse: (MovieImageData?) -> Unit, onFailure: (String) -> Unit) {
+    fun getMovieHalfSheet(
+        movieId: String,
+        onResponse: (String) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
         val language = "en"
-
         val call = movieApiService.getMovieHalfSheet(movieId, language, "Bearer " + BuildConfig.MOVIE_SECRET)
 
         call.enqueue(object : Callback<MovieImageData> {
             override fun onResponse(call: Call<MovieImageData>, response: Response<MovieImageData>) {
                 if (response.isSuccessful) {
                     val movieResponse = response.body()
-                    onResponse(movieResponse)
+                    if (!movieResponse?.backdrops.isNullOrEmpty()) {
+                        val filePath = movieResponse?.backdrops?.get(0)?.filePath ?: ""
+                        onResponse(filePath)
+                    } else {
+                        onFailure("No backdrops available.")
+                    }
                 } else {
                     onFailure("Error: ${response.message()}")
                 }

@@ -1,6 +1,7 @@
 package com.tabka.backblogapp.network
 
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import retrofit2.Call
 import retrofit2.http.GET
