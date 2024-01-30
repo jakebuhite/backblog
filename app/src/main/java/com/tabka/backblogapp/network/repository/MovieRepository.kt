@@ -8,6 +8,7 @@ import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
@@ -159,6 +160,27 @@ class MovieRepository(private val movieApiService: ApiService) {
 
             override fun onFailure(call: Call<MovieSearchData>, t: Throwable) {
                 Log.d("Movies", "Failure: ${t.message}")
+                onFailure("Failure: ${t.message}")
+            }
+        })
+    }
+
+    fun getMovieHalfSheet(movieId: String, onResponse: (MovieImageData?) -> Unit, onFailure: (String) -> Unit) {
+        val language = "en"
+
+        val call = movieApiService.getMovieHalfSheet(movieId, language, "Bearer " + BuildConfig.MOVIE_SECRET)
+
+        call.enqueue(object : Callback<MovieImageData> {
+            override fun onResponse(call: Call<MovieImageData>, response: Response<MovieImageData>) {
+                if (response.isSuccessful) {
+                    val movieResponse = response.body()
+                    onResponse(movieResponse)
+                } else {
+                    onFailure("Error: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MovieImageData>, t: Throwable) {
                 onFailure("Failure: ${t.message}")
             }
         })
