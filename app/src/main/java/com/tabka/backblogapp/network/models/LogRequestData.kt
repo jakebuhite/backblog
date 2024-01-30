@@ -1,6 +1,5 @@
 package com.tabka.backblogapp.network.models
 
-import com.google.firebase.firestore.PropertyName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

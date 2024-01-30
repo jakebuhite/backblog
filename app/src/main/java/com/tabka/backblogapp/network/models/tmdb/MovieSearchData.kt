@@ -1,27 +1,30 @@
 package com.tabka.backblogapp.network.models.tmdb
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MovieSearchData(
     val page: Int?,
     val results: List<MovieSearchResult>?,
-    @SerializedName("total_pages") val totalPages: Int?,
-    @SerializedName("total_results") val totalResults: Int?
+    @SerialName("total_pages") val totalPages: Int?,
+    @SerialName("total_results") val totalResults: Int?
 )
 
+@Serializable
 data class MovieSearchResult(
     val adult: Boolean?,
-    @SerializedName("backdrop_path") val backdropPath: String?,
-    @SerializedName("genre_ids") val genreIds: List<Int>?,
+    @SerialName("backdrop_path") val backdropPath: String?,
+    @SerialName("genre_ids") val genreIds: List<Int>?,
     val id: Int?,
-    @SerializedName("original_language") val originalLanguage: String?,
-    @SerializedName("original_title") val originalTitle: String?,
+    @SerialName("original_language") val originalLanguage: String?,
+    @SerialName("original_title") val originalTitle: String?,
     val overview: String?,
     val popularity: Double?,
-    @SerializedName("poster_path") val posterPath: String?,
-    @SerializedName("release_date") val releaseDate: String?,
+    @SerialName("poster_path") val posterPath: String?,
+    @SerialName("release_date") val releaseDate: String?,
     val title: String?,
     val video: Boolean?,
-    @SerializedName("vote_average") val voteAverage: Double?,
-    @SerializedName("vote_count") val voteCount: Int?
+    @SerialName("vote_average") val voteAverage: Double?,
+    @SerialName("vote_count") val voteCount: Int?
 )

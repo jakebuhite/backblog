@@ -20,9 +20,11 @@ class MovieDetailsViewModel(savedStateHandle: SavedStateHandle): ViewModel() {
     val movie = _movie.asStateFlow()
 
     init {
+        Log.d(TAG, "Movie ID: $movieId")
         movieRepository.getMovieById(movieId,
             onResponse = { movie ->
                 _movie.value = movie
+                Log.d(TAG, "GOT THE MOVIE: ${movie}")
             },
             onFailure = { error ->
                 Log.d(TAG, error)

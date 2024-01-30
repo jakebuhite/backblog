@@ -131,7 +131,7 @@ fun SearchBar(navController: NavController) {
                     .padding(top = 20.dp)
             ) {
                 items(movieResults) { movie ->
-                    MovieResult(movie)
+                    MovieResult(navController, movie)
                 }
             }
         }
@@ -141,7 +141,7 @@ fun SearchBar(navController: NavController) {
 }
 
 @Composable
-fun MovieResult(movie: MovieSearchResult) {
+fun MovieResult(navController: NavController, movie: MovieSearchResult) {
     Row(modifier = Modifier.padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
@@ -149,7 +149,9 @@ fun MovieResult(movie: MovieSearchResult) {
         // Movie Image
         Column(modifier = Modifier
             .weight(2F)
-            .fillMaxHeight()) {
+            .fillMaxHeight()
+            .clickable { navController.navigate("search_movie_details_${movie.id}") },
+        ) {
             Box(
                 modifier = Modifier
                     .width(140.dp)
@@ -170,7 +172,8 @@ fun MovieResult(movie: MovieSearchResult) {
             .weight(3F)
             .fillMaxHeight()
             .height(70.dp)
-            .padding(start = 8.dp),
+            .padding(start = 8.dp)
+            .clickable { navController.navigate("search_movie_details_${movie.id}") },
             verticalArrangement = Arrangement.Center){
             Text("${movie.originalTitle}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
         }
@@ -178,7 +181,8 @@ fun MovieResult(movie: MovieSearchResult) {
         // Add Button
         Column(modifier = Modifier
             .weight(1F)
-            .height(70.dp),
+            .height(70.dp)
+            .clickable {  },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
             Image(
