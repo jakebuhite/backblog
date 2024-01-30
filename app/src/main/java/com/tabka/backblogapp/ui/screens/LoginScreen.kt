@@ -157,6 +157,7 @@ fun LoginScreen(navController: NavController) {
                         .height(70.dp)
                         .width(150.dp)
                         .padding(12.dp)
+                        .testTag("LOGIN_BUTTON")
                 )
                 {
                     Text("LOG IN", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -166,7 +167,8 @@ fun LoginScreen(navController: NavController) {
                     style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF979C9E)),
                     modifier = Modifier.padding(top = 12.dp))
 
-                TextButton(onClick = { navController.navigate("signup")}) {
+                TextButton(onClick = { navController.navigate("signup")},
+                    modifier = Modifier.testTag("GO_TO_SIGNUP_BUTTON")) {
                     Text("Sign up", style = MaterialTheme.typography.bodyLarge.copy(textDecoration = TextDecoration.Underline, fontWeight = FontWeight.SemiBold))
                 }
 
