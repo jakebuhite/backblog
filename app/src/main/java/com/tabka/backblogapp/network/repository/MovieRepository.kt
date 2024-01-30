@@ -7,16 +7,12 @@ import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
-import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
-import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.tasks.await
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -128,8 +124,8 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieData>, response: Response<MovieData>) {
                 if (response.isSuccessful) {
                     val movieResponse = response.body()
-                    val movieData = Json.decodeFromString<MovieData>(Json.encodeToString(movieResponse.toJsonElement()))
-                    onResponse(movieData)
+                    Log.d("Moviessss", movieResponse.toString())
+                    onResponse(movieResponse)
                 } else {
                     onFailure("Error: ${response.message()}")
                 }
@@ -153,9 +149,7 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
                 if (response.isSuccessful) {
                     val movieSearchData = response.body()
-                    val movieResults = Json.decodeFromString<MovieSearchData>(Json.encodeToString(movieSearchData.toJsonElement()))
-                    Log.d("Movies", "$movieSearchData")
-                    onResponse(movieResults)
+                    onResponse(movieSearchData)
                 } else {
                     // Handle error
                     Log.d("Movies", "Error: ${response.code()} - ${response.message()}")

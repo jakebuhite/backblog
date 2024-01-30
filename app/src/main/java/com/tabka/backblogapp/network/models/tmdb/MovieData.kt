@@ -105,11 +105,13 @@ data class WatchProviders(
 @Serializable
 data class WatchProviderResult(
     val link: String?,
-    val flatrate: List<Flatrate>?
+    val buy: List<Service>?,
+    val rent: List<Service>?,
+    val flatrate: List<Service>?
 )
 
 @Serializable
-data class Flatrate(
+data class Service(
     @SerialName("logo_path") val logoPath: String?,
     @SerialName("provider_id") val providerId: Int?,
     @SerialName("provider_name") val providerName: String?,
