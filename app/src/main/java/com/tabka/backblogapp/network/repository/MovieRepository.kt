@@ -7,16 +7,13 @@ import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
-import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
-import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.tasks.await
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -128,8 +125,8 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieData>, response: Response<MovieData>) {
                 if (response.isSuccessful) {
                     val movieResponse = response.body()
-                    val movieData = Json.decodeFromString<MovieData>(Json.encodeToString(movieResponse.toJsonElement()))
-                    onResponse(movieData)
+                    Log.d("Moviessss", movieResponse.toString())
+                    onResponse(movieResponse)
                 } else {
                     onFailure("Error: ${response.message()}")
                 }
@@ -153,7 +150,6 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
                 if (response.isSuccessful) {
                     val movieSearchData = response.body()
-
                     Log.d("Movies", "$movieSearchData")
                     onResponse(movieSearchData)
                 } else {
@@ -165,6 +161,27 @@ class MovieRepository(private val movieApiService: ApiService) {
 
             override fun onFailure(call: Call<MovieSearchData>, t: Throwable) {
                 Log.d("Movies", "Failure: ${t.message}")
+                onFailure("Failure: ${t.message}")
+            }
+        })
+    }
+
+    fun getMovieHalfSheet(movieId: String, onResponse: (MovieImageData?) -> Unit, onFailure: (String) -> Unit) {
+        val language = "en"
+
+        val call = movieApiService.getMovieHalfSheet(movieId, language, "Bearer " + BuildConfig.MOVIE_SECRET)
+
+        call.enqueue(object : Callback<MovieImageData> {
+            override fun onResponse(call: Call<MovieImageData>, response: Response<MovieImageData>) {
+                if (response.isSuccessful) {
+                    val movieResponse = response.body()
+                    onResponse(movieResponse)
+                } else {
+                    onFailure("Error: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MovieImageData>, t: Throwable) {
                 onFailure("Failure: ${t.message}")
             }
         })
