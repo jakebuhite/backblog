@@ -37,7 +37,6 @@ class LogViewModel : ViewModel() {
             add(to, removeAt(from))
         }
         localLogRepository.reorderLogs(allLogs.value!!)
-        Log.d(TAG, _allLogs.value.toString())
     }
 
 

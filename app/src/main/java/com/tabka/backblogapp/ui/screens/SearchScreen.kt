@@ -123,6 +123,9 @@ fun Category(genre: String) {
             .width(190.dp)
             .padding(end = 20.dp),
         shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
         Box(
@@ -191,6 +194,9 @@ fun FriendMovie() {
                         .height(180.dp)
                         .width(140.dp),
                     shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Transparent
+                    ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                 )
                 {

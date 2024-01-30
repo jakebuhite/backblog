@@ -153,9 +153,9 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
                 if (response.isSuccessful) {
                     val movieSearchData = response.body()
-                    val movieResults = Json.decodeFromString<MovieSearchData>(Json.encodeToString(movieSearchData.toJsonElement()))
+
                     Log.d("Movies", "$movieSearchData")
-                    onResponse(movieResults)
+                    onResponse(movieSearchData)
                 } else {
                     // Handle error
                     Log.d("Movies", "Error: ${response.code()} - ${response.message()}")
