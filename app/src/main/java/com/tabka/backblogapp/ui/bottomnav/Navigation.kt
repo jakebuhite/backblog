@@ -72,8 +72,6 @@ fun RowScope.AddItem(
     currentDestination: NavDestination?,
     navController: NavHostController
 ) {
-    val selectedIconColor = 
-    
     BottomNavigationItem(
         icon = {
             Icon(

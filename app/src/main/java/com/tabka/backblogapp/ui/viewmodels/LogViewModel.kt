@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.Owner
 import com.tabka.backblogapp.network.repository.LogLocalRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +14,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class LogViewModel(): ViewModel() {
+class LogViewModel : ViewModel() {
     private val TAG = "LogViewModel"
     private val localLogRepository = LogLocalRepository()
 
@@ -54,13 +55,18 @@ class LogViewModel(): ViewModel() {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val formattedDate = currentDate.format(formatter)
 
+        val owner = Owner(
+            userId = null,
+            priority = priority
+        )
+
         val log = LogData(
             logId =  id,
             name = logName,
             isVisible = false,
             movieIds = emptyMap(),
             watchedIds = emptyMap(),
-            owner = mapOf("priority" to priority),
+            owner = owner,
             collaborators = emptyMap(),
             creationDate = formattedDate,
             lastModifiedDate = formattedDate
@@ -86,11 +92,10 @@ class LogViewModel(): ViewModel() {
     private fun findMaxPriority(): Int {
         var maxPriority = 0
         _allLogs.value?.forEach { log ->
-            val temp = log.owner?.get("priority") as Double
-            val tempInt = temp.toInt()
+            val temp = log.owner?.priority!!
 
-            if (tempInt > maxPriority) {
-                maxPriority = tempInt
+            if (temp > maxPriority) {
+                maxPriority = temp
             }
 /*            val temp = log.owner?.get("priority")
 

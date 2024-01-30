@@ -1,92 +1,154 @@
 package com.tabka.backblogapp.network.models.tmdb
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MovieData(
     val adult: Boolean?,
-    @SerializedName("backdrop_path") val backdropPath: String?,
-    @SerializedName("belongs_to_collection") val belongsToCollection: Any?,
+    @SerialName("backdrop_path") val backdropPath: String?,
+    @SerialName("belongs_to_collection") val belongsToCollection: Collection?,
     val budget: Int?,
     val genres: List<Genre>?,
     val homepage: String?,
     val id: Int?,
-    @SerializedName("imdb_id") val imdbId: String?,
-    @SerializedName("original_language") val originalLanguage: String?,
-    @SerializedName("original_title") val originalTitle: String?,
+    @SerialName("imdb_id") val imdbId: String?,
+    @SerialName("original_language") val originalLanguage: String?,
+    @SerialName("original_title") val originalTitle: String?,
     val overview: String?,
     val popularity: Double?,
-    @SerializedName("poster_path") val posterPath: String?,
-    @SerializedName("production_companies") val productionCompanies: List<ProductionCompany>?,
-    @SerializedName("production_countries") val productionCountries: List<Map<String, String?>>,
-    @SerializedName("release_date") val releaseDate: String?,
+    @SerialName("poster_path") val posterPath: String?,
+    @SerialName("production_companies") val productionCompanies: List<ProductionCompany>?,
+    @SerialName("production_countries") val productionCountries: List<Map<String, String?>>?,
+    @SerialName("release_date") val releaseDate: String?,
     val revenue: Int?,
     val runtime: Int?,
-    @SerializedName("spoken_languages") val spokenLanguages: List<Map<String, String?>>,
+    @SerialName("spoken_languages") val spokenLanguages: List<Map<String, String?>>?,
     val status: String?,
     val tagline: String?,
     val title: String?,
     val video: Boolean?,
-    @SerializedName("vote_average") val voteAverage: Double?,
-    @SerializedName("vote_count") val voteCount: Int?,
+    @SerialName("vote_average") val voteAverage: Double?,
+    @SerialName("vote_count") val voteCount: Int?,
     val images: MovieImages?,
-    @SerializedName("release_dates") val releaseDates: ReleaseDates?,
-    @SerializedName("watch/providers") val watchProviders: WatchProviders?,
+    @SerialName("release_dates") val releaseDates: ReleaseDates?,
+    @SerialName("watch/providers") val watchProviders: WatchProviders?,
     val credits: Credits?
 )
 
+@Serializable
+data class Collection(
+    val id: Int?,
+    val name: String?,
+    @SerialName("poster_path") val posterPath: String?,
+    @SerialName("backdrop_path") val backdropPath: String?
+)
+
+@Serializable
 data class Genre(
     val id: Int?,
     val name: String?
 )
 
+@Serializable
 data class ProductionCompany(
     val id: Int?,
-    @SerializedName("logo_path") val logoPath: String?,
+    @SerialName("logo_path") val logoPath: String?,
     val name: String?,
-    @SerializedName("origin_country") val originCountry: String?
+    @SerialName("origin_country") val originCountry: String?
 )
 
+@Serializable
 data class MovieImages(
-    val backdrops: List<Map<String, Any?>>,
-    val logos: List<Map<String, Any?>>?,
-    val posters: List<Map<String, Any?>>?
+    val backdrops: List<Image>?,
+    val logos: List<Image>?,
+    val posters: List<Image>?
 )
 
+@Serializable
+data class Image(
+    @SerialName("aspect_ratio") val aspectRatio: Double?,
+    val height: Int?,
+    @SerialName("iso_639_1") val iso6391: String?,
+    @SerialName("file_path") val filePath: String?,
+    @SerialName("vote_average") val voteAverage: Double?,
+    @SerialName("vote_count") val voteCount: Int?,
+    val width: Int?
+)
+
+@Serializable
 data class ReleaseDates(
-    val results: List<Map<String, Any?>>
+    val results: List<ReleaseDate>?
 )
 
+@Serializable
+data class ReleaseDate(
+    @SerialName("iso_3166_1") val iso31661: String?,
+    @SerialName("release_dates") val releaseDates: List<ReleaseDateItem>?
+)
+
+@Serializable
+data class ReleaseDateItem(
+    val certification: String?,
+    val descriptors: List<String?>?,
+    @SerialName("iso_639_1") val iso6391: String?,
+    val note: String?,
+    @SerialName("release_date") val releaseDate: String?,
+    val type: Int
+)
+
+@Serializable
 data class WatchProviders(
     val results: Map<String?, WatchProviderResult>?
 )
 
+@Serializable
 data class WatchProviderResult(
     val link: String?,
     val flatrate: List<Flatrate>?
 )
 
+@Serializable
 data class Flatrate(
-    @SerializedName("logo_path") val logoPath: String?,
-    @SerializedName("provider_id") val providerId: Int?,
-    @SerializedName("provider_name") val providerName: String?,
-    @SerializedName("display_priority") val displayPriority: Int?
+    @SerialName("logo_path") val logoPath: String?,
+    @SerialName("provider_id") val providerId: Int?,
+    @SerialName("provider_name") val providerName: String?,
+    @SerialName("display_priority") val displayPriority: Int?
 )
 
+@Serializable
 data class Credits(
-    val cast: List<Cast>?
+    val cast: List<Cast>?,
+    val crew: List<Crew>?
 )
 
+@Serializable
 data class Cast(
     val adult: Boolean?,
     val gender: Int?,
     val id: Int?,
-    @SerializedName("known_for_department") val knownForDepartment: String?,
+    @SerialName("known_for_department") val knownForDepartment: String?,
     val name: String?,
-    @SerializedName("original_name") val originalName: String?,
+    @SerialName("original_name") val originalName: String?,
     val popularity: Double?,
-    @SerializedName("profile_path") val profilePath: String?,
-    @SerializedName("cast_id") val castId: Int?,
+    @SerialName("profile_path") val profilePath: String?,
+    @SerialName("cast_id") val castId: Int?,
     val character: String?,
-    @SerializedName("credit_id") val creditId: String?,
+    @SerialName("credit_id") val creditId: String?,
     val order: Int?
+)
+
+@Serializable
+data class Crew(
+    val adult: Boolean?,
+    val gender: Int?,
+    val id: Int?,
+    @SerialName("known_for_department") val knownForDepartment: String?,
+    val name: String?,
+    @SerialName("original_name") val originalName: String?,
+    val popularity: Double?,
+    @SerialName("profile_path") val profilePath: String?,
+    @SerialName("credit_id") val creditId: String?,
+    val department: String?,
+    val job: String?
 )
