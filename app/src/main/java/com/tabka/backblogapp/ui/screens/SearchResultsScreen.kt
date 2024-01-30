@@ -23,12 +23,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,65 +51,14 @@ fun SearchResultsScreen(navController: NavController) {
 
     BaseScreen(navController, hasBackButton, pageTitle) {
         SearchBar(navController)
-/*        Text("Click here to go to movie details page",
-            modifier = Modifier.clickable { navController.navigate("search_movie_details_128") }
-        )*/
     }
 }
-
-/*
-@Composable
-fun SearchBar(navController: NavController) {
-    val searchResultsViewModel: SearchResultsViewModel = viewModel()
-    var text by remember { mutableStateOf("") }
-
-    TextField(
-        value = text,
-        onValueChange = {
-            text = it
-
-            // If there is something
-            if (!text.isNullOrBlank()) {
-                Log.d(TAG, "$text")
-                searchResultsViewModel.getMovieResults(text)
-            }
-        },
-        placeholder = { Text("Search for a movie") },
-        maxLines = 1,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White) // Modify background color
-            .padding(8.dp) // Add padding for better appearance
-            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-    )
-
-    val movieResults =  searchResultsViewModel.movieResults.collectAsState().value
-    if (!movieResults.isNullOrEmpty()) {
-        ListMovieResults(navController, movieResults)
-    } else if (text.isNotEmpty()){
-        Text("No results")
-    }
-}
-
-@Composable
-fun ListMovieResults(navController: NavController, movieResults: List<MovieSearchResult>) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        movieResults.forEach { movie ->
-            Text(
-                "${movie.originalTitle}",
-                modifier = Modifier
-                    .height(100.dp)
-                    .clickable { navController.navigate("search_movie_details_${movie.id}") }
-            )
-        }
-}*/
 
 @Composable
 fun SearchBar(navController: NavController) {
     val searchResultsViewModel: SearchResultsViewModel = viewModel()
     var text by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
 
     Row(
         modifier = Modifier
@@ -142,10 +94,15 @@ fun SearchBar(navController: NavController) {
                     maxLines = 1,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White) // Modify background color
+                        .background(Color.White)
+                        .focusRequester(focusRequester)
                     /*.padding(8.dp) // Add padding for better appearance
                     .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))*/
                 )
+
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                }
             }
         }
     }
@@ -157,7 +114,10 @@ fun SearchBar(navController: NavController) {
             modifier = Modifier.fillMaxSize()
         ) {
             movieResults.forEach { movie ->
-                Text("${movie.originalTitle}")
+                Text(
+                    "${movie.originalTitle}",
+                    modifier = Modifier.clickable { navController.navigate("search_movie_details_${movie.id}") }
+                )
             }
         }
     } else if (text.isNotEmpty()){

@@ -176,7 +176,7 @@ class MovieRepository(private val movieApiService: ApiService) {
 
         logs.forEach { log ->
             val userPriority: Int = if (log.owner?.get("userId") == userId)
-                log.owner["priority"] as Int
+                log.owner!!["priority"] as Int
             else (log.collaborators?.get(userId)?.toMap()?.get("priority") as Int)
 
             if (userPriority < highestPriority && !log.movieIds.isNullOrEmpty()) {

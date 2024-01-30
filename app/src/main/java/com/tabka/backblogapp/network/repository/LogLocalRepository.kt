@@ -19,7 +19,14 @@ class LogLocalRepository {
     }
 
     fun reorderLogs(userLogsJson: List<LogData>) {
-        jsonUtility.overwriteJSON(userLogsJson)
+        val updatedLogs = userLogsJson.mapIndexed { index, logData ->
+            val newPriority = (index + 1).toDouble()
+            val newOwnerMap = logData.owner!!.toMutableMap().apply {
+                this["priority"] = newPriority
+            }
+            logData.copy(owner = newOwnerMap)
+        }
+        jsonUtility.overwriteJSON(updatedLogs)
     }
 
     fun getLogById(id: String): LogData? {

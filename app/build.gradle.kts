@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlinx.kover") version "0.5.0"
 }
 
 android {
@@ -16,6 +17,7 @@ android {
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
+
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

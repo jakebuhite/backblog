@@ -12,7 +12,7 @@ data class LogData(
     val lastModifiedDate: String?,
     @PropertyName("is_visible")
     val isVisible: Boolean?,
-    val owner: Map<String, Any>?,
+    var owner: Map<String, Any>?,
     val collaborators: Map<String, Map<String, Int>>?,
     @PropertyName("movie_ids")
     val movieIds: Map<String, Boolean>?,
