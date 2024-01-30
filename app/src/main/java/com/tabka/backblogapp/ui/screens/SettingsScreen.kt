@@ -38,6 +38,10 @@ import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.shared.LoadingSpinner
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(navController: NavController) {
@@ -170,7 +174,24 @@ fun SettingsForm(userData: UserData) {
         )
 
         // Update settings button
-        Button(onClick = { /* TODO */ },
+        Button(onClick = {
+            CoroutineScope(Dispatchers.Main).launch {
+                // Check if password matches
+
+                /*if (loginSuccessful.first) {
+                    statusText = "Login successful. Redirecting..."
+                    statusColor = Color(0xFF4BB543)
+                    visible = true
+                    delay(1000)
+                    navController.navigate("friends")
+                } else {
+                    // Display error text message
+                    statusText = loginSuccessful.second
+                    statusColor = Color(0xFFCC0000)
+                    visible = true
+                }*/
+            }
+        },
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color(0xFF3891E1)
             ),

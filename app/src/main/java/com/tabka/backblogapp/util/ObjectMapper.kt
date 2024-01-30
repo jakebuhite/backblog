@@ -1,8 +1,9 @@
 package com.tabka.backblogapp.util
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.*
-import kotlinx.serialization.serializer
-import kotlin.reflect.full.createType
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.memberProperties
 
 // Convert Firebase Firestore maps to JSON element for serialization
 fun Any?.toJsonElement(): JsonElement = when (this) {
@@ -14,5 +15,18 @@ fun Any?.toJsonElement(): JsonElement = when (this) {
     is Array<*> -> JsonArray(map { it.toJsonElement() })
     is List<*> -> JsonArray(map { it.toJsonElement() })
     is Map<*, *> -> JsonObject(map { it.key.toString() to it.value.toJsonElement() }.toMap())
-    else -> Json.encodeToJsonElement(serializer(this::class.createType()), this)
+    else -> {
+        val jsonEncoder = Json {
+            encodeDefaults = true
+        }
+
+        val properties = this::class.memberProperties
+        val jsonObject = JsonObject(properties.associate { property ->
+            val serialName = property.findAnnotation<SerialName>()?.value
+            val propertyName = serialName ?: property.name
+            propertyName to jsonEncoder.encodeToJsonElement(property.getter.call(this))
+        })
+
+        jsonObject
+    }
 }

@@ -3,6 +3,7 @@ package com.tabka.backblogapp.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.repository.UserRepository
@@ -48,4 +49,15 @@ class SettingsViewModel: ViewModel() {
             DataResult.Failure(e)
         }
     }
+
+    /*suspend fun isCorrectPassword(password: String): DataResult<Boolean> {
+        return try {
+            val userEmail = auth.currentUser?.email
+            val result = await auth.currentUser?.reauthenticateAndRetrieveData(EmailAuthProvider.getCredential(userEmail, password)
+            return DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.d(tag, "Error: $e")
+            DataResult.Failure(e)
+        }
+    }*/
 }
