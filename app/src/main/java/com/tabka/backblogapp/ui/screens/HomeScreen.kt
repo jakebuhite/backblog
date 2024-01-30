@@ -1,19 +1,12 @@
 package com.tabka.backblogapp.ui.screens
 
-import android.annotation.SuppressLint
-import android.graphics.Paint.Align
 import android.os.Build
 import android.util.Log
-import android.view.MotionEvent
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,57 +15,42 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter.Companion.tint
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import com.tabka.backblogapp.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddToPhotos
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter.Companion.tint
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
-import kotlinx.coroutines.launch
-import org.burnoutcrew.reorderable.ReorderableItem
-import org.burnoutcrew.reorderable.detectReorderAfterLongPress
-import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
-import org.burnoutcrew.reorderable.reorderable
-import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.roundToInt
-import androidx.compose.material.TextField
 
 
 private val TAG = "HomeScreen"
@@ -162,8 +140,10 @@ fun NextMovie(navController: NavController, movie: String?) {
         Card(
             shape = RoundedCornerShape(5.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
-            modifier = Modifier.clickable{ navController.navigate("home_movie_details_0")
-            }
+            modifier = Modifier.clickable{ navController.navigate("home_movie_details_0") },
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Transparent
+            )
         ) {
             Box(
                 modifier = Modifier.height(200.dp)
@@ -602,7 +582,6 @@ fun DisplayLogsWithDrag(navController: NavController, scrollState: ScrollState, 
 
                 val log = allLogs[index]
                 Card(
-                    shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
                         .size(175.dp)
                         .clickable { navController.navigate("home_log_details_${log.logId}") }
@@ -705,7 +684,11 @@ fun DisplayLogsWithDrag(navController: NavController, scrollState: ScrollState, 
                                 }
                             )
                         },
-                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Transparent
+                    )
+                    /*elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)*/
                 ) {
                     Box(
                         modifier = Modifier
