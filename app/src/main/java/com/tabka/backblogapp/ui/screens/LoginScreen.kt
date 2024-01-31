@@ -28,13 +28,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.shared.AuthScreen
 import com.tabka.backblogapp.ui.shared.CardGradient
+import com.tabka.backblogapp.ui.shared.PasswordTextField
 import com.tabka.backblogapp.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -92,27 +92,7 @@ fun LoginScreen(navController: NavController) {
 
                 // Password field
                 var password by remember { mutableStateOf("") }
-                TextField(
-                    value = password,
-                    // TODO - Update view model immediately
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth()
-                        .testTag("PASSWORD_FIELD"),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    textStyle = TextStyle(color = Color(0xE6FFFFFF)),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Color(0xFF373737),
-                        focusedLabelColor = Color(0xFF979C9E),
-                        unfocusedLabelColor = Color(0xFF979C9E),
-                        unfocusedBorderColor = Color(0xFF373737),
-                        backgroundColor = Color(0xFF373737)
-                    ),
-                    singleLine = true
-                )
+                PasswordTextField("Password") { pwd -> password = pwd }
 
                 // Status Message
                 var visible by remember { mutableStateOf(false) }

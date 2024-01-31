@@ -10,6 +10,7 @@ import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.NetworkError
 import com.tabka.backblogapp.util.NetworkExceptionType
+import kotlinx.coroutines.tasks.await
 
 class SettingsViewModel: ViewModel() {
     private val auth = Firebase.auth
@@ -33,12 +34,20 @@ class SettingsViewModel: ViewModel() {
         }
     }
 
-    suspend fun updateUserData(updates: Map<String, Any?>): DataResult<Boolean> {
+    suspend fun updateUserData(updates: Map<String, Any?>, password: String): DataResult<Boolean> {
         return try {
-            val userId = auth.currentUser!!.uid
-            when(userRepository.updateUser(userId, updates)) {
+            when (isCorrectPassword(password)) {
                 is DataResult.Success -> {
-                    return DataResult.Success(true)
+                    val userId = auth.currentUser!!.uid
+                    return when(userRepository.updateUser(userId, updates)) {
+                        is DataResult.Success -> {
+                            DataResult.Success(true)
+                        }
+
+                        is DataResult.Failure -> {
+                            DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+                        }
+                    }
                 }
                 is DataResult.Failure -> {
                     return DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
@@ -50,14 +59,14 @@ class SettingsViewModel: ViewModel() {
         }
     }
 
-    /*suspend fun isCorrectPassword(password: String): DataResult<Boolean> {
+    private suspend fun isCorrectPassword(password: String): DataResult<Boolean> {
         return try {
-            val userEmail = auth.currentUser?.email
-            val result = await auth.currentUser?.reauthenticateAndRetrieveData(EmailAuthProvider.getCredential(userEmail, password)
+            val userEmail = auth.currentUser?.email!!
+            auth.currentUser?.reauthenticateAndRetrieveData(EmailAuthProvider.getCredential(userEmail, password))?.await()
             return DataResult.Success(true)
         } catch (e: Exception) {
             Log.d(tag, "Error: $e")
             DataResult.Failure(e)
         }
-    }*/
+    }
 }
