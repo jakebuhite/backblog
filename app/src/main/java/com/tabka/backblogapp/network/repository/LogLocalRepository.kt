@@ -17,17 +17,9 @@ class LogLocalRepository {
     }
 
     fun reorderLogs(userLogsJson: List<LogData>) {
-/*        val updatedLogs = userLogsJson.mapIndexed { index, logData ->
-            val newPriority = (index + 1).toDouble()
-            val newOwnerMap = logData.owner!!.toMutableMap().apply {
-                this["priority"] = newPriority
-            }
-            logData.copy(owner = newOwnerMap)
-        }
-        jsonUtility.overwriteJSON(updatedLogs)*/
         val updatedLogs = userLogsJson.mapIndexed { index, logData ->
             val newPriority = (index + 1)
-            val updatedOwner = logData.owner?.copy(priority = newPriority.toInt())
+            val updatedOwner = logData.owner?.copy(priority = newPriority)
             logData.copy(owner = updatedOwner)
         }
         jsonUtility.overwriteJSON(updatedLogs)
@@ -35,6 +27,14 @@ class LogLocalRepository {
 
     fun getLogById(id: String): LogData? {
         return jsonUtility.readFromFile().find { it.logId == id }
+    }
+
+    fun getLogCount(): Int {
+        return jsonUtility.readFromFile().size
+    }
+
+    fun clearLogs() {
+        jsonUtility.deleteAllLogs()
     }
 
     fun addMovieToLog(movieId: Int, logId: String) {

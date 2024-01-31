@@ -72,13 +72,18 @@ fun SettingsScreen(navController: NavController) {
         if (userData == null) {
             LoadingSpinner()
         } else {
-            SettingsForm(userData!!, settingsViewModel::updateUserData)
+            SettingsForm(userData!!, settingsViewModel::updateUserData,
+                settingsViewModel::syncLocalLogsToDB,
+                settingsViewModel::getLogCount)
         }
     }
 }
 
 @Composable
-fun SettingsForm(userData: UserData, updateUserData: suspend (Map<String, Any?>, String) -> DataResult<Boolean>) {
+fun SettingsForm(userData: UserData,
+                 updateUserData: suspend (Map<String, Any?>, String) -> DataResult<Boolean>,
+                 syncLocalLogsToDB: suspend () -> DataResult<Boolean>,
+                 getLogCount: () -> Int) {
     // Avatar selection button
     var showDialog by remember { mutableStateOf(false) }
     var selectedAvatar by remember { mutableIntStateOf(userData.avatarPreset!!) }
@@ -157,6 +162,40 @@ fun SettingsForm(userData: UserData, updateUserData: suspend (Map<String, Any?>,
             Text(text = statusText,
                 style = MaterialTheme.typography.bodyMedium.copy(color = statusColor),
                 modifier = Modifier.padding(12.dp))
+        }
+
+        // Sync local data
+        if (getLogCount() > 0) {
+            Button(onClick = {
+                CoroutineScope(Dispatchers.Default).launch {
+                    when (val result = syncLocalLogsToDB()) {
+                        is DataResult.Success -> {
+                            statusText = "Local logs successfully synced!"
+                            statusColor = Color(0xFF4BB543)
+                            visible = true
+                        }
+                        is DataResult.Failure -> {
+                            val e = result.throwable.message
+                            Log.d("SettingsScreen", "Error syncing logs $e")
+                            statusText = "Error syncing logs."
+                            statusColor = Color(0xFFCC0000)
+                            visible = true
+                        }
+                    }
+                }
+            },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFF3891E1)
+                ),
+                shape = RoundedCornerShape(35),
+                modifier = Modifier
+                    .height(70.dp)
+                    .width(200.dp)
+                    .padding(12.dp)
+            )
+            {
+                Text("Sync Logs to DB", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            }
         }
 
         // Update settings button
