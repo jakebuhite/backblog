@@ -90,7 +90,7 @@ fun SettingsForm(userData: UserData, updateUserData: suspend (Map<String, Any?>,
             modifier = Modifier.fillMaxWidth().padding(16.dp)
         ){
             Image(
-                painter = painterResource(id = getAvatarResourceId(selectedAvatar)),
+                painter = painterResource(id = getAvatarResourceId(selectedAvatar).second),
                 contentDescription = "loading spinner",
                 modifier = Modifier
                     .height(120.dp)
@@ -248,8 +248,9 @@ fun AvatarOption(
             },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val (imageName, imageId) = getAvatarResourceId(avatarId)
         Image(
-            painter = painterResource(id = getAvatarResourceId(avatarId)),
+            painter = painterResource(id = imageId),
             contentDescription = null,
             modifier = Modifier
                 .height(120.dp)
@@ -258,7 +259,7 @@ fun AvatarOption(
         )
 
         Text(
-            text = "Preset $avatarId",
+            text = imageName,
             modifier = Modifier
                 .padding(top = 8.dp)
                 .align(Alignment.CenterHorizontally),
