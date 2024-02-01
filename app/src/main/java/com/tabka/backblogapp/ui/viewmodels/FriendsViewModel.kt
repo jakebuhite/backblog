@@ -11,6 +11,7 @@ import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.repository.LogLocalRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.network.repository.UserRepository
+import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -33,8 +34,8 @@ class FriendsViewModel(): ViewModel() {
        val user = auth.currentUser?.uid
 
         if(user != null) {
-            val userData: UserData? = userRepository.getUser(user)
-            return userData?.username
+            val userData: DataResult<UserData> = userRepository.getUser(user)
+            //return userData?.username
         }
         return null
     }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -263,18 +264,23 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
         ) {
             val focusManager = LocalFocusManager.current
 
-            Row(modifier = Modifier
-                .fillMaxWidth(),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically) {
-                Text("New Log",
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "New Log",
                     style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center)
+                    textAlign = TextAlign.Center
+                )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Row(modifier = Modifier.padding(horizontal = 50.dp),
+            Row(
+                modifier = Modifier.padding(horizontal = 50.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -299,7 +305,7 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                 )
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Collaborators Heading
             Row(modifier = Modifier.padding(start = 14.dp)) {
@@ -308,8 +314,15 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
 
             Spacer(modifier = Modifier.height(15.dp))
 
+            val userList = listOf(
+                "Nick Abegg",
+                "Josh Altmeyer",
+                "Christian Totaro",
+                "Jake Buhite"
+            )
+
             LazyRow(modifier = Modifier.padding(start = 24.dp)) {
-                items(4) { index ->
+                items(userList) { index ->
                     Column() {
                         Image(
                             imageVector = Icons.Default.AccountCircle,
@@ -332,81 +345,23 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
             Spacer(modifier = Modifier.height(15.dp))
 
             Box(modifier = Modifier.height(265.dp)) {
-                LazyColumn(modifier = Modifier.padding(horizontal = 24.dp)) {
-                    items(4) { index ->
-                        Row(
-                            modifier = Modifier.padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            // User Icon
-                            Column(modifier = Modifier.weight(1F)) {
-                                Image(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.size(60.dp),
-                                    colorFilter = tint(color = colorResource(id = R.color.white))
-                                )
-                            }
-
-                            // Username
-                            Column(
-                                modifier = Modifier
-                                    .weight(3F)
-                                    .height(60.dp),
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text("Username", style = MaterialTheme.typography.bodyLarge)
-                            }
-
-                            // Add Button
-                            Column(
-                                modifier = Modifier
-                                    .weight(1F)
-                                    .height(60.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.add),
-                                    contentDescription = "Add Icon",
-                                    modifier = Modifier.size(25.dp)
-                                )
-                            }
-                        }
+                LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    items(userList) { displayName ->
+                        NewLogCollaborator(displayName)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center) {
-                // Create Button
-                Button(
-                    onClick = {
-                        if (!logName.isNullOrEmpty()) {
-                            createLog(logName)
-                            isSheetOpen = false
-                            logName = ""
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(horizontal = 24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.sky_blue),
-                        disabledContainerColor = colorResource(id = R.color.sky_blue)
-                    ),
-                ) {
-                    Text("Create", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                }
+            // Create Button tab
+            NewLogBottomSection(logName) {createdLogName ->
+                createLog(createdLogName)
+                isSheetOpen = false
+                logName = ""
             }
         }
     }
-
 
     Spacer(modifier = Modifier.height(15.dp))
 
@@ -424,12 +379,12 @@ fun VerticalReorderGrid(
 ) {
 
     val logs = remember { mutableStateOf(allLogs) }
-    val state = rememberReorderableLazyGridState( onMove = { from, to ->
-            logs.value = logs.value.toMutableList().apply {
-                add(to.index, removeAt(from.index))
-                Log.d(TAG, "After: ${logs.value}")
-            }
+    val state = rememberReorderableLazyGridState(onMove = { from, to ->
+        logs.value = logs.value.toMutableList().apply {
+            add(to.index, removeAt(from.index))
+            Log.d(TAG, "After: ${logs.value}")
         }
+    }
     )
 
     //val height = if (allLogs.size % 2 == 1)  ((allLogs.size + 1)/2) * 175 else allLogs.size/2 * 175
@@ -476,25 +431,111 @@ fun VerticalReorderGrid(
                                     color = Color.Black.copy(alpha = 0.75f), // Transparent black color
                                     shape = RoundedCornerShape(5.dp)
                                 )
-                      )
+                        )
 
                         // Text overlay
                         Text(
-                        text = "${index.name}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                            .align(Alignment.Center)
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                       )
+                            text = "${index.name}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                                .align(Alignment.Center)
+                                .wrapContentHeight(align = Alignment.CenterVertically)
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun NewLogCollaborator(displayName: String) {
+    Row(
+        modifier = Modifier.padding(bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // User Icon
+        Column(modifier = Modifier.weight(1F)) {
+            Image(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(60.dp),
+                colorFilter = tint(color = colorResource(id = R.color.white))
+            )
+        }
+
+        // Username
+        Column(
+            modifier = Modifier
+                .weight(3F)
+                .height(60.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(displayName, style = MaterialTheme.typography.bodyLarge)
+        }
+
+        // Add Button
+        Column(
+            modifier = Modifier
+                .width(40.dp)
+                .height(60.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.add),
+                contentDescription = "Add Icon",
+                modifier = Modifier.size(25.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Divider(thickness = 1.dp, color = Color(0xFF303437))
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // Create Button
+        Button(
+            onClick = {
+                if (!logName.isNullOrEmpty()) {
+                    onCreateClick(logName)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .padding(horizontal = 24.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.sky_blue),
+                disabledContainerColor = colorResource(id = R.color.sky_blue)
+            ),
+        ) {
+            Text(
+                "Create",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
 
 /*
 

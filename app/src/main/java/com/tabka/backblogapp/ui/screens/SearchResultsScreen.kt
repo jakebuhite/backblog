@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -193,19 +194,20 @@ fun MovieResult(movie: MovieSearchResult) {
         Column(modifier = Modifier
             .weight(2F)
             .fillMaxHeight()) {
-            Box(
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(70.dp)
-            ) {
-                val imageBaseURL =
-                    "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
-                Image(
-                    painter = rememberAsyncImagePainter(imageBaseURL),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
-                )
-            }
+                Box(
+                    modifier = Modifier
+                        .width(130.dp)
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(5.dp))
+                ) {
+                    val imageBaseURL =
+                        "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
+                    Image(
+                        painter = rememberAsyncImagePainter(imageBaseURL),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop
+                    )
+                }
         }
 
         // Movie Title
