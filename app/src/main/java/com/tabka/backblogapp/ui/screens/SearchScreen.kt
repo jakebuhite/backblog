@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -73,9 +74,9 @@ fun SearchScreen(navController: NavController) {
             }
         }*/
         SearchBar(navController)
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         BrowseCategories()
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         FriendsAdded()
     }
 }
@@ -105,11 +106,18 @@ fun BrowseCategories() {
         "Fantasy"
     )
 
-    LazyRow() {
+ /*   LazyRow() {
         items(genreList) { genre ->
             Column {
                 Category(genre)
             }
+        }
+    }*/
+    
+    LazyHorizontalGrid(rows = GridCells.Fixed(2),
+        modifier = Modifier.height(160.dp)) {
+        items(genreList) { genre ->
+            Category(genre)
         }
     }
 }
@@ -119,9 +127,9 @@ fun BrowseCategories() {
 fun Category(genre: String) {
     Card(
         modifier = Modifier
-            .height(95.dp)
-            .width(190.dp)
-            .padding(end = 20.dp),
+            .height(80.dp)
+            .width(183.dp)
+            .padding(end = 10.dp, bottom = 10.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -130,8 +138,8 @@ fun Category(genre: String) {
     ) {
         Box(
             modifier = Modifier
-                .height(95.dp)
-                .width(175.dp)
+                .height(80.dp)
+                .width(183.dp)
                 .fillMaxSize()
         ) {
             Image(
@@ -191,8 +199,8 @@ fun FriendMovie() {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Card(
                     modifier = Modifier
-                        .height(180.dp)
-                        .width(140.dp),
+                        .height(160.dp)
+                        .width(120.dp),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color.Transparent
