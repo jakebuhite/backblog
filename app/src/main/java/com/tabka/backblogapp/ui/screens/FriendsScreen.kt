@@ -15,8 +15,8 @@ import androidx.navigation.NavController
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.R
-private val friendsViewModel: FriendsViewModel = FriendsViewModel()
 
+private val friendsViewModel: FriendsViewModel = FriendsViewModel()
 
 @Composable
 fun FriendsScreen(navController: NavController) {

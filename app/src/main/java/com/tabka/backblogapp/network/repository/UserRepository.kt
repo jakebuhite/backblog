@@ -66,7 +66,7 @@ class UserRepository {
 
             // Add the modified properties to updatedUserObj
             updateData["username"]?.let { updatedUserObj["username"] = it }
-            updateData["avatarPreset"]?.let { updatedUserObj["avatar_preset"] = it }
+            updateData["avatar_preset"]?.let { updatedUserObj["avatar_preset"] = it }
             updateData["friends"]?.let { updatedUserObj["friends"] = it }
             updateData["blocked"]?.let { updatedUserObj["blocked"] = it }
 

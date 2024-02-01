@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.shared.AuthScreen
 import com.tabka.backblogapp.ui.shared.CardGradient
+import com.tabka.backblogapp.ui.shared.PasswordTextField
 import com.tabka.backblogapp.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -87,7 +88,7 @@ fun LoginScreen(navController: NavController) {
                             )
                         }
                     }
-
+                    
                     // Fields
                     Row() {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -117,28 +118,7 @@ fun LoginScreen(navController: NavController) {
 
                             // Password field
                             var password by remember { mutableStateOf("") }
-                            TextField(
-                                value = password,
-                                // TODO - Update view model immediately
-                                onValueChange = { password = it },
-                                label = { Text("Password") },
-                                modifier = Modifier
-                                    .padding(12.dp)
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .testTag("PASSWORD_FIELD"),
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                textStyle = TextStyle(color = Color(0xE6FFFFFF)),
-                                colors = TextFieldDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = Color(0xFF373737),
-                                    focusedLabelColor = Color(0xFF979C9E),
-                                    unfocusedLabelColor = Color(0xFF979C9E),
-                                    unfocusedBorderColor = Color(0xFF373737),
-                                    backgroundColor = Color(0xFF373737)
-                                ),
-                                singleLine = true
-                            )
+                            PasswordTextField("Password") { pwd -> password = pwd }
 
                             // Status Message
                             var visible by remember { mutableStateOf(false) }
@@ -190,11 +170,11 @@ fun LoginScreen(navController: NavController) {
                                     .height(50.dp)
                                     .fillMaxWidth()
                                     .padding(horizontal = 24.dp)
+                                    .testTag("LOGIN_BUTTON")
                             )
                             {
                                 Text(
-                                    "LOG IN",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                                    "LOG IN", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                                 )
                             }
                         }
@@ -209,8 +189,8 @@ fun LoginScreen(navController: NavController) {
                                 text = "Don't have an account?",
                                 style = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF979C9E)),
                             )
-
-                            TextButton(onClick = { navController.navigate("signup") }) {
+                            TextButton(onClick = { navController.navigate("signup") },
+                                modifier = Modifier.testTag("GO_TO_SIGNUP_BUTTON")) {
                                 Text(
                                     "Sign up",
                                     style = MaterialTheme.typography.titleMedium.copy(

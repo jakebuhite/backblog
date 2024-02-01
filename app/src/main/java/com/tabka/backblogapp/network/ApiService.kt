@@ -1,6 +1,7 @@
 package com.tabka.backblogapp.network
 
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import retrofit2.Call
 import retrofit2.http.GET
@@ -16,6 +17,13 @@ interface ApiService {
         @Header("Authorization") authorization: String
     ): Call<MovieData>
 
+    @GET("movie/{movieId}/images")
+    fun getMovieHalfSheet(
+        @Path("movieId") movieId: String,
+        @Query("include_image_language") movieLanguage: String,
+        @Header("Authorization") authorization: String
+    ): Call<MovieImageData>
+
     @GET("search/movie")
     fun searchMovies(
         @Query("query") query: String,
@@ -24,4 +32,5 @@ interface ApiService {
         @Query("page") page: Int,
         @Header("Authorization") authorization: String
     ): Call<MovieSearchData>
+
 }

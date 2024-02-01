@@ -8,6 +8,7 @@ import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
@@ -124,6 +125,7 @@ class MovieRepository(private val movieApiService: ApiService) {
             override fun onResponse(call: Call<MovieData>, response: Response<MovieData>) {
                 if (response.isSuccessful) {
                     val movieResponse = response.body()
+                    Log.d("Movies", movieResponse.toString())
                     onResponse(movieResponse)
                 } else {
                     onFailure("Error: ${response.message()}")
@@ -159,6 +161,35 @@ class MovieRepository(private val movieApiService: ApiService) {
 
             override fun onFailure(call: Call<MovieSearchData>, t: Throwable) {
                 Log.d("Movies", "Failure: ${t.message}")
+                onFailure("Failure: ${t.message}")
+            }
+        })
+    }
+
+    fun getMovieHalfSheet(
+        movieId: String,
+        onResponse: (String) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        val language = "en"
+        val call = movieApiService.getMovieHalfSheet(movieId, language, "Bearer " + BuildConfig.MOVIE_SECRET)
+
+        call.enqueue(object : Callback<MovieImageData> {
+            override fun onResponse(call: Call<MovieImageData>, response: Response<MovieImageData>) {
+                if (response.isSuccessful) {
+                    val movieResponse = response.body()
+                    if (!movieResponse?.backdrops.isNullOrEmpty()) {
+                        val filePath = movieResponse?.backdrops?.get(0)?.filePath ?: ""
+                        onResponse(filePath)
+                    } else {
+                        onFailure("No backdrops available.")
+                    }
+                } else {
+                    onFailure("Error: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MovieImageData>, t: Throwable) {
                 onFailure("Failure: ${t.message}")
             }
         })

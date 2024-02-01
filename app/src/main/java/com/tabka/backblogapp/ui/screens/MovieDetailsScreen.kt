@@ -29,8 +29,8 @@ fun MovieDetailsScreen(navController: NavController, logId: String?) {
 
     BaseScreen(navController, hasBackButton, pageTitle) {
         if (movie != null) {
-            Text(movie.originalTitle!!)
-            Text(movie.releaseDate!!)
+            Text(movie.title!!)
+            movie.releaseDate?.let { it1 -> Text(it1) }
             if ((movie.watchProviders != null) && (movie.watchProviders.results != null)) {
                 Column(
                     modifier = Modifier.fillMaxSize()

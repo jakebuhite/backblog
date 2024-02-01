@@ -44,6 +44,31 @@ class LogRepository {
         }
     }
 
+    // For syncing local logs
+    suspend fun addLog(name: String, ownerId: String, priority: Int, creationDate: String, movieIds: Map<String, Boolean>, watchedIds: Map<String, Boolean>): DataResult<Boolean> {
+        return try {
+            // Get all log data
+            val logData = mapOf(
+                "name" to name,
+                "creation_date" to creationDate,
+                "last_modified_date" to System.currentTimeMillis().toString(),
+                "is_visible" to false, // Hiding logs default
+                "owner" to mapOf("user_id" to ownerId, "priority" to priority),
+                "collaborators" to emptyMap<String, Map<String, Int>>(),
+                "movie_ids" to movieIds,
+                "watched_ids" to watchedIds
+            )
+
+            db.collection("logs").add(logData).await()
+
+            Log.d(tag, "Log successfully written!")
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error writing log document", e)
+            DataResult.Failure(e)
+        }
+    }
+
     suspend fun getLog(logId: String): DataResult<LogData> {
         return try {
             val doc = db.collection("logs").document(logId).get().await()
