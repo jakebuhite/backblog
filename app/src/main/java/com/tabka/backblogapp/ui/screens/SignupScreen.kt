@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.Button
-import androidx.compose.material.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,17 +25,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.shared.AuthScreen
 import com.tabka.backblogapp.ui.shared.CardGradient
+import com.tabka.backblogapp.ui.shared.PasswordTextField
 import com.tabka.backblogapp.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,12 +57,14 @@ fun SignupScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Start
                 ) {
+                    val imgId = R.drawable.img_logo_80_80
                     Image(
                         painter = painterResource(id = R.drawable.img_logo_80_80),
                         contentDescription = "BackBlog logo",
                         modifier = Modifier
                             .height(80.dp)
                             .width(80.dp)
+                            .testTag(imgId.toString())
                     )
                     Column ( modifier = Modifier.height(80.dp),
                         verticalArrangement = Arrangement.Center) {
@@ -75,12 +78,12 @@ fun SignupScreen(navController: NavController) {
                 var email by remember { mutableStateOf("") }
                 TextField(
                     value = email,
-                    // TODO - Update view model immediately
                     onValueChange = { email = it },
                     label = { Text("Email") },
                     modifier = Modifier
                         .padding(12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag("EMAIL_FIELD"),
                     textStyle = TextStyle(color = Color(0xE6FFFFFF)),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -97,12 +100,12 @@ fun SignupScreen(navController: NavController) {
                 var username by remember { mutableStateOf("") }
                 TextField(
                     value = username,
-                    // TODO - Update view model immediately
                     onValueChange = { username = it },
                     label = { Text("Username") },
                     modifier = Modifier
                         .padding(12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag("USERNAME_FIELD"),
                     textStyle = TextStyle(color = Color(0xE6FFFFFF)),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -117,26 +120,7 @@ fun SignupScreen(navController: NavController) {
 
                 // Password field
                 var password by remember { mutableStateOf("") }
-                TextField(
-                    value = password,
-                    // TODO - Update view model immediately
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    textStyle = TextStyle(color = Color(0xE6FFFFFF)),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Color(0xFF373737),
-                        focusedLabelColor = Color(0xFF979C9E),
-                        unfocusedLabelColor = Color(0xFF979C9E),
-                        unfocusedBorderColor = Color(0xFF373737),
-                        backgroundColor = Color(0xFF373737)
-                    ),
-                    singleLine = true
-                )
+                PasswordTextField("Password") { pwd -> password = pwd }
 
                 // Status Message
                 var visible by remember { mutableStateOf(false) }
@@ -145,7 +129,7 @@ fun SignupScreen(navController: NavController) {
                 if (visible) {
                     Text(text = statusText,
                         style = MaterialTheme.typography.bodyMedium.copy(color = statusColor),
-                        modifier = Modifier.padding(top = 6.dp))
+                        modifier = Modifier.padding(top = 6.dp).testTag("STATUS_MESSAGE"))
                 }
 
                 // Sign up Button
@@ -180,6 +164,7 @@ fun SignupScreen(navController: NavController) {
                         .height(70.dp)
                         .width(150.dp)
                         .padding(12.dp)
+                        .testTag("SIGNUP_BUTTON")
                 )
                 {
                     Text("SIGN UP", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -189,7 +174,8 @@ fun SignupScreen(navController: NavController) {
                     style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF979C9E)),
                     modifier = Modifier.padding(top = 12.dp))
 
-                TextButton(onClick = { navController.navigate("login")}) {
+                TextButton(onClick = { navController.navigate("login")},
+                    modifier = Modifier.testTag("GO_TO_LOGIN_BUTTON")) {
                     Text("Log in", style = MaterialTheme.typography.bodyLarge.copy(textDecoration = TextDecoration.Underline, fontWeight = FontWeight.SemiBold))
                 }
             }

@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 import androidx.compose.foundation.verticalScroll
@@ -47,7 +46,7 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             backButton(navController, isBackButtonVisible)
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             pageTitle(title)
             content(scrollState)
             Spacer(modifier = Modifier.height(70.dp))
