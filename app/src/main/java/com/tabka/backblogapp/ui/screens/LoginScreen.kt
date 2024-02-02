@@ -1,7 +1,6 @@
 package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,15 +9,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.Button
-import androidx.compose.material.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +31,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -90,7 +87,7 @@ fun LoginScreen(navController: NavController) {
                     }
                     
                     // Fields
-                    Row() {
+                    Row {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             // Email field
                             var email by remember { mutableStateOf("") }
@@ -178,16 +175,12 @@ fun LoginScreen(navController: NavController) {
                                 )
                             }
                         }
-                    } else {
-                        statusText = "Please complete all fields"
-                        statusColor = Color(0xFFCC0000)
-                        visible = true
                     }
 
                     Spacer(modifier = Modifier.height(30.dp))
 
                     // Sign Up
-                    Row() {
+                    Row {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = "Don't have an account?",
