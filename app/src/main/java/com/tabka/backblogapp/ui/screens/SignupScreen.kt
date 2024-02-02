@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -127,9 +128,12 @@ fun SignupScreen(navController: NavController) {
                 var statusText by remember { mutableStateOf("") }
                 var statusColor by remember { mutableStateOf(Color(0xFF4BB543)) }
                 if (visible) {
-                    Text(text = statusText,
+                    Text(
+                        text = statusText,
                         style = MaterialTheme.typography.bodyMedium.copy(color = statusColor),
-                        modifier = Modifier.padding(top = 6.dp).testTag("STATUS_MESSAGE"))
+                        modifier = Modifier.testTag("STATUS_MESSAGE"),
+                        textAlign = TextAlign.Center
+                    )
                 }
 
                 // Sign up Button
@@ -138,22 +142,22 @@ fun SignupScreen(navController: NavController) {
                         CoroutineScope(Dispatchers.Main).launch {
                             val signupSuccessful = authViewModel.attemptSignup(email, username, password)
                             if (signupSuccessful.first) {
+                                visible = true
                                 statusText = "Signup successful. Redirecting..."
                                 statusColor = Color(0xFF4BB543)
-                                visible = true
                                 delay(1000)
                                 navController.navigate("login")
                             } else {
                                 // Display error text message
+                                visible = true
                                 statusText = signupSuccessful.second
                                 statusColor = Color(0xFFCC0000)
-                                visible = true
                             }
                         }
                     } else {
+                        visible = true
                         statusText = "Please complete all fields"
                         statusColor = Color(0xFFCC0000)
-                        visible = true
                     }
                 },
                     colors = ButtonDefaults.buttonColors(

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.testTag
 import androidx.navigation.NavController
 
 @Composable
@@ -77,7 +78,8 @@ fun backButton(navController: NavController, visible: Boolean) {
 
 @Composable
 fun pageTitle(title: String) {
-    Text(title, style = MaterialTheme.typography.headlineLarge)
+    Text(title, style = MaterialTheme.typography.headlineLarge,
+        modifier = Modifier.testTag("PAGE_TITLE"))
 }
 
 @Composable
@@ -94,5 +96,5 @@ fun BackgroundGradient() {
     val gradientColors = listOf(lightGrey, darkGrey)
 
     // Create a vertical gradient brush
-    Box(modifier = Modifier.background(Brush.verticalGradient(gradientColors)))
+    Box(modifier = Modifier.background(Brush.verticalGradient(gradientColors)).testTag("GRADIENT"))
 }
