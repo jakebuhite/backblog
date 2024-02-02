@@ -36,8 +36,8 @@ class LogLocalRepository {
     fun clearLogs() {
         jsonUtility.deleteAllLogs()
     }
-
-    fun addMovieToLog(movieId: Int, logId: String) {
+    
+    fun addMovieToLog(logId: String, movieId: String) {
         // Get all logs
         val existingLogs = jsonUtility.readFromFile()
 
@@ -46,7 +46,7 @@ class LogLocalRepository {
 
         // Add movieId to log
         val updatedMovieIds = log.movieIds!!.toMutableMap()
-        updatedMovieIds[movieId.toString()] = true
+        updatedMovieIds[movieId] = true
 
         // Update Log accordingly
         val updatedLog = log.copy(movieIds = updatedMovieIds)

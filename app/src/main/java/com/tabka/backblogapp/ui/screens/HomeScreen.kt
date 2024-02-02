@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.TextField
@@ -27,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter.Companion.tint
@@ -45,27 +45,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.ui.bottomnav.logViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 
 private val TAG = "HomeScreen"
-private val logViewModel: LogViewModel = LogViewModel()
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun createLog(logName: String) {
-    logViewModel.createLog(logName)
-}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(navController: NavController) {
-    val allLogs = logViewModel.allLogs.collectAsState().value
+fun HomeScreen(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+    val allLogs by logViewModel.allLogs.collectAsState()
 
     val hasBackButton = false
     val pageTitle = "What's Next?"
@@ -75,11 +72,12 @@ fun HomeScreen(navController: NavController) {
 
         // If logs exist
         if (!allLogs.isNullOrEmpty()) {
-            WatchNextCard(navController, allLogs[0])
+            WatchNextCard(navController, allLogs!![0])
 
         }
         Spacer(Modifier.height(40.dp))
-        MyLogsSection(navController, allLogs, scrollState)
+        MyLogsSection(navController, backStackEntry, allLogs, scrollState)
+
     }
 }
 
@@ -214,8 +212,13 @@ fun NextMovieInfo(movie: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollState: ScrollState) {
-
+fun MyLogsSection(
+    navController: NavHostController,
+    backStackEntry: NavBackStackEntry,
+    allLogs: List<LogData>?,
+    scrollState: ScrollState
+) {
+    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
@@ -266,18 +269,23 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
         ) {
             val focusManager = LocalFocusManager.current
 
-            Row(modifier = Modifier
-                .fillMaxWidth(),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically) {
-                Text("New Log",
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "New Log",
                     style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center)
+                    textAlign = TextAlign.Center
+                )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Row(modifier = Modifier.padding(horizontal = 50.dp),
+            Row(
+                modifier = Modifier.padding(horizontal = 50.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -302,7 +310,7 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                 )
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Collaborators Heading
             Row(modifier = Modifier.padding(start = 14.dp)) {
@@ -311,8 +319,15 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
 
             Spacer(modifier = Modifier.height(15.dp))
 
+            val userList = listOf(
+                "Nick Abegg",
+                "Josh Altmeyer",
+                "Christian Totaro",
+                "Jake Buhite"
+            )
+
             LazyRow(modifier = Modifier.padding(start = 24.dp)) {
-                items(4) { index ->
+                items(userList) { index ->
                     Column() {
                         Image(
                             imageVector = Icons.Default.AccountCircle,
@@ -335,54 +350,14 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
             Spacer(modifier = Modifier.height(15.dp))
 
             Box(modifier = Modifier.height(265.dp)) {
-                LazyColumn(modifier = Modifier.padding(horizontal = 24.dp)) {
-                    items(4) { index ->
-                        Row(
-                            modifier = Modifier.padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            // User Icon
-                            Column(modifier = Modifier.weight(1F)) {
-                                Image(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.size(60.dp),
-                                    colorFilter = tint(color = colorResource(id = R.color.white))
-                                )
-                            }
-
-                            // Username
-                            Column(
-                                modifier = Modifier
-                                    .weight(3F)
-                                    .height(60.dp),
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text("Username", style = MaterialTheme.typography.bodyLarge)
-                            }
-
-                            // Add Button
-                            Column(
-                                modifier = Modifier
-                                    .weight(1F)
-                                    .height(60.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.add),
-                                    contentDescription = "Add Icon",
-                                    modifier = Modifier.size(25.dp)
-                                )
-                            }
-                        }
+                LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    items(userList) { displayName ->
+                        NewLogCollaborator(displayName)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+/*            Spacer(modifier = Modifier.height(30.dp))
 
             Row(modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center) {
@@ -390,7 +365,7 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                 Button(
                     onClick = {
                         if (logName.isNotEmpty()) {
-                            createLog(logName)
+                            logViewModel.createLog(logName)
                             isSheetOpen = false
                             logName = ""
                         }
@@ -405,21 +380,33 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                     ),
                 ) {
                     Text("Create", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                }
+                }*/
+          
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Create Button tab
+            NewLogBottomSection(logName) {createdLogName ->
+                logViewModel.createLog(createdLogName)
+                isSheetOpen = false
+                logName = ""
+
             }
         }
     }
 
-
     Spacer(modifier = Modifier.height(15.dp))
 
     if (!allLogs.isNullOrEmpty()) {
-        DisplayLogsWithDrag(navController, scrollState, allLogs)
+        DisplayLogsWithDrag(navController, backStackEntry, scrollState, allLogs)
+        Log.d(TAG, "ALL LOGS: $allLogs")
     }
 }
 
 @Composable
-fun DisplayLogsWithDrag(navController: NavController, scrollState: ScrollState, allLogs: List<LogData>?) {
+fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBackStackEntry, scrollState: ScrollState, allLogs: List<LogData>?) {
+    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+    val allLogs by logViewModel.allLogs.collectAsState()
+
     data class LogPosition(
         var index: Int,
         var logId: String,
@@ -517,6 +504,306 @@ fun DisplayLogsWithDrag(navController: NavController, scrollState: ScrollState, 
                                 .wrapContentHeight(align = Alignment.CenterVertically)
                         )
                     }
+                    for (log in logPositions) {
+                        if (log.logId != selectedLog!!.logId) {
+                            // Selected log is in the first column
+                            if (selectedLog.index % 2 == 0) {
+                                if (middleHorizontal > log.top) {
+                                    if (middleHorizontal < log.bottom) {
+                                        if (middleVertical > log.left) {
+                                            swapNeeded = true
+                                            firstIndexToSwap = selectedLog.index
+                                            secondIndexToSwap = log.index
+                                            break
+                                        }
+                                    }
+                                }
+                                // Selected log is in the second column
+                            } else {
+                                if ((middleHorizontal > log.top) && (middleHorizontal < log.bottom)) {
+                                    if (middleVertical < log.right) {
+                                        swapNeeded = true
+                                        firstIndexToSwap = selectedLog.index
+                                        secondIndexToSwap = log.index
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (swapNeeded) {
+                        val movingLogId = logPositions[firstIndexToSwap].logId
+                        val movingLogName = logPositions[firstIndexToSwap].name
+
+                        if (firstIndexToSwap < secondIndexToSwap) {
+                            // Move each logId one position up in the range from firstIndexToSwap to secondIndexToSwap
+                            for (i in firstIndexToSwap until secondIndexToSwap) {
+                                logPositions[i].logId = logPositions[i + 1].logId
+                                logPositions[i].name = logPositions[i + 1].name
+                            }
+                        } else {
+                            // Move each logId one position down in the range from secondIndexToSwap to firstIndexToSwap
+                            for (i in firstIndexToSwap downTo secondIndexToSwap + 1) {
+                                logPositions[i].logId = logPositions[i - 1].logId
+                                logPositions[i].name = logPositions[i - 1].name
+                            }
+                        }
+
+                        logPositions[secondIndexToSwap].logId = movingLogId
+                        logPositions[secondIndexToSwap].name = movingLogName
+                        draggedItem.value = logPositions[secondIndexToSwap]
+                        logViewModel.onMove(firstIndexToSwap, secondIndexToSwap)
+                    }
+                }
+            }
+        }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier.matchParentSize(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(allLogs!!.size, key = { index -> allLogs!![index].logId!! }) { index ->
+
+                var alpha by remember { mutableStateOf(1f) }
+
+                val log = allLogs!![index]
+                Card(
+                    modifier = Modifier
+                        .size(175.dp)
+                        .clickable { navController.navigate("home_log_details_${log.logId}") }
+                        .alpha(alpha)
+                        .onGloballyPositioned { coordinates ->
+                            height = coordinates.size.height.toFloat()
+                            width = coordinates.size.width.toFloat()
+
+                            val currTop = coordinates.positionInParent().y.toFloat()
+                            val currBottom = currTop + height
+                            val currLeft = coordinates.positionInParent().x.toFloat()
+                            val currRight = currLeft + width
+
+                            if (logPositions.none { it.logId == log.logId }) {
+                                val newLog = LogPosition(
+                                    index,
+                                    log.logId!!,
+                                    log.name,
+                                    coordinates.positionInParent().x,
+                                    coordinates.positionInParent().y,
+                                    currTop,
+                                    currBottom,
+                                    currLeft,
+                                    currRight
+                                )
+                                Log.d(TAG, newLog.toString())
+                                logPositions.add(newLog)
+                            }
+                        }
+                        /*.clickable { draggedItem.value = logPositions[index] }*/
+                        .pointerInput(log) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { _ ->
+                                    val currentIndex =
+                                        logPositions.indexOfFirst { it.logId == log.logId }
+                                    draggedItem.value = logPositions[currentIndex]
+                                    offset = offset
+                                    alpha = 0f
+                                    boxOverlayAlpha = 1f
+
+                                    Log.d(TAG, "Beginning to Drag: ${logPositions[index]}")
+                                    Log.d(TAG, "New index we found $currentIndex")
+                                    boxOverlayX = logPositions[currentIndex].initialX
+                                    boxOverlayY = logPositions[currentIndex].initialY
+                                    boxShown = true
+
+                                    Log.d(TAG, "We have begun")
+                                },
+                                onDrag = { change, dragAmount ->
+                                    //change.consume()
+
+                                    // Update positions if within bounds
+                                    offset = Offset(
+                                        x = offset.x + dragAmount.x,
+                                        y = offset.y + dragAmount.y
+                                    )
+
+                                    //Log.d(TAG, "Offset: $offset")
+                                    boxOverlayX += dragAmount.x
+                                    //boxOverlayX = (boxOverlayX + dragAmount.x).coerceIn(0f, parentWidth - width)
+                                    //boxOverlayY = (boxOverlayY + dragAmount.y).coerceIn(0f, parentHeight - height)
+                                    boxOverlayY += dragAmount.y
+
+                                    /*top = boxOverlayY
+                                    if (top < 0) {
+                                        middleHorizontal = 0f
+                                        middleVertical = 0f
+                                        alpha = 1f
+                                        boxOverlayAlpha = 0f
+                                        boxOverlayX = -1f
+                                        boxOverlayY = -1f
+                                        offset = Offset(0f, 0f)
+                                    } else {*/
+                                    top = boxOverlayY
+                                    bottom = top + height
+                                    left = boxOverlayX
+                                    right = left + width
+
+                                    Log.d(TAG, "Box Top: $boxOverlayY")
+
+
+                                    // Calculate the midpoints
+                                    middleVertical = (left + right) / 2
+                                    middleHorizontal = (top + bottom) / 2
+
+                                    /*if (boxBottomInViewPort > screenHeight) {
+                                    isScrollingNeeded = true
+                                    } else {
+                                        isScrollingNeeded = false
+                                    }*/
+                                },
+                                onDragEnd = {
+                                    middleHorizontal = 0f
+                                    middleVertical = 0f
+                                    alpha = 1f
+                                    boxOverlayAlpha = 0f
+                                    boxOverlayX = -1f
+                                    boxOverlayY = -1f
+                                    offset = Offset(0f, 0f)
+                                }
+                            )
+                        },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Transparent
+                    )
+                    /*elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)*/
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.creator),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    color = Color.Black.copy(alpha = 0.75f), // Transparent black color
+                                    shape = RoundedCornerShape(5.dp)
+                                )
+                        )
+
+                        // Text overlay
+                        Text(
+                            text = "${log.name}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                                .align(Alignment.Center)
+                                .wrapContentHeight(align = Alignment.CenterVertically)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NewLogCollaborator(displayName: String) {
+    Row(
+        modifier = Modifier.padding(bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // User Icon
+        Column(modifier = Modifier.weight(1F)) {
+            Image(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(60.dp),
+                colorFilter = tint(color = colorResource(id = R.color.white))
+            )
+        }
+
+        // Username
+        Column(
+            modifier = Modifier
+                .weight(3F)
+                .height(60.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(displayName, style = MaterialTheme.typography.bodyLarge)
+        }
+
+        // Add Button
+        Column(
+            modifier = Modifier
+                .width(40.dp)
+                .height(60.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.add),
+                contentDescription = "Add Icon",
+                modifier = Modifier.size(25.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Divider(thickness = 1.dp, color = Color(0xFF303437))
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // Create Button
+        Button(
+            onClick = {
+                if (!logName.isNullOrEmpty()) {
+                    onCreateClick(logName)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .padding(horizontal = 24.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.sky_blue),
+                disabledContainerColor = colorResource(id = R.color.sky_blue)
+            ),
+        ) {
+            Text(
+                "Create",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+
+
+
+/*
+@Composable
+fun ListLogs(navController: NavController, allLogs: List<LogData>) {
                     for (log in logPositions) {
                         if (log.logId != selectedLog!!.logId) {
                             // Selected log is in the first column
@@ -667,7 +954,7 @@ fun DisplayLogsWithDrag(navController: NavController, scrollState: ScrollState, 
                                     middleVertical = (left + right) / 2
                                     middleHorizontal = (top + bottom) / 2
 
-/*                                    if (boxBottomInViewPort > screenHeight) {
+                                    /*                                    if (boxBottomInViewPort > screenHeight) {
                                         isScrollingNeeded = true
                                     } else {
                                         isScrollingNeeded = false
@@ -726,3 +1013,4 @@ fun DisplayLogsWithDrag(navController: NavController, scrollState: ScrollState, 
         }
     }
 }
+*/
