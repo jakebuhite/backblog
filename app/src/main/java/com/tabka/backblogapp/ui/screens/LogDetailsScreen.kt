@@ -1,10 +1,8 @@
 package com.tabka.backblogapp.ui.screens
 
+/*import com.tabka.backblogapp.ui.bottomnav.logDetailsViewModel*/
+import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,30 +15,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FractionalThreshold
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.rememberSwipeableState
-import androidx.compose.material.swipeable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -50,17 +38,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
-import kotlin.math.abs
-import kotlin.math.ceil
 
 private val TAG = "LogDetailsScreen"
 
 
 @Composable
-fun LogDetailsScreen(navController: NavController, logId: String?) {
+fun LogDetailsScreen(
+    navController: NavHostController,
+    logId: String?
+) {
     val logDetailsViewModel: LogDetailsViewModel = viewModel()
     val log = logDetailsViewModel.log!!
 
@@ -72,7 +63,7 @@ fun LogDetailsScreen(navController: NavController, logId: String?) {
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons()
         Spacer(modifier = Modifier.height(20.dp))
-        LogList()
+        LogList(navController)
 
     }
 }
@@ -185,9 +176,12 @@ fun LogButtons() {
 }
 
 @Composable
-fun LogList() {
+fun LogList(navController: NavHostController) {
+    val logDetailsViewModel: LogDetailsViewModel = viewModel()
+    val movies by logDetailsViewModel.movies.collectAsState()
+    Log.d(TAG, "Movies: $movies")
 
-    val logs = listOf(
+/*    val logs = listOf(
         "Aquaman and the Lost Kingdom",
         "NOPE",
         "The Batman",
@@ -196,27 +190,32 @@ fun LogList() {
         "Joker",
         "The Creator",
         "Spider-Man"
-    )
+    )*/
+    //MovieEntry(movie = movies!!)
+    if (!movies.isNullOrEmpty()) {
+        // Height of image and padding times number of movies
+        val height: Dp = (80 * movies!!.size).dp
 
-    val height: Dp = (70 * logs.size).dp
-
-    LazyColumn(userScrollEnabled = false, modifier = Modifier.height(height)) {
-        items(logs) { logName ->
-            LogEntry(logName)
+        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(height)) {
+            items(movies!!.size) { index ->
+                val movie = movies!![index]
+                MovieEntry(movie)
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun LogEntry(logName: String) {
+fun MovieEntry(movie: MovieData) {
     /*Row(modifier = swipeableModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
 
     }*/
-    Row(modifier = Modifier.fillMaxWidth()
+    Row(modifier = Modifier
+        .fillMaxWidth()
         .padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
@@ -231,11 +230,11 @@ fun LogEntry(logName: String) {
                     .height(70.dp)
                     .clip(RoundedCornerShape(5.dp))
             ) {
-                /*val imageBaseURL =
-                    "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"*/
+                val imageBaseURL =
+                    "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
                 Image(
-                    painter = painterResource(id = R.drawable.creator),
-                    contentDescription = "movie image",
+                    painter = rememberAsyncImagePainter(imageBaseURL),
+                    contentDescription = null,
                     contentScale = ContentScale.Crop
                 )
             }
@@ -248,7 +247,7 @@ fun LogEntry(logName: String) {
             .height(70.dp)
             .padding(start = 8.dp),
             verticalArrangement = Arrangement.Center){
-            Text(text = logName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = movie.title!!, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
         // Add Button
