@@ -27,7 +27,7 @@ class LogDetailsScreenTest {
             mockNavController.navigatorProvider.addNavigator(ComposeNavigator())
             BottomNavGraph(navController = mockNavController)
             Surface {
-                LogDetailsScreen(navController = mockNavController, logId)
+                LogDetailsScreen(navController = mockNavController, backStackEntry, logId)
             }
         }
     }
