@@ -21,6 +21,9 @@ class SearchResultsViewModel : ViewModel() {
     fun getMovieResults(query: String) {
         movieRepository.searchMovie(query, 1,
             onResponse = { searchData ->
+                searchData?.results?.forEach { searchResult ->
+                    Log.d(TAG, "$searchResult")
+                }
                 Log.d(TAG, searchData.toString())
                 _movieResults.value = searchData?.results
             },

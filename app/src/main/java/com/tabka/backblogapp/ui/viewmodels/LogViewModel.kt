@@ -39,6 +39,11 @@ class LogViewModel : ViewModel() {
         localLogRepository.reorderLogs(allLogs.value!!)
     }
 
+    fun addMovieToLog(logId: String?, movieId: String?) {
+        localLogRepository.addMovieToLog(logId!!, movieId!!)
+        loadLogs()
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun createLog(logName: String) {
