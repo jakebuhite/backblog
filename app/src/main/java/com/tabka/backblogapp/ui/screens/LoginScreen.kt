@@ -178,6 +178,10 @@ fun LoginScreen(navController: NavController) {
                                 )
                             }
                         }
+                    } else {
+                        statusText = "Please complete all fields"
+                        statusColor = Color(0xFFCC0000)
+                        visible = true
                     }
 
                     Spacer(modifier = Modifier.height(30.dp))

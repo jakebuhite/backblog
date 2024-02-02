@@ -83,7 +83,9 @@ class SettingsViewModel: ViewModel() {
             }.awaitAll()
 
             // Now delete logs
-            logLocalRepository.clearLogs()
+            if (logs.isNotEmpty()) {
+                logLocalRepository.clearLogs()
+            }
 
             DataResult.Success(true)
         } catch (e: Exception) {

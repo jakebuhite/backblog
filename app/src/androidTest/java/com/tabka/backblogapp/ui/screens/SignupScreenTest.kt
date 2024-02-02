@@ -2,15 +2,22 @@ package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -23,6 +30,9 @@ class SignupScreenTest {
     val composeTestRule = createComposeRule()
 
     private lateinit var mockNavController: TestNavHostController
+    private val email = "test@test.com"
+    private val username = "test"
+    private val password = "test123"
 
     @Before
     fun setUp() {
@@ -37,8 +47,16 @@ class SignupScreenTest {
         }
     }
 
+    @After
+    fun tearDown() {
+        // Perform actions to delete the user
+        if (Firebase.auth.currentUser != null) {
+            Firebase.auth.currentUser!!.delete()
+        }
+    }
+
     @Test
-    fun signupScreenInView() {
+    fun testSignupScreenInView() {
         val imgId = R.drawable.img_logo_80_80.toString()
         composeTestRule.onNodeWithTag(imgId).assertIsDisplayed()
         composeTestRule.onNodeWithText("BackBlog").assertIsDisplayed()
@@ -66,5 +84,97 @@ class SignupScreenTest {
         composeTestRule.onNodeWithText("Already have an account?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Log in").assertIsDisplayed()
         composeTestRule.onNodeWithTag("GO_TO_LOGIN_BUTTON").assertIsDisplayed()
+    }
+
+    @Test
+    fun testSignupButtonClickFailedNoEmail() {
+        // Enter NO email and password
+        composeTestRule.onNodeWithTag("PASSWORD_FIELD").performTextInput(password)
+        composeTestRule.onNodeWithTag("USERNAME_FIELD").performTextInput(username)
+
+        // Click on the login button
+        composeTestRule.onNodeWithTag("SIGNUP_BUTTON").performClick()
+
+        composeTestRule.waitUntil(2000) {
+            composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
+        }
+
+        composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Please complete all fields")
+    }
+
+    @Test
+    fun testSignupButtonClickFailedNoPassword() {
+        // Enter NO email and password
+        composeTestRule.onNodeWithTag("EMAIL_FIELD").performTextInput(email)
+        composeTestRule.onNodeWithTag("USERNAME_FIELD").performTextInput(username)
+
+        // Click on the login button
+        composeTestRule.onNodeWithTag("SIGNUP_BUTTON").performClick()
+
+        composeTestRule.waitUntil(2000) {
+            composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
+        }
+
+        composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Please complete all fields")
+    }
+
+    @Test
+    fun testSignupButtonClickFailedNoUsername() {
+        // Enter NO email and password
+        composeTestRule.onNodeWithTag("EMAIL_FIELD").performTextInput(email)
+        composeTestRule.onNodeWithTag("PASSWORD_FIELD").performTextInput(password)
+
+        // Click on the login button
+        composeTestRule.onNodeWithTag("SIGNUP_BUTTON").performClick()
+
+        composeTestRule.waitUntil(2000) {
+            composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
+        }
+
+        composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Please complete all fields")
+    }
+
+    @Test
+    fun testSignupButtonClickAccountAlreadyExistsAuth() {
+        // Enter NO email and password
+        composeTestRule.onNodeWithTag("EMAIL_FIELD").performTextInput("apple@apple.com")
+        composeTestRule.onNodeWithTag("USERNAME_FIELD").performTextInput("apple")
+        composeTestRule.onNodeWithTag("PASSWORD_FIELD").performTextInput("apple123")
+
+        // Click on the login button
+        composeTestRule.onNodeWithTag("SIGNUP_BUTTON").performClick()
+
+        composeTestRule.waitUntil(2000) {
+            composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
+        }
+
+        composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Email already in use.")
+    }
+
+    @Test
+    fun testSignupUserClickSuccess() {
+        // Enter email and password
+        composeTestRule.onNodeWithTag("EMAIL_FIELD").performTextInput(email)
+        composeTestRule.onNodeWithTag("USERNAME_FIELD").performTextInput(username)
+        composeTestRule.onNodeWithTag("PASSWORD_FIELD").performTextInput(password)
+
+        // Perform signup actions
+        composeTestRule.onNodeWithTag("SIGNUP_BUTTON").performClick()
+
+        // Wait for the signup process to complete
+        composeTestRule.waitUntil(2000) {
+            composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
+        }
+
+        // Check to see status message
+        composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Signup successful. Redirecting...")
+
+        // Check to see if view changed to login
+        composeTestRule.waitUntil(1500) {
+            mockNavController.currentDestination?.route == "login"
+        }
+
+        // Check if the user is signed up
+       assert(Firebase.auth.currentUser != null)
     }
 }
