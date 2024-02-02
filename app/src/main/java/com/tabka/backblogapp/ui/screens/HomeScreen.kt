@@ -37,6 +37,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -112,7 +113,8 @@ fun WatchNextCard(navController: NavController, priorityLog: LogData) {
 @Composable
 fun PriorityLogTitle(logName: String) {
     Row() {
-        Text("From $logName", style = MaterialTheme.typography.titleSmall)
+        Text("From $logName", style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.testTag("PRIORITY_LOG_TITLE"))
     }
 }
 
@@ -151,6 +153,7 @@ fun NextMovie(navController: NavController, movie: String?) {
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
+                        .testTag("MOVIE_IMAGE")
                 )
             }
         }
@@ -172,13 +175,15 @@ fun NextMovieInfo(movie: String) {
         {
             // Title
             Row() {
-                Text(text = "Tenet", style = MaterialTheme.typography.headlineMedium)
+                Text(text = "Tenet", style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.testTag("MOVIE_TITLE"))
             }
 
             Row() {
                 // Rating
                 Column() {
-                    Text(text = "PG-13", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "PG-13", style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.testTag("MOVIE_RATING"))
                 }
 
                 Spacer(modifier = Modifier.width(5.dp))
@@ -186,7 +191,8 @@ fun NextMovieInfo(movie: String) {
                 // Release Date
                 Column(
                 ) {
-                    Text(text = "2022", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "2022", style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.testTag("MOVIE_YEAR"))
                 }
             }
         }
@@ -200,7 +206,7 @@ fun NextMovieInfo(movie: String) {
             Image(
                 painter = painterResource(id = R.drawable.checkbutton2),
                 contentDescription = "Check icon",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(40.dp).testTag("CHECK_ICON")
             )
         }
     }

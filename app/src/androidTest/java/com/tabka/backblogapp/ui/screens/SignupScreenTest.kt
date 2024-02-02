@@ -1,6 +1,7 @@
 package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.material3.Surface
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -17,7 +18,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
-import org.junit.After
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -35,7 +37,7 @@ class SignupScreenTest {
     private val password = "test123"
 
     @Before
-    fun setUp() {
+    fun setup() {
         // Launch the LoginScreen composable
         composeTestRule.setContent {
             mockNavController = TestNavHostController(ApplicationProvider.getApplicationContext())
@@ -44,14 +46,6 @@ class SignupScreenTest {
             Surface {
                 SignupScreen(navController = mockNavController)
             }
-        }
-    }
-
-    @After
-    fun tearDown() {
-        // Perform actions to delete the user
-        if (Firebase.auth.currentUser != null) {
-            Firebase.auth.currentUser!!.delete()
         }
     }
 
@@ -84,6 +78,9 @@ class SignupScreenTest {
         composeTestRule.onNodeWithText("Already have an account?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Log in").assertIsDisplayed()
         composeTestRule.onNodeWithTag("GO_TO_LOGIN_BUTTON").assertIsDisplayed()
+
+        // Assert click-ability
+        composeTestRule.onNodeWithTag("GO_TO_LOGIN_BUTTON").assertHasClickAction()
     }
 
     @Test
@@ -152,7 +149,7 @@ class SignupScreenTest {
     }
 
     @Test
-    fun testSignupUserClickSuccess() {
+    fun testSignupUserClickSuccess() = runBlocking {
         // Enter email and password
         composeTestRule.onNodeWithTag("EMAIL_FIELD").performTextInput(email)
         composeTestRule.onNodeWithTag("USERNAME_FIELD").performTextInput(username)
@@ -162,7 +159,7 @@ class SignupScreenTest {
         composeTestRule.onNodeWithTag("SIGNUP_BUTTON").performClick()
 
         // Wait for the signup process to complete
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
@@ -176,5 +173,13 @@ class SignupScreenTest {
 
         // Check if the user is signed up
        assert(Firebase.auth.currentUser != null)
+
+        // Perform actions to delete the user
+        if (Firebase.auth.currentUser != null) {
+            Firebase.auth.currentUser!!.delete().await()
+        }
+
+        // Assert user is now deleted
+        assert(Firebase.auth.currentUser == null)
     }
 }

@@ -64,7 +64,7 @@ android {
 }
 
 jacoco {
-    toolVersion = "0.8.0"
+    toolVersion = "0.8.11"
 }
 
 tasks.create("jacocoTestReport", JacocoReport::class) {
@@ -86,7 +86,7 @@ tasks.create("jacocoTestReport", JacocoReport::class) {
     classDirectories.setFrom(files(debugTree))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(fileTree(buildDir) {
-        include("jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec")
+        include("jacoco/testDebugUnitTest.exec", "outputs/code-coverage/connected/*coverage.ec")
     })
 }
 
