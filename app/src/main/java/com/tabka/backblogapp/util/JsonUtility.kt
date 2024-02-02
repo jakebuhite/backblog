@@ -8,20 +8,13 @@ import kotlinx.serialization.json.Json
 import java.io.IOException
 
 class JsonUtility(private val context: Context) {
-
     private val fileName = "logs.json"
 
     fun appendToFile(newLog: LogData) {
-        // Read existing content
         val existingLogs = readFromFile()
-
-        // Add the new log to the list
         existingLogs.add(newLog)
 
-        // Convert the updated list back to JSON string
         val updatedJson = Json.encodeToString(existingLogs)
-
-        // Write the JSON string to the file
         context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
             it.write(updatedJson.toByteArray())
         }
@@ -35,13 +28,10 @@ class JsonUtility(private val context: Context) {
         }
 
         return if (fileContents.startsWith("[")) {
-            // The content is a JSON array
             Json.decodeFromString(fileContents)
         } else if (fileContents.isNotEmpty()) {
-            // The content is a single JSON object
             mutableListOf(Json.decodeFromString(fileContents))
         } else {
-            // The file is empty
             mutableListOf()
         }
     }
@@ -54,13 +44,10 @@ class JsonUtility(private val context: Context) {
     }
 
     fun deleteLog(logToDelete: LogData) {
-        // Read existing content
         val existingLogs = readFromFile()
 
         // Find the index of the log to delete
         val logIndex = existingLogs.indexOfFirst { it.logId == logToDelete.logId }
-
-        // Check if the log was found
         if (logIndex != -1) {
             existingLogs.removeAt(logIndex)
             overwriteJSON(existingLogs)
@@ -70,7 +57,6 @@ class JsonUtility(private val context: Context) {
     }
 
     fun deleteAllLogs() {
-        // Clear the content of the JSON file
         context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
             it.write("".toByteArray())
         }

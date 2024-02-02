@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -87,7 +88,7 @@ fun DetailBar() {
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier.size(35.dp).testTag("CREATOR_PICTURE"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -98,7 +99,7 @@ fun DetailBar() {
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier.size(35.dp).testTag("COLLABS_PICTURE"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -132,7 +133,7 @@ fun LogButtons() {
                 Image(
                     painter = painterResource(id = R.drawable.user_add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(35.dp)
+                    modifier = Modifier.size(35.dp).testTag("ADD_ICON")
                 )
             }
 
@@ -145,7 +146,7 @@ fun LogButtons() {
                 Image(
                     painter = painterResource(id = R.drawable.edit),
                     contentDescription = "Edit",
-                    modifier = Modifier.size(35.dp)
+                    modifier = Modifier.size(35.dp).testTag("EDIT_ICON")
                 )
             }
         }
@@ -163,6 +164,7 @@ fun LogButtons() {
                     modifier = Modifier
                         .size(35.dp)
                         .fillMaxHeight()
+                        .testTag("SHUFFLE_ICON")
                 )
             }
 
@@ -175,7 +177,7 @@ fun LogButtons() {
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier.size(50.dp).testTag("ADD_MOVIE_ICON")
                 )
             }
         }
