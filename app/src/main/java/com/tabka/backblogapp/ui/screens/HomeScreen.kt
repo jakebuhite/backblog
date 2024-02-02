@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter.Companion.tint
@@ -46,27 +45,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.ui.bottomnav.logViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 
 private val TAG = "HomeScreen"
-private val logViewModel: LogViewModel = LogViewModel()
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun createLog(logName: String) {
-    logViewModel.createLog(logName)
-}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(navController: NavController) {
-    val allLogs = logViewModel.allLogs.collectAsState().value
+fun HomeScreen(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+    val allLogs by logViewModel.allLogs.collectAsState()
 
     val hasBackButton = false
     val pageTitle = "What's Next?"
@@ -76,11 +72,11 @@ fun HomeScreen(navController: NavController) {
 
         // If logs exist
         if (!allLogs.isNullOrEmpty()) {
-            WatchNextCard(navController, allLogs[0])
+            WatchNextCard(navController, allLogs!![0])
 
         }
         Spacer(Modifier.height(40.dp))
-        MyLogsSection(navController, allLogs, scrollState)
+        MyLogsSection(navController, backStackEntry, allLogs, scrollState)
     }
 }
 
@@ -215,8 +211,13 @@ fun NextMovieInfo(movie: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollState: ScrollState) {
-
+fun MyLogsSection(
+    navController: NavHostController,
+    backStackEntry: NavBackStackEntry,
+    allLogs: List<LogData>?,
+    scrollState: ScrollState
+) {
+    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
@@ -355,6 +356,31 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                 }
             }
 
+/*            Spacer(modifier = Modifier.height(30.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center) {
+                // Create Button
+                Button(
+                    onClick = {
+                        if (logName.isNotEmpty()) {
+                            logViewModel.createLog(logName)
+                            isSheetOpen = false
+                            logName = ""
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(horizontal = 24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.sky_blue),
+                        disabledContainerColor = colorResource(id = R.color.sky_blue)
+                    ),
+                ) {
+                    Text("Create", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                }*/
+          
             Spacer(modifier = Modifier.height(10.dp))
 
             // Create Button tab
@@ -362,6 +388,7 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
                 createLog(createdLogName)
                 isSheetOpen = false
                 logName = ""
+
             }
         }
     }
@@ -369,12 +396,14 @@ fun MyLogsSection(navController: NavController, allLogs: List<LogData>?, scrollS
     Spacer(modifier = Modifier.height(15.dp))
 
     if (!allLogs.isNullOrEmpty()) {
-        DisplayLogsWithDrag(navController, scrollState, allLogs)
+        DisplayLogsWithDrag(navController, backStackEntry, scrollState, allLogs)
     }
 }
 
 @Composable
-fun DisplayLogsWithDrag(navController: NavController, scrollState: ScrollState, allLogs: List<LogData>?) {
+fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBackStackEntry, scrollState: ScrollState, allLogs: List<LogData>?) {
+    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+
     data class LogPosition(
         var index: Int,
         var logId: String,
@@ -718,7 +747,7 @@ fun ListLogs(navController: NavController, allLogs: List<LogData>) {
                                     middleVertical = (left + right) / 2
                                     middleHorizontal = (top + bottom) / 2
 
-/*                                    if (boxBottomInViewPort > screenHeight) {
+                                    /*                                    if (boxBottomInViewPort > screenHeight) {
                                         isScrollingNeeded = true
                                     } else {
                                         isScrollingNeeded = false

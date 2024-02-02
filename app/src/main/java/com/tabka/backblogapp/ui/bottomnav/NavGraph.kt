@@ -3,10 +3,14 @@ package com.tabka.backblogapp.ui.bottomnav
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -24,10 +28,13 @@ import com.tabka.backblogapp.ui.screens.SearchResultsScreen
 import com.tabka.backblogapp.ui.screens.SearchScreen
 import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
+
+
     var startDest by remember { mutableStateOf("login") }
     val auth = Firebase.auth
     auth.addAuthStateListener {
@@ -42,10 +49,13 @@ fun BottomNavGraph(navController: NavHostController) {
         navController = navController,
         startDestination = BottomNavigationBar.Home.route
     ) {
+
         navigation(startDestination = "home", route = BottomNavigationBar.Home.route) {
 
-            composable(route = "home") {
-                HomeScreen(navController)
+            composable(route = "home") { backStackEntry ->
+                /*val logViewModel = backStackEntry.logViewModel<LogViewModel>(navController)
+                val allLogs by logViewModel.allLogs.collectAsState()*/
+                HomeScreen(navController, backStackEntry)
             }
 
             composable(
@@ -69,8 +79,10 @@ fun BottomNavGraph(navController: NavHostController) {
                 SearchScreen(navController)
             }
 
-            composable(route = "search_results") {
-                SearchResultsScreen(navController)
+            composable(route = "search_results") { backStackEntry ->
+                /*val logViewModel = entry.logViewModel<LogViewModel>(navController)
+                val allLogs by logViewModel.allLogs.collectAsState()*/
+                SearchResultsScreen(navController, backStackEntry)
             }
 
             composable(
@@ -101,3 +113,15 @@ fun BottomNavGraph(navController: NavHostController) {
         }
     }
 }
+
+@Composable
+inline fun <reified T : ViewModel> NavBackStackEntry.logViewModel(
+    navController: NavHostController,
+): T {
+    val navGraphRoute = destination.parent?.route ?: return viewModel()
+    val parentEntry = remember(this) {
+        navController.getBackStackEntry(navGraphRoute)
+    }
+    return viewModel(parentEntry)
+}
+

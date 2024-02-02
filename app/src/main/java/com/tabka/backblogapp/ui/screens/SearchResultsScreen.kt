@@ -3,7 +3,6 @@ package com.tabka.backblogapp.ui.screens
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Icon
@@ -54,34 +52,34 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
-import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
+import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
-import com.tabka.backblogapp.network.repository.MovieRepository
+import com.tabka.backblogapp.ui.bottomnav.logViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
-import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
-import java.util.Collections.addAll
 
 private val TAG = "SearchResultsScreen"
-private val logViewModel: LogViewModel = LogViewModel()
+val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
+
 
 @Composable
-fun SearchResultsScreen(navController: NavController) {
+fun SearchResultsScreen(navController: NavHostController, backStackEntry: NavBackStackEntry) {
     val hasBackButton = true
     val pageTitle = "Results"
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        SearchBar(navController)
+        SearchBar(navController, backStackEntry)
+        //DisplayMovieResults
     }
 }
 
 @Composable
-fun SearchBar(navController: NavController) {
-    val searchResultsViewModel: SearchResultsViewModel = viewModel()
+fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntry) {
     var text by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
@@ -122,8 +120,6 @@ fun SearchBar(navController: NavController) {
                         .fillMaxWidth()
                         .background(Color.White)
                         .focusRequester(focusRequester)
-                    /*.padding(8.dp) // Add padding for better appearance
-                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))*/
                 )
 
                 LaunchedEffect(Unit) {
@@ -132,8 +128,6 @@ fun SearchBar(navController: NavController) {
             }
         }
     }
-
-
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
     if (!movieResults.isNullOrEmpty()) {
         Box(modifier = Modifier.height(500.dp)) {
@@ -143,7 +137,7 @@ fun SearchBar(navController: NavController) {
                     .padding(top = 20.dp)
             ) {
                 items(movieResults) { movie ->
-                    MovieResult(navController, movie)
+                    MovieResult(navController, backStackEntry, movie)
                 }
             }
         }
@@ -152,9 +146,12 @@ fun SearchBar(navController: NavController) {
     }
 }
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieResult(navController: NavController, movie: MovieSearchResult) {
+fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEntry, movie: MovieSearchResult) {
+    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+    val allLogs by logViewModel.allLogs.collectAsState()
+
     Row(modifier = Modifier.padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
@@ -191,16 +188,16 @@ fun MovieResult(navController: NavController, movie: MovieSearchResult) {
             Text("${movie.originalTitle}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
-/*        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var isSheetOpen by rememberSaveable {
             mutableStateOf(false)
-        }*/
+        }
 
         // Add Button
         Column(modifier = Modifier
             .weight(1F)
-            .height(70.dp),
-            //.clickable { isSheetOpen = true },
+            .height(70.dp)
+            .clickable { isSheetOpen = true },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
             Image(
@@ -209,8 +206,6 @@ fun MovieResult(navController: NavController, movie: MovieSearchResult) {
                 modifier = Modifier.size(25.dp)
             )
         }
-
-        /*
 
 
         if (isSheetOpen) {
@@ -221,14 +216,15 @@ fun MovieResult(navController: NavController, movie: MovieSearchResult) {
                 modifier = Modifier.fillMaxSize()
             ){
 
+                //val allLogs = logViewModel.allLogs.collectAsState().value
                 if (allLogs != null) {
-                    val checkedStates = remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs.size) { false }) } }
+                    val checkedStates = remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
 
                     LazyColumn(
                         modifier = Modifier.padding(start = 20.dp)
                     ) {
-                        items(allLogs.size) { index ->
-                            val log = allLogs[index]
+                        items(allLogs!!.size) { index ->
+                            val log = allLogs!![index]
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -248,48 +244,24 @@ fun MovieResult(navController: NavController, movie: MovieSearchResult) {
                     Button(
                         onClick = {
                             // Use the checkedStates list to find out which checkboxes are checked
-                            val checkedItems = allLogs.indices.filter { checkedStates[it] }
+                            val checkedItems = allLogs!!.indices.filter { checkedStates[it] }
                             Log.d(TAG, "Checked Items: $checkedItems")
-                        }
-                    ) {
-                        Text(
-                            "Add to Log",
-                            color = Color.White
-                        )
-                    }
-                    *//*LazyColumn(
-                        modifier = Modifier
-                            .padding(start = 20.dp)
-                    ) {
+                            for (checkedItem in checkedItems) {
+                                val log = allLogs!![checkedItem]
 
-                        items(allLogs.size) { index ->
-                            val checkedState = remember { mutableStateOf(false) }
-                            val log = allLogs[index]
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    log.name!!,
-                                    color = Color.White
-                                )
-                                Checkbox(
-                                    checked = checkedState.value,
-                                    onCheckedChange = { checkedState.value = it },
-                                )
+                                logViewModel.addMovieToLog(log.logId, movie.id.toString())
+                                /*Log.d(TAG, allLogs)*/
                             }
                         }
-                    }
-                    Button(
-                        onClick = { Log.d(TAG, "Button clicked! $") }
                     ) {
                         Text(
                             "Add to Log",
                             color = Color.White
                         )
-                    }*//*
+                    }
                 }
             }
-        }*/
+        }
     }
 }
 
