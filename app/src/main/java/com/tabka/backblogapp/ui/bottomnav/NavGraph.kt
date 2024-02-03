@@ -3,7 +3,6 @@ package com.tabka.backblogapp.ui.bottomnav
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,12 +27,14 @@ import com.tabka.backblogapp.ui.screens.SearchResultsScreen
 import com.tabka.backblogapp.ui.screens.SearchScreen
 import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
-import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
+import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
-
+    val friendsViewModel = FriendsViewModel()
+    val logDetailsViewModel = LogDetailsViewModel()
 
     var startDest by remember { mutableStateOf("login") }
     val auth = Firebase.auth
@@ -62,7 +63,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "home_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"))
+                LogDetailsScreen(navController, logDetailsViewModel, backStackEntry.arguments?.getString("logId"))
             }
 
             composable(
@@ -96,7 +97,7 @@ fun BottomNavGraph(navController: NavHostController) {
         navigation(startDestination = startDest, route = BottomNavigationBar.Friends.route) {
 
             composable(route = "friends") {
-                FriendsScreen(navController)
+                FriendsScreen(navController, friendsViewModel)
             }
 
             composable(route = "login") {
@@ -109,6 +110,13 @@ fun BottomNavGraph(navController: NavHostController) {
 
             composable(route = "settings") {
                 SettingsScreen(navController)
+            }
+
+            composable(
+                route = "public_log_details_{logId}",
+                arguments = listOf(navArgument("logId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                LogDetailsScreen(navController, logDetailsViewModel, backStackEntry.arguments?.getString("logId"))
             }
         }
     }

@@ -8,6 +8,7 @@ import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
+import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
@@ -74,7 +75,7 @@ class LogRepository {
             val doc = db.collection("logs").document(logId).get().await()
             if (doc.exists()) {
                 Log.d(tag, "Log successfully written!")
-                DataResult.Success(Json.decodeFromString(Json.encodeToString(doc)))
+                DataResult.Success(Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())))
             } else {
                 Log.d(tag, "Log not found.")
                 DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
@@ -97,11 +98,9 @@ class LogRepository {
                         val snapshot = if (private) {
                             logRef.whereEqualTo("owner.user_id", userId)
                         } else {
-                            logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("status", "PUBLIC")
+                            logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("is_visible", true)
                         }.get().await()
-                        logs.addAll(snapshot.documents.map { doc ->
-                            Json.decodeFromString(Json.encodeToString(doc.data))
-                        })
+                        logs.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
                     } catch (e: Exception) {
                         Log.w(tag, "Error receiving logs document (userOwned)", e)
                         return@async DataResult.Failure(e)
@@ -113,10 +112,10 @@ class LogRepository {
                         val snapshot = if (private) {
                             logRef.orderBy("collaborators.${userId}")
                         } else {
-                            logRef.orderBy("collaborators.${userId}").whereEqualTo("status", "PUBLIC")
+                            logRef.orderBy("collaborators.${userId}").whereEqualTo("is_visible", true)
                         }.get().await()
                         logs.addAll(snapshot.documents.map { doc ->
-                            Json.decodeFromString(Json.encodeToString(doc.data))
+                            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
                         })
                     } catch (e: Exception) {
                         Log.w(tag, "Error receiving logs document (userCollab)", e)
@@ -142,7 +141,7 @@ class LogRepository {
 
             // Add the modified properties to updatedUserObj
             updateData["name"]?.let { updatedLogObj["name"] = it }
-            updateData["status"]?.let { updatedLogObj["status"] = it }
+            updateData["is_visible"]?.let { updatedLogObj["is_visible"] = it }
             updateData["movie_ids"]?.let { updatedLogObj["movie_ids"] = it }
             updateData["watched_ids"]?.let { updatedLogObj["watched_ids"] = it }
 

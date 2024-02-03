@@ -1,6 +1,5 @@
 package com.tabka.backblogapp.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuthException
@@ -23,6 +22,7 @@ class AuthViewModel: ViewModel() {
         } catch (e: Exception) {
             println("Error: $e")
             val errorCode = (e as FirebaseAuthException).errorCode
+            print("ERROR CODE: $errorCode")
             resultMsg = getErrorMessage(errorCode)
         }
         return Pair(false, resultMsg)
@@ -41,6 +41,7 @@ class AuthViewModel: ViewModel() {
         } catch (e: Exception) {
             println("Error: $e")
             val errorCode = (e as FirebaseAuthException).errorCode
+            print("ERROR CODE: $errorCode")
             resultMsg = getErrorMessage(errorCode)
         }
         return Pair(false, resultMsg)
