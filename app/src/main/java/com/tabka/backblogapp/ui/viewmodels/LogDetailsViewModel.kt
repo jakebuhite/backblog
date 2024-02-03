@@ -1,56 +1,95 @@
 package com.tabka.backblogapp.ui.viewmodels
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.repository.LogLocalRepository
+import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import com.tabka.backblogapp.util.DataResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class LogDetailsViewModel(savedStateHandle: SavedStateHandle): ViewModel() {
-    private val TAG = "LogDetailsViewModel"
+class LogDetailsViewModel: ViewModel() {
+    private val tag = "LogDetailsViewModel"
+    private val auth = Firebase.auth
 
+    // Log data
+    private val localRepository = LogLocalRepository()
+    private val logRepository = LogRepository()
+    val logData: MutableLiveData<LogData> = MutableLiveData()
+
+    // Movie data
     private val apiService = ApiClient.movieApiService
     private val movieRepository = MovieRepository(apiService)
+    val movies: MutableLiveData<List<MovieData>> = MutableLiveData()
 
-
-    private val logId: String = checkNotNull(savedStateHandle["logId"])
-    val log: LogData? = LogLocalRepository().getLogById(logId)
-
-
-    private val _movies = MutableStateFlow<List<MovieData>?>(emptyList())
-    val movies = _movies.asStateFlow()
-
-    init {
-        Log.d(TAG, "LogID! $logId")
+    private suspend fun updateLogData(newLog: LogData) {
+        logData.value = newLog
         getMovies()
     }
 
-    private fun getMovies() {
-        Log.d(TAG, "Getting the movies")
-        log!!.movieIds?.let { movieIds ->
-            Log.d(TAG, "Here are the Movie IDs: $movieIds")
-            movieIds.keys.forEach { movieId ->
-                Log.d(TAG, "Going further... $movieId")
-                movieRepository.getMovieById(movieId,
-                    onResponse = { movieData ->
-                        Log.d(TAG, "Good response, here is the movie: $movieData")
-                        _movies.update { currentList ->
-                            currentList?.plus(movieData!!)
+    private fun updateMovieList(newList: List<MovieData>) {
+        movies.value = newList
+    }
+
+    suspend fun getLogData(logId: String) {
+        viewModelScope.launch {
+            try {
+                val user = auth.currentUser?.uid
+                if (user != null) {
+                    val result: DataResult<LogData> = logRepository.getLog(logId)
+                    withContext(Dispatchers.Main) {
+                        when (result) {
+                            is DataResult.Success -> updateLogData(result.item)
+                            is DataResult.Failure -> throw result.throwable
                         }
-                        Log.d(TAG, "Got the movie!")
-                    },
-                    onFailure = { error ->
-                        Log.d(TAG, "Error: $error")
                     }
-                )
+                } else {
+                    val result = localRepository.getLogById(logId)
+                    if (result != null) {
+                        updateLogData(result)
+                    } else {
+                        throw Throwable("Failed to get log from local log repository")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d(tag, "Error: $e")
             }
         }
     }
 
+    private suspend fun getMovies() {
+        val movieDataList = mutableListOf<MovieData>()
+        val movieIds = logData.value?.movieIds?.keys ?: listOf()
+
+        viewModelScope.launch {
+            try {
+                for (movieId in movieIds) {
+                    movieRepository.getMovieById(
+                        movieId = movieId,
+                        onResponse = { movieResponse ->
+                            movieResponse?.let { movieDataList.add(it) }
+                        },
+                        onFailure = { e ->
+                            Log.e("Movies", "Failed to fetch details for movie ID $movieId: $e")
+                        }
+                    )
+                }
+
+                withContext(Dispatchers.Main) {
+                    updateMovieList(movieDataList)
+                }
+            } catch (e: Exception) {
+                Log.e("Movies", "Failed to fetch details for movies: $e")
+            }
+        }
+    }
 }

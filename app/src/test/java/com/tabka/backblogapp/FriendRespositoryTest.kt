@@ -1,26 +1,5 @@
 package com.tabka.backblogapp
 
-import com.google.android.gms.tasks.Task
-import com.google.android.gms.tasks.Tasks
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.tabka.backblogapp.network.models.FriendRequestData
-import com.tabka.backblogapp.network.models.LogRequestData
-import com.tabka.backblogapp.network.repository.FriendRepository
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
-
 class FriendRepositoryTest {
 
     /*@Mock

@@ -4,16 +4,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.navigation.NavController
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -26,6 +25,7 @@ class FriendsScreenTest {
     val composeTestRule = createComposeRule()
 
     private lateinit var mockNavController: TestNavHostController
+    private lateinit var viewModel: FriendsViewModel
 
     @Before
     fun setup() {
@@ -35,7 +35,7 @@ class FriendsScreenTest {
             mockNavController.navigatorProvider.addNavigator(ComposeNavigator())
             BottomNavGraph(navController = mockNavController)
             Surface {
-                FriendsScreen(navController = mockNavController)
+                FriendsScreen(navController = mockNavController, viewModel)
             }
         }
     }

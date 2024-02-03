@@ -4,7 +4,6 @@ import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
-import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.util.DataResult
@@ -110,7 +109,7 @@ class UserRepository {
         }
     }
 
-    suspend fun getFriendRequests(userId: String): DataResult<List<FriendRequestData>> {
+    suspend fun getFriendRequests(userId: String): DataResult<List<LogRequestData>> {
         try {
             val snapshot = db.collection("friend_requests")
                 .whereEqualTo("target_id", userId)
@@ -119,7 +118,7 @@ class UserRepository {
 
             return if (!snapshot.isEmpty) {
                 val friendRequests = snapshot.documents.map { document ->
-                    Json.decodeFromString<FriendRequestData>(Json.encodeToString(document))
+                    Json.decodeFromString<LogRequestData>(Json.encodeToString(document))
                 }
                 DataResult.Success(friendRequests)
             } else {
