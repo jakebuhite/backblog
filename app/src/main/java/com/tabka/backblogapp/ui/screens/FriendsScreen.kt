@@ -151,11 +151,12 @@ fun FriendHeader(navController: NavController) {
 }
 
 @Composable
-fun TabScreen(navController: NavController,
-              publicLogs: List<LogData>,
-              friendRequests:List<Pair<FriendRequestData, UserData>>,
-              logRequests: List<Pair<LogRequestData, UserData>>,
-              friends: List<UserData>
+fun TabScreen(
+    navController: NavController,
+    publicLogs: List<LogData>,
+    friendRequests: List<Pair<FriendRequestData, UserData>>,
+    logRequests: List<Pair<LogRequestData, UserData>>,
+    friends: List<UserData>
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -178,13 +179,22 @@ fun TabScreen(navController: NavController,
             tabs.forEachIndexed { index, title ->
                 Tab(
                     text = {
-                        Text(
-                            title,
-                            color = if (selectedTab == index) Color(0xFF3891E1) else Color(
-                                0xFF979C9E
-                            ),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                title,
+                                color = if (selectedTab == index) Color(0xFF3891E1) else Color(0xFF979C9E),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            // Add the notification badge if there are friend or log requests
+                            if ((index == 1) && (friendRequests.isNotEmpty() || logRequests.isNotEmpty())) {
+                                Spacer(modifier = Modifier.width(4.dp)) // Adjust spacing as needed
+                                Image(
+                                    painter = painterResource(id = R.drawable.badge_notification),
+                                    contentDescription = "Notification Badge",
+                                    modifier = Modifier.size(5.dp)
+                                )
+                            }
+                        }
                     },
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
