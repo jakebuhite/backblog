@@ -1,6 +1,5 @@
 package com.tabka.backblogapp.ui.screens
 
-/*import com.tabka.backblogapp.ui.bottomnav.logDetailsViewModel*/
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -16,28 +15,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
@@ -50,26 +46,37 @@ private val TAG = "LogDetailsScreen"
 @Composable
 fun LogDetailsScreen(
     navController: NavHostController,
+    logDetailsViewModel: LogDetailsViewModel,
     logId: String?
 ) {
-    val logDetailsViewModel: LogDetailsViewModel = viewModel()
-    val log = logDetailsViewModel.log!!
-
     val hasBackButton = true
-    val pageTitle = log.name!!
+
+    // Movies
+    val movieState = logDetailsViewModel.movies.observeAsState()
+    val movies = movieState.value ?: emptyList()
+
+    // Logs
+    val logState = logDetailsViewModel.logData.observeAsState()
+    val log = logState.value
+    val pageTitle = log?.name ?: ""
+
+    // Get data
+    LaunchedEffect(key1 = logId) {
+        logDetailsViewModel.getLogData(logId!!)
+        logDetailsViewModel.getMovies()
+    }
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        DetailBar()
+        DetailBar(movies.size)
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons()
         Spacer(modifier = Modifier.height(20.dp))
-        LogList(navController)
-
+        LogList(navController, movies)
     }
 }
 
 @Composable
-fun DetailBar() {
+fun DetailBar(movieCount: Int) {
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically) {
         // Creator Picture
@@ -79,7 +86,9 @@ fun DetailBar() {
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp).testTag("CREATOR_PICTURE"),
+                modifier = Modifier
+                    .size(35.dp)
+                    .testTag("CREATOR_PICTURE"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -90,7 +99,9 @@ fun DetailBar() {
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp).testTag("COLLABS_PICTURE"),
+                modifier = Modifier
+                    .size(35.dp)
+                    .testTag("COLLABS_PICTURE"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -98,7 +109,7 @@ fun DetailBar() {
         // Number of Movies
         Column(modifier = Modifier.padding(start = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("7 Movies", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -124,7 +135,9 @@ fun LogButtons() {
                 Image(
                     painter = painterResource(id = R.drawable.user_add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(35.dp).testTag("ADD_ICON")
+                    modifier = Modifier
+                        .size(35.dp)
+                        .testTag("ADD_ICON")
                 )
             }
 
@@ -137,7 +150,9 @@ fun LogButtons() {
                 Image(
                     painter = painterResource(id = R.drawable.edit),
                     contentDescription = "Edit",
-                    modifier = Modifier.size(35.dp).testTag("EDIT_ICON")
+                    modifier = Modifier
+                        .size(35.dp)
+                        .testTag("EDIT_ICON")
                 )
             }
         }
@@ -168,7 +183,9 @@ fun LogButtons() {
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(50.dp).testTag("ADD_MOVIE_ICON")
+                    modifier = Modifier
+                        .size(50.dp)
+                        .testTag("ADD_MOVIE_ICON")
                 )
             }
         }
@@ -176,36 +193,22 @@ fun LogButtons() {
 }
 
 @Composable
-fun LogList(navController: NavHostController) {
-    val logDetailsViewModel: LogDetailsViewModel = viewModel()
-    val movies by logDetailsViewModel.movies.collectAsState()
+fun LogList(navController: NavHostController, movies: List<MovieData>) {
     Log.d(TAG, "Movies: $movies")
 
-/*    val logs = listOf(
-        "Aquaman and the Lost Kingdom",
-        "NOPE",
-        "The Batman",
-        "Get Out",
-        "Interstellar",
-        "Joker",
-        "The Creator",
-        "Spider-Man"
-    )*/
-    //MovieEntry(movie = movies!!)
-    if (!movies.isNullOrEmpty()) {
+    if (movies.isNotEmpty()) {
         // Height of image and padding times number of movies
-        val height: Dp = (80 * movies!!.size).dp
+        val height: Dp = (80 * movies.size).dp
 
         LazyColumn(userScrollEnabled = false, modifier = Modifier.height(height)) {
-            items(movies!!.size) { index ->
-                val movie = movies!![index]
+            items(movies.size) { index ->
+                val movie = movies[index]
                 MovieEntry(movie)
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MovieEntry(movie: MovieData) {
     /*Row(modifier = swipeableModifier.fillMaxWidth(),
