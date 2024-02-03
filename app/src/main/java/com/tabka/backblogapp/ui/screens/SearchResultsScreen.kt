@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,22 +42,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
-import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
 import com.tabka.backblogapp.ui.bottomnav.logViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
@@ -99,14 +97,13 @@ fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntr
                     value = text,
                     onValueChange = {
                         text = it
-
                         // If there is something
                         if (!text.isNullOrBlank()) {
                             Log.d(TAG, "$text")
                             searchResultsViewModel.getMovieResults(text)
                         }
                     },
-                    placeholder = { Text("Search for a movie") },
+                    placeholder = { Text("Search for a movie", modifier = Modifier.testTag("SEARCH_BAR_LABEL")) },
                     maxLines = 1,
                     leadingIcon = {
                         Icon(
@@ -120,6 +117,7 @@ fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntr
                         .fillMaxWidth()
                         .background(Color.White)
                         .focusRequester(focusRequester)
+                        .testTag("SEARCH_BAR_INPUT")
                 )
 
                 LaunchedEffect(Unit) {
@@ -135,6 +133,7 @@ fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntr
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = 20.dp)
+                    .testTag("MOVIE_RESULTS_LIST")
             ) {
                 items(movieResults) { movie ->
                     MovieResult(navController, backStackEntry, movie)
@@ -269,7 +268,8 @@ fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEn
 fun NoResults() {
     Row(modifier = Modifier
         .fillMaxSize()
-        .padding(top = 100.dp),
+        .padding(top = 100.dp)
+        .testTag("NO_RESULTS_ROW"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {

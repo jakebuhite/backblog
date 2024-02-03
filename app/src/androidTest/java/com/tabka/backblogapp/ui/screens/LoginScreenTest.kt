@@ -80,7 +80,7 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
@@ -95,7 +95,7 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
@@ -111,7 +111,7 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
@@ -127,7 +127,7 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 

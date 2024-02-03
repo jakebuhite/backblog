@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
@@ -41,6 +42,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -61,24 +63,23 @@ private val TAG = "HomeScreen"
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(navController: NavHostController, backStackEntry: NavBackStackEntry) {
-    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+fun HomeScreen(
+    navController: NavHostController,
+    backStackEntry: NavBackStackEntry,
+    logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+    ) {
     val allLogs by logViewModel.allLogs.collectAsState()
 
     val hasBackButton = false
     val pageTitle = "What's Next?"
-
-
     BaseScreen(navController, hasBackButton, pageTitle) { scrollState ->
 
         // If logs exist
         if (!allLogs.isNullOrEmpty()) {
             WatchNextCard(navController, allLogs!![0])
-
         }
         Spacer(Modifier.height(40.dp))
         MyLogsSection(navController, backStackEntry, allLogs, scrollState)
-
     }
 }
 
@@ -152,7 +153,8 @@ fun NextMovie(navController: NavController, movie: String?) {
                     painter = painterResource(id = image),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .testTag("MOVIE_IMAGE")
                 )
             }
@@ -206,7 +208,9 @@ fun NextMovieInfo(movie: String) {
             Image(
                 painter = painterResource(id = R.drawable.checkbutton2),
                 contentDescription = "Check icon",
-                modifier = Modifier.size(40.dp).testTag("CHECK_ICON")
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("CHECK_ICON")
             )
         }
     }
@@ -240,15 +244,17 @@ fun MyLogsSection(
                 .weight(1f)
                 .fillMaxHeight()
         ) {
-            Text("My Logs", style = MaterialTheme.typography.headlineMedium)
+            Text("My Logs",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.testTag("MY_LOGS_HEADER")
+            )
         }
 
         // Add Log Button
         Column(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
-            /*.padding(end = 5.dp)*/,
+                .fillMaxHeight(),
             horizontalAlignment = Alignment.End
         ) {
             Image(
@@ -257,7 +263,8 @@ fun MyLogsSection(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
-                    .clickable { isSheetOpen = true },
+                    .clickable { isSheetOpen = true }
+                    .testTag("ADD_LOG_BUTTON"),
                 colorFilter = tint(color = colorResource(id = R.color.sky_blue))
             )
         }
@@ -271,7 +278,9 @@ fun MyLogsSection(
             sheetState = sheetState,
             onDismissRequest = { isSheetOpen = false },
             containerColor = colorResource(id = R.color.bottomnav),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("ADD_LOG_POPUP")
         ) {
             val focusManager = LocalFocusManager.current
 
@@ -299,8 +308,13 @@ fun MyLogsSection(
                 TextField(
                     value = logName,
                     onValueChange = { logName = it },
-                    label = { Text("Log Name") },
+                    label = { Text(
+                        "Log Name",
+                        modifier = Modifier.testTag("ADD_LOG_POPUP_LOG_NAME_LABEL")
+                    ) },
                     singleLine = true,
+                    modifier = Modifier.testTag("LOG_NAME_INPUT"),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
@@ -789,7 +803,8 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .testTag("CREATE_LOG_BUTTON"),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.sky_blue),
                 disabledContainerColor = colorResource(id = R.color.sky_blue)
@@ -803,220 +818,3 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
         }
     }
 }
-
-
-
-
-/*
-@Composable
-fun ListLogs(navController: NavController, allLogs: List<LogData>) {
-                    for (log in logPositions) {
-                        if (log.logId != selectedLog!!.logId) {
-                            // Selected log is in the first column
-                            if (selectedLog.index % 2 == 0) {
-                                if (middleHorizontal > log.top) {
-                                    if (middleHorizontal < log.bottom) {
-                                        if (middleVertical > log.left) {
-                                            swapNeeded = true
-                                            firstIndexToSwap = selectedLog.index
-                                            secondIndexToSwap = log.index
-                                            break
-                                        }
-                                    }
-                                }
-                            // Selected log is in the second column
-                            } else {
-                                if ((middleHorizontal > log.top) && (middleHorizontal < log.bottom)) {
-                                    if (middleVertical < log.right) {
-                                        swapNeeded = true
-                                        firstIndexToSwap = selectedLog.index
-                                        secondIndexToSwap = log.index
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (swapNeeded) {
-                        val movingLogId = logPositions[firstIndexToSwap].logId
-                        val movingLogName = logPositions[firstIndexToSwap].name
-
-                        if (firstIndexToSwap < secondIndexToSwap) {
-                            // Move each logId one position up in the range from firstIndexToSwap to secondIndexToSwap
-                            for (i in firstIndexToSwap until secondIndexToSwap) {
-                                logPositions[i].logId = logPositions[i + 1].logId
-                                logPositions[i].name = logPositions[i + 1].name
-                            }
-                        } else {
-                            // Move each logId one position down in the range from secondIndexToSwap to firstIndexToSwap
-                            for (i in firstIndexToSwap downTo secondIndexToSwap + 1) {
-                                logPositions[i].logId = logPositions[i - 1].logId
-                                logPositions[i].name = logPositions[i - 1].name
-                            }
-                        }
-
-                        logPositions[secondIndexToSwap].logId = movingLogId
-                        logPositions[secondIndexToSwap].name = movingLogName
-                        draggedItem.value = logPositions[secondIndexToSwap]
-                        logViewModel.onMove(firstIndexToSwap, secondIndexToSwap)
-                    }
-                }
-            }
-        }
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.matchParentSize(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(allLogs!!.size, key = { index -> allLogs[index].logId!! }) { index ->
-
-                var alpha by remember { mutableStateOf(1f) }
-
-                val log = allLogs[index]
-                Card(
-                    modifier = Modifier
-                        .size(175.dp)
-                        .clickable { navController.navigate("home_log_details_${log.logId}") }
-                        .alpha(alpha)
-                        .onGloballyPositioned { coordinates ->
-                            height = coordinates.size.height.toFloat()
-                            width = coordinates.size.width.toFloat()
-
-                            val currTop = coordinates.positionInParent().y.toFloat()
-                            val currBottom = currTop + height
-                            val currLeft = coordinates.positionInParent().x.toFloat()
-                            val currRight = currLeft + width
-
-                            if (logPositions.none { it.logId == log.logId }) {
-                                val newLog = LogPosition(
-                                    index,
-                                    log.logId!!,
-                                    log.name,
-                                    coordinates.positionInParent().x,
-                                    coordinates.positionInParent().y,
-                                    currTop,
-                                    currBottom,
-                                    currLeft,
-                                    currRight
-                                )
-                                Log.d(TAG, newLog.toString())
-                                logPositions.add(newLog)
-                            }
-                        }
-                        /*.clickable { draggedItem.value = logPositions[index] }*/
-                        .pointerInput(log) {
-                            detectDragGesturesAfterLongPress(
-                                onDragStart = { _ ->
-                                    val currentIndex =
-                                        logPositions.indexOfFirst { it.logId == log.logId }
-                                    draggedItem.value = logPositions[currentIndex]
-                                    offset = offset
-                                    alpha = 0f
-                                    boxOverlayAlpha = 1f
-
-                                    Log.d(TAG, "Beginning to Drag: ${logPositions[index]}")
-                                    Log.d(TAG, "New index we found $currentIndex")
-                                    boxOverlayX = logPositions[currentIndex].initialX
-                                    boxOverlayY = logPositions[currentIndex].initialY
-                                    boxShown = true
-
-                                    Log.d(TAG, "We have begun")
-                                },
-                                onDrag = { change, dragAmount ->
-                                    //change.consume()
-
-                                    // Update positions if within bounds
-                                    offset = Offset(
-                                        x = offset.x + dragAmount.x,
-                                        y = offset.y + dragAmount.y
-                                    )
-
-                                    //Log.d(TAG, "Offset: $offset")
-                                    boxOverlayX += dragAmount.x
-                                    //boxOverlayX = (boxOverlayX + dragAmount.x).coerceIn(0f, parentWidth - width)
-                                    //boxOverlayY = (boxOverlayY + dragAmount.y).coerceIn(0f, parentHeight - height)
-                                    boxOverlayY += dragAmount.y
-
-                                    /*top = boxOverlayY
-                                    if (top < 0) {
-                                        middleHorizontal = 0f
-                                        middleVertical = 0f
-                                        alpha = 1f
-                                        boxOverlayAlpha = 0f
-                                        boxOverlayX = -1f
-                                        boxOverlayY = -1f
-                                        offset = Offset(0f, 0f)
-                                    } else {*/
-                                    top = boxOverlayY
-                                    bottom = top + height
-                                    left = boxOverlayX
-                                    right = left + width
-
-                                    Log.d(TAG, "Box Top: $boxOverlayY")
-
-
-                                    // Calculate the midpoints
-                                    middleVertical = (left + right) / 2
-                                    middleHorizontal = (top + bottom) / 2
-
-                                    /*                                    if (boxBottomInViewPort > screenHeight) {
-                                        isScrollingNeeded = true
-                                    } else {
-                                        isScrollingNeeded = false
-                                    }*/
-                                },
-                                onDragEnd = {
-                                    middleHorizontal = 0f
-                                    middleVertical = 0f
-                                    alpha = 1f
-                                    boxOverlayAlpha = 0f
-                                    boxOverlayX = -1f
-                                    boxOverlayY = -1f
-                                    offset = Offset(0f, 0f)
-                                }
-                            )
-                        },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Transparent
-                    )
-                    /*elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)*/
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.creator),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    color = Color.Black.copy(alpha = 0.75f), // Transparent black color
-                                    shape = RoundedCornerShape(5.dp)
-                                )
-                        )
-
-                        // Text overlay
-                        Text(
-                            text = "${log.name}",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                                .align(Alignment.Center)
-                                .wrapContentHeight(align = Alignment.CenterVertically)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-*/

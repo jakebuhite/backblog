@@ -9,17 +9,16 @@ import com.tabka.backblogapp.network.models.Owner
 import com.tabka.backblogapp.network.repository.LogLocalRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.burnoutcrew.reorderable.ItemPosition
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class LogViewModel : ViewModel() {
+open class LogViewModel : ViewModel() {
     private val TAG = "LogViewModel"
     private val localLogRepository = LogLocalRepository()
 
     private val _allLogs = MutableStateFlow<List<LogData>?>(emptyList())
-    var allLogs = _allLogs.asStateFlow()
+    open var allLogs = _allLogs.asStateFlow()
 
     init {
         loadLogs()
