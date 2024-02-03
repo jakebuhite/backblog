@@ -27,6 +27,8 @@ android {
 
         val key : String = gradleLocalProperties(rootDir).getProperty("MOVIE_SECRET")
         buildConfigField("String", "MOVIE_SECRET", "\"${key}\"")
+        buildConfigField("boolean", "IS_TESTING", "false")
+
     }
 
     buildTypes {
@@ -125,6 +127,7 @@ dependencies {
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.03.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.navigation:navigation-testing:2.7.6")
+    androidTestImplementation("org.testng:testng:6.9.6")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

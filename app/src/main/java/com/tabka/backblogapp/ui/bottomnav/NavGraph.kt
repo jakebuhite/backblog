@@ -18,6 +18,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.ui.screens.FriendsScreen
 import com.tabka.backblogapp.ui.screens.HomeScreen
 import com.tabka.backblogapp.ui.screens.LogDetailsScreen
@@ -56,7 +57,10 @@ fun BottomNavGraph(navController: NavHostController) {
             composable(route = "home") { backStackEntry ->
                 /*val logViewModel = backStackEntry.logViewModel<LogViewModel>(navController)
                 val allLogs by logViewModel.allLogs.collectAsState()*/
-                HomeScreen(navController, backStackEntry)
+                // If not testing
+                if (!BuildConfig.IS_TESTING) {
+                    HomeScreen(navController, backStackEntry)
+                }
             }
 
             composable(
@@ -77,13 +81,17 @@ fun BottomNavGraph(navController: NavHostController) {
         navigation(startDestination = "search", route = BottomNavigationBar.Search.route) {
 
             composable(route = "search") {
-                SearchScreen(navController)
+                if (!BuildConfig.IS_TESTING) {
+                    SearchScreen(navController)
+                }
             }
 
             composable(route = "search_results") { backStackEntry ->
                 /*val logViewModel = entry.logViewModel<LogViewModel>(navController)
                 val allLogs by logViewModel.allLogs.collectAsState()*/
-                SearchResultsScreen(navController, backStackEntry)
+                if (!BuildConfig.IS_TESTING) {
+                    SearchResultsScreen(navController, backStackEntry)
+                }
             }
 
             composable(
