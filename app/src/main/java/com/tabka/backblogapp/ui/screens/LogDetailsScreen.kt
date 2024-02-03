@@ -63,7 +63,6 @@ fun LogDetailsScreen(
     // Get data
     LaunchedEffect(key1 = logId) {
         logDetailsViewModel.getLogData(logId!!)
-        logDetailsViewModel.getMovies()
     }
 
     BaseScreen(navController, hasBackButton, pageTitle) {

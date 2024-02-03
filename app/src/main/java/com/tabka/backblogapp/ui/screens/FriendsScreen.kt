@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +17,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Surface
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.TabRowDefaults
@@ -42,38 +47,93 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.LogRequestData
+import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
+import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
 @Composable
 fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewModel) {
-    val hasBackButton = false
-    val username = friendsViewModel.userData.observeAsState()
-    val pageTitle: String = username.value?.username ?: ""
+    val userDataState = friendsViewModel.userData.observeAsState()
+    val pageTitle: String = userDataState.value?.username ?: ""
+    val userAvatar = userDataState.value?.avatarPreset ?: 1
     val composableScope = rememberCoroutineScope()
 
     // Logs
     val logState = friendsViewModel.publicLogData.observeAsState()
     val publicLogs = logState.value ?: emptyList()
 
+    // Friend Requests (And the sender's data)
+    val friendReqState = friendsViewModel.friendReqData.observeAsState()
+    val friendReqs = friendReqState.value ?: emptyList()
+
+    // Log Requests (And the sender's data)
+    val logReqState = friendsViewModel.logReqData.observeAsState()
+    val logReqs = logReqState.value ?: emptyList()
+
+    // Friend's data
+    val friendsState = friendsViewModel.friendsData.observeAsState()
+    val friends = friendsState.value ?: emptyList()
+
     // Get data
     composableScope.launch {
         friendsViewModel.getUserData()
         friendsViewModel.getPublicLogs()
+        friendsViewModel.getFriends()
+        friendsViewModel.getFriendRequests()
+        friendsViewModel.getLogRequests()
     }
 
     // UI Content
-    FriendsContent(navController, hasBackButton, pageTitle, publicLogs)
+    FriendsContent(navController, pageTitle, publicLogs,
+        friendReqs, logReqs, friends, userAvatar)
 
 }
 
 @Composable
-fun FriendsContent(navController: NavController, hasBackButton: Boolean, pageTitle: String, publicLogs: List<LogData>) {
-    BaseScreen(navController, hasBackButton, pageTitle) {
-        FriendHeader(navController)
-        TabScreen(navController, publicLogs)
+fun FriendsContent(navController: NavController,
+                   pageTitle: String,
+                   publicLogs: List<LogData>,
+                   friendRequests:List<Pair<FriendRequestData, UserData>>,
+                   logRequests: List<Pair<LogRequestData, UserData>>,
+                   friends: List<UserData>,
+                   userAvatar: Int
+) {
+    val scrollState = rememberScrollState()
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        BackgroundGradient()
+
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .verticalScroll(scrollState)
+        ) {
+            Row(horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.height(50.dp).fillMaxWidth()) {
+                FriendHeader(navController)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = getAvatarResourceId(userAvatar).second),
+                    contentDescription = "Avatar",
+                    modifier = Modifier
+                        .size(50.dp)
+                )
+                pageTitle(pageTitle)
+            }
+            TabScreen(navController, publicLogs, friendRequests, logRequests, friends)
+            Spacer(modifier = Modifier.height(70.dp))
+        }
     }
 }
 
@@ -91,7 +151,13 @@ fun FriendHeader(navController: NavController) {
 }
 
 @Composable
-fun TabScreen(navController: NavController, publicLogs: List<LogData>) {
+fun TabScreen(
+    navController: NavController,
+    publicLogs: List<LogData>,
+    friendRequests: List<Pair<FriendRequestData, UserData>>,
+    logRequests: List<Pair<LogRequestData, UserData>>,
+    friends: List<UserData>
+) {
     var selectedTab by remember { mutableStateOf(0) }
 
     val tabs = listOf("Logs", "Friends")
@@ -113,13 +179,22 @@ fun TabScreen(navController: NavController, publicLogs: List<LogData>) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     text = {
-                        Text(
-                            title,
-                            color = if (selectedTab == index) Color(0xFF3891E1) else Color(
-                                0xFF979C9E
-                            ),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                title,
+                                color = if (selectedTab == index) Color(0xFF3891E1) else Color(0xFF979C9E),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            // Add the notification badge if there are friend or log requests
+                            if ((index == 1) && (friendRequests.isNotEmpty() || logRequests.isNotEmpty())) {
+                                Spacer(modifier = Modifier.width(4.dp)) // Adjust spacing as needed
+                                Image(
+                                    painter = painterResource(id = R.drawable.badge_notification),
+                                    contentDescription = "Notification Badge",
+                                    modifier = Modifier.size(5.dp)
+                                )
+                            }
+                        }
                     },
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
@@ -129,7 +204,7 @@ fun TabScreen(navController: NavController, publicLogs: List<LogData>) {
         }
         when (selectedTab) {
             0 -> PublicLogs(navController, publicLogs)
-            1 -> FriendRequestsScreen()
+            1 -> FriendRequestsScreen(friendRequests, logRequests, friends)
         }
     }
 }
@@ -137,7 +212,9 @@ fun TabScreen(navController: NavController, publicLogs: List<LogData>) {
 @Composable
 fun PublicLogs(navController: NavController, publicLogs: List<LogData>) {
     Text("Public Logs", style = MaterialTheme.typography.headlineSmall,
-        modifier = Modifier.padding(bottom = 8.dp).testTag("PAGE_SUB_TITLE"))
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .testTag("PAGE_SUB_TITLE"))
     DisplayPublicLogs(navController = navController, allLogs = publicLogs)
 }
 

@@ -31,8 +31,9 @@ class LogDetailsViewModel: ViewModel() {
     private val movieRepository = MovieRepository(apiService)
     val movies: MutableLiveData<List<MovieData>> = MutableLiveData()
 
-    private fun updateLogData(newLog: LogData) {
+    private suspend fun updateLogData(newLog: LogData) {
         logData.value = newLog
+        getMovies()
     }
 
     private fun updateMovieList(newList: List<MovieData>) {
@@ -65,24 +66,30 @@ class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    fun getMovies() {
+    private suspend fun getMovies() {
         val movieDataList = mutableListOf<MovieData>()
         val movieIds = logData.value?.movieIds?.keys ?: listOf()
 
-        for (movieId in movieIds) {
-            movieRepository.getMovieById(
-                movieId = movieId,
-                onResponse = { movieResponse ->
-                    movieResponse?.let { movieDataList.add(it) }
-
-                    if (movieDataList.size == movieIds.size) {
-                        updateMovieList(movieDataList)
-                    }
-                },
-                onFailure = { e ->
-                    Log.e("Movies", "Failed to fetch details for movie ID $movieId: $e")
+        viewModelScope.launch {
+            try {
+                for (movieId in movieIds) {
+                    movieRepository.getMovieById(
+                        movieId = movieId,
+                        onResponse = { movieResponse ->
+                            movieResponse?.let { movieDataList.add(it) }
+                        },
+                        onFailure = { e ->
+                            Log.e("Movies", "Failed to fetch details for movie ID $movieId: $e")
+                        }
+                    )
                 }
-            )
+
+                withContext(Dispatchers.Main) {
+                    updateMovieList(movieDataList)
+                }
+            } catch (e: Exception) {
+                Log.e("Movies", "Failed to fetch details for movies: $e")
+            }
         }
     }
 }

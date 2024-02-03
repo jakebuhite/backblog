@@ -1,19 +1,26 @@
 package com.tabka.backblogapp.network.repository
 
 import android.util.Log
+import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
+import com.tabka.backblogapp.network.models.FriendRequestData
+import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
 import com.tabka.backblogapp.util.NetworkError
 import com.tabka.backblogapp.util.NetworkExceptionType
+import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-class FriendRepository(private val db: FirebaseFirestore) {
+class FriendRepository {
+    private val db = Firebase.firestore
     private val tag = "FriendsRepo"
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
@@ -55,6 +62,36 @@ class FriendRepository(private val db: FirebaseFirestore) {
         }
     }
 
+    suspend fun getFriendRequests(userId: String): DataResult<List<FriendRequestData>> {
+        val requests: MutableList<FriendRequestData> = mutableListOf()
+        try {
+            val snapshot = db.collection("friend_requests")
+                .whereEqualTo("target_id", userId)
+                .whereEqualTo("is_complete", false).get().await()
+            requests.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
+        } catch (e: Exception) {
+            Log.w(tag, "Error getting friend request", e)
+            DataResult.Failure(e)
+        }
+
+        return DataResult.Success(requests)
+    }
+
+    suspend fun getLogRequests(userId: String): DataResult<List<LogRequestData>> {
+        val requests: MutableList<LogRequestData> = mutableListOf()
+        try {
+            val snapshot = db.collection("log_requests")
+                .whereEqualTo("target_id", userId)
+                .whereEqualTo("is_complete", false).get().await()
+            requests.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
+        } catch (e: Exception) {
+            Log.w(tag, "Error getting log requests", e)
+            DataResult.Failure(e)
+        }
+
+        return DataResult.Success(requests)
+    }
+
     suspend fun getFriends(userId: String): List<UserData> = withContext(Dispatchers.IO) {
         val usersCollection = db.collection("users")
 
@@ -70,15 +107,7 @@ class FriendRepository(private val db: FirebaseFirestore) {
             for (friendId in friendIds) {
                 val friendDocument = usersCollection.document(friendId).get().await()
 
-                @Suppress("UNCHECKED_CAST")
-                val friendUserData = UserData(
-                    userId = friendDocument.id,
-                    username = friendDocument.getString("name"),
-                    joinDate = friendDocument.getString("join_date"),
-                    avatarPreset = friendDocument.getLong("avatar_preset")?.toInt() ?: 0,
-                    friends = friendDocument.data?.get("friends") as Map<String, Boolean>?,
-                    blocked = friendDocument.data?.get("blocked") as Map<String, Boolean>?
-                )
+                val friendUserData = Json.decodeFromString<UserData>(Json.encodeToString(friendDocument.data.toJsonElement()))
 
                 friendUserDataList.add(friendUserData)
             }
