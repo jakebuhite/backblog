@@ -42,6 +42,19 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+        <entry key="-1883967388">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="BLU B135DL" value="120" />
+                  <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
         <entry key="-1881878157">
           <value>
             <AndroidTestResultsTableState>
@@ -330,6 +343,19 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+        <entry key="557390195">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="BLU B135DL" value="120" />
+                  <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
         <entry key="609404211">
           <value>
             <AndroidTestResultsTableState>
@@ -500,13 +526,40 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+        <entry key="1811266425">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="BLU B135DL" value="120" />
+                  <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
         <entry key="1956800161">
           <value>
             <AndroidTestResultsTableState>
               <option name="preferredColumnWidths">
                 <map>
+                  <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
                   <entry key="Pixel_2_API_30" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="1964443660">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="BLU B135DL" value="120" />
+                  <entry key="Duration" value="90" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>

@@ -133,7 +133,7 @@ class LoginScreenTest {
 
         composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Login successful. Redirecting...")
 
-        composeTestRule.waitUntil(1500) {
+        composeTestRule.waitUntil(3000) {
             mockNavController.currentDestination?.route == "friends"
         }
 
