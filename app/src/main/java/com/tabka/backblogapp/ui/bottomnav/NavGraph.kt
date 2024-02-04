@@ -18,7 +18,6 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.ui.screens.FriendsScreen
 import com.tabka.backblogapp.ui.screens.HomeScreen
 import com.tabka.backblogapp.ui.screens.LogDetailsScreen
@@ -31,6 +30,7 @@ import com.tabka.backblogapp.ui.screens.SignupScreen
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -38,6 +38,7 @@ fun BottomNavGraph(navController: NavHostController) {
     val friendsViewModel = FriendsViewModel()
     val logDetailsViewModel = LogDetailsViewModel()
     val logViewModel = LogViewModel()
+    val settingsViewModel = SettingsViewModel()
 
     var startDest by remember { mutableStateOf("login") }
     val auth = Firebase.auth
@@ -78,17 +79,11 @@ fun BottomNavGraph(navController: NavHostController) {
         navigation(startDestination = "search", route = BottomNavigationBar.Search.route) {
 
             composable(route = "search") {
-                if (!BuildConfig.IS_TESTING) {
-                    SearchScreen(navController)
-                }
+                SearchScreen(navController)
             }
 
             composable(route = "search_results") { backStackEntry ->
-                /*val logViewModel = entry.logViewModel<LogViewModel>(navController)
-                val allLogs by logViewModel.allLogs.collectAsState()*/
-                if (!BuildConfig.IS_TESTING) {
-                    SearchResultsScreen(navController, logViewModel)
-                }
+                SearchResultsScreen(navController, logViewModel)
             }
 
             composable(
@@ -114,7 +109,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(route = "settings") {
-                SettingsScreen(navController)
+                SettingsScreen(navController, settingsViewModel)
             }
 
             composable(
