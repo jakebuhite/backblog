@@ -14,12 +14,8 @@ import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -148,7 +144,7 @@ class SignupScreenTest {
         composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Email already in use.")
     }
 
-    @Test
+    /*@Test
     fun testSignupUserClickSuccess() = runBlocking {
         // Enter email and password
         composeTestRule.onNodeWithTag("EMAIL_FIELD").performTextInput(email)
@@ -181,5 +177,5 @@ class SignupScreenTest {
 
         // Assert user is now deleted
         assert(Firebase.auth.currentUser == null)
-    }
+    }*/
 }

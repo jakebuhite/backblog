@@ -30,12 +30,14 @@ import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
     val friendsViewModel = FriendsViewModel()
     val logDetailsViewModel = LogDetailsViewModel()
+    val logViewModel = LogViewModel()
 
     var startDest by remember { mutableStateOf("login") }
     val auth = Firebase.auth
@@ -55,12 +57,7 @@ fun BottomNavGraph(navController: NavHostController) {
         navigation(startDestination = "home", route = BottomNavigationBar.Home.route) {
 
             composable(route = "home") { backStackEntry ->
-                /*val logViewModel = backStackEntry.logViewModel<LogViewModel>(navController)
-                val allLogs by logViewModel.allLogs.collectAsState()*/
-                // If not testing
-                if (!BuildConfig.IS_TESTING) {
-                    HomeScreen(navController, backStackEntry)
-                }
+                HomeScreen(navController, logViewModel)
             }
 
             composable(
@@ -90,7 +87,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 /*val logViewModel = entry.logViewModel<LogViewModel>(navController)
                 val allLogs by logViewModel.allLogs.collectAsState()*/
                 if (!BuildConfig.IS_TESTING) {
-                    SearchResultsScreen(navController, backStackEntry)
+                    SearchResultsScreen(navController, logViewModel)
                 }
             }
 

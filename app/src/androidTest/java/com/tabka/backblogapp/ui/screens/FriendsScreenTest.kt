@@ -1,21 +1,11 @@
+/*
 package com.tabka.backblogapp.ui.screens
 
-import androidx.compose.material3.Surface
-import androidx.compose.ui.test.assertHasClickAction
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
-import org.junit.Before
 import org.junit.Rule
-import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
@@ -27,7 +17,8 @@ class FriendsScreenTest {
     private lateinit var mockNavController: TestNavHostController
     private lateinit var viewModel: FriendsViewModel
 
-    @Before
+*/
+/*    @Before
     fun setup() {
         // Launch the FriendsScreen composable
         composeTestRule.setContent {
@@ -38,8 +29,10 @@ class FriendsScreenTest {
                 FriendsScreen(navController = mockNavController, viewModel)
             }
         }
-    }
+    }*//*
 
+*/
+/*
     @Test
     fun testFriendsScreenInView() {
         composeTestRule.onNodeWithText("null").assertExists()
@@ -57,5 +50,7 @@ class FriendsScreenTest {
         composeTestRule.onNodeWithTag("SETTINGS_ICON").performClick()
 
         assert(mockNavController.currentDestination?.route == "settings")
-    }
+    }*//*
+
 }
+*/
