@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -49,10 +50,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(navController: NavController, settingsViewModel: SettingsViewModel) {
     val hasBackButton = true
     val pageTitle = "Settings"
-    val settingsViewModel = SettingsViewModel()
 
     BaseScreen(navController, hasBackButton, pageTitle) {
         var userData by remember { mutableStateOf<UserData?>(null) }
@@ -100,6 +100,7 @@ fun SettingsForm(userData: UserData,
                 modifier = Modifier
                     .height(120.dp)
                     .width(120.dp)
+                    .testTag("LOADING_SPINNER_PREVIEW")
             )
             Button(onClick = { showDialog = true },
                 colors = ButtonDefaults.buttonColors(
@@ -110,6 +111,7 @@ fun SettingsForm(userData: UserData,
                     .height(70.dp)
                     .width(200.dp)
                     .padding(12.dp)
+                    .testTag("CHANGE_AVATAR_BUTTON")
             )
             {
                 Text("Change Avatar", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -133,7 +135,8 @@ fun SettingsForm(userData: UserData,
             placeholder = { Text(userData.username!!) },
             modifier = Modifier
                 .padding(12.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .testTag("USERNAME_TEXT_INPUT"),
             textStyle = TextStyle(color = Color(0xE6FFFFFF)),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
             colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -148,7 +151,9 @@ fun SettingsForm(userData: UserData,
 
         // Old Password field
         var password by remember { mutableStateOf("") }
-        PasswordTextField("Old Password") { pwd -> password = pwd }
+        PasswordTextField(
+            "Old Password",
+        ) { pwd -> password = pwd }
 
         // New Password field
         var newPassword by remember { mutableStateOf("") }
@@ -161,7 +166,10 @@ fun SettingsForm(userData: UserData,
         if (visible) {
             Text(text = statusText,
                 style = MaterialTheme.typography.bodyMedium.copy(color = statusColor),
-                modifier = Modifier.padding(12.dp))
+                modifier = Modifier
+                    .padding(12.dp)
+                    .testTag("SYNC_STATUS_MESSAGE")
+            )
         }
 
         // Sync local data
@@ -192,9 +200,14 @@ fun SettingsForm(userData: UserData,
                     .height(70.dp)
                     .width(200.dp)
                     .padding(12.dp)
+                    .testTag("SYNC_LOGS_BUTTON")
             )
             {
-                Text("Sync Logs to DB", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(
+                    "Sync Logs to DB",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.testTag("SYNC_LOGS_TEXT")
+                )
             }
         }
 
@@ -246,6 +259,7 @@ fun SettingsForm(userData: UserData,
                 .height(70.dp)
                 .width(200.dp)
                 .padding(12.dp)
+                .testTag("UPDATE_SETTINGS_BUTTON")
         )
         {
             Text("Update Settings", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -262,7 +276,9 @@ fun AvatarSelectionDialog(
     Dialog(onDismissRequest = onDismiss) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .testTag("AVATAR_SELECTION_DIALOG")
         ) {
             // Display six avatar options in a grid
             items(6) { avatarId ->
