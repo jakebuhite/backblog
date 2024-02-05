@@ -1,4 +1,6 @@
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -25,8 +27,10 @@ android {
             useSupportLibrary = true
         }
 
-        val key : String = gradleLocalProperties(rootDir).getProperty("MOVIE_SECRET")
-        buildConfigField("String", "MOVIE_SECRET", "\"${key}\"")
+        val localProperties = Properties()
+        localProperties.load(FileInputStream(rootProject.file("local.properties")))
+        val movieString = localProperties.getProperty("MOVIE_SECRET")
+        buildConfigField("String", "MOVIE_SECRET", movieString)
         buildConfigField("boolean", "IS_TESTING", "false")
 
     }
