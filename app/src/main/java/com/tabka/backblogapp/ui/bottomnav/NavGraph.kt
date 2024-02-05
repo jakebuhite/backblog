@@ -40,10 +40,10 @@ fun BottomNavGraph(navController: NavHostController) {
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()
 
-    var startDest by remember { mutableStateOf("login") }
+    var friendsStartDest by remember { mutableStateOf("login") }
     val auth = Firebase.auth
     auth.addAuthStateListener {
-        startDest = if (auth.currentUser == null) {
+        friendsStartDest = if (auth.currentUser == null) {
             "login"
         } else {
             "friends"
@@ -54,10 +54,9 @@ fun BottomNavGraph(navController: NavHostController) {
         navController = navController,
         startDestination = BottomNavigationBar.Home.route
     ) {
-
         navigation(startDestination = "home", route = BottomNavigationBar.Home.route) {
 
-            composable(route = "home") { backStackEntry ->
+            composable(route = "home") {
                 HomeScreen(navController, logViewModel)
             }
 
@@ -82,7 +81,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 SearchScreen(navController)
             }
 
-            composable(route = "search_results") { backStackEntry ->
+            composable(route = "search_results") {
                 SearchResultsScreen(navController, logViewModel)
             }
 
@@ -94,7 +93,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
         }
 
-        navigation(startDestination = startDest, route = BottomNavigationBar.Friends.route) {
+        navigation(startDestination = friendsStartDest, route = BottomNavigationBar.Friends.route) {
 
             composable(route = "friends") {
                 FriendsScreen(navController, friendsViewModel)

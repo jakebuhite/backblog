@@ -73,6 +73,7 @@ fun backButton(navController: NavController, visible: Boolean) {
             .clip(CircleShape)
             .alpha(alpha)
             .clickable { navController.popBackStack() }
+            .testTag("BACK_BUTTON")
     )
 }
 

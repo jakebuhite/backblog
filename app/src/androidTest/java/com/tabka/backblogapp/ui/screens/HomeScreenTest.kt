@@ -72,7 +72,7 @@ class HomeScreenTest {
 
         // Launch compose
         composeTestRule.setContent {
-            HomeScreen(navController = mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel)
         }
 
         composeTestRule.onNodeWithTag("PRIORITY_LOG_TITLE").assertDoesNotExist()
