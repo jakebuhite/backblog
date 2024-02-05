@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BackBlogApp.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/bottomnav</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/logo_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.BackBlogApp</item>
+    </style>
+</resources>
