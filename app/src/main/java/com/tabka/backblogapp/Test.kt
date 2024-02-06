@@ -11,6 +11,5 @@ class BackBlog : Application() {
 
     companion object {
         var appContext: Context? = null
-            private set
     }
 }

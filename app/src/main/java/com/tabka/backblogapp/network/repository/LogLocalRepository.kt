@@ -7,7 +7,7 @@ import com.tabka.backblogapp.util.JsonUtility
 
 class LogLocalRepository {
     private val tag = "LocalStorageLogsRepo"
-    private var jsonUtility: JsonUtility = JsonUtility(BackBlog.appContext!!)
+    var jsonUtility: JsonUtility = JsonUtility(BackBlog.appContext!!)
 
     fun getLogs(): List<LogData> {
         return jsonUtility.readFromFile()
@@ -73,7 +73,11 @@ class LogLocalRepository {
         val existingLogs = jsonUtility.readFromFile()
 
         // Find specific log
-        val log = existingLogs.find { it.logId == logId }!!
+        val log = existingLogs.find { it.logId == logId }
+
+        if (log == null) {
+            return
+        }
 
         // Add movieId to log
         val updatedMovieIds = log.movieIds!!.toMutableMap()

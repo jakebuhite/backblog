@@ -49,11 +49,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         buildConfig = true
@@ -61,6 +61,9 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
     packaging {
         resources {
@@ -123,9 +126,9 @@ dependencies {
     implementation("androidx.navigation:navigation-testing:2.7.6")
     implementation("androidx.core:core-splashscreen:1.0.1")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:3.12.4")
-    testImplementation("org.mockito:mockito-inline:3.12.4")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+    testImplementation("org.mockito:mockito-core:5.10.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     androidTestImplementation("androidx.test.ext:truth:1.5.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
