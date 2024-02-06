@@ -122,6 +122,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation(kotlin("reflect"))
+    implementation("androidx.compose.foundation:foundation:1.6.0-alpha04")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
     implementation("androidx.navigation:navigation-testing:2.7.6")
     implementation("androidx.core:core-splashscreen:1.0.1")

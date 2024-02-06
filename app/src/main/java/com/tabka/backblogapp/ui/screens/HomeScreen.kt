@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
@@ -450,7 +451,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            Box(modifier = Modifier.height(265.dp)) {
+            Box(modifier = Modifier.height(200.dp)) {
                 LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
                     items(userList) { displayName ->
                         NewLogCollaborator(displayName)
@@ -564,6 +565,9 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                             painter = painter,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                /*.align(Alignment.Center)*/
                         )
                         Box(
                             modifier = Modifier
@@ -795,7 +799,8 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                         Image(
                             painter = painter,
                             contentDescription = null,
-                            /*contentScale = ContentScale.Crop,*/
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                         Box(
                             modifier = Modifier
@@ -881,6 +886,9 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
     ) {
         Divider(thickness = 1.dp, color = Color(0xFF303437))
     }
+
+    Spacer(modifier = Modifier.height(10.dp))
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
@@ -909,4 +917,37 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
             )
         }
     }
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // Cancel Button
+        Button(
+            onClick = {
+                /*if (!logName.isNullOrEmpty()) {
+                    onCreateClick(logName)
+                }*/
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .padding(horizontal = 24.dp)
+                .background(color = Color.Transparent)
+                .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+        ) {
+            androidx.compose.material3.Text(
+                "Cancel",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
 }
+
