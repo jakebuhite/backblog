@@ -1,5 +1,6 @@
 package com.tabka.backblogapp.network.repository
 
+import android.util.Log
 import com.tabka.backblogapp.BackBlog
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.util.JsonUtility
@@ -35,6 +36,36 @@ class LogLocalRepository {
 
     fun clearLogs() {
         jsonUtility.deleteAllLogs()
+    }
+
+    fun markMovie(logId: String, movieId: String, watched: Boolean) {
+        if (watched) {
+            // Mark as watched
+            Log.d(tag, "Mark as watched")
+
+            // Get all logs
+            val existingLogs = jsonUtility.readFromFile()
+
+            // Find specific log
+            val log = existingLogs.find { it.logId == logId }!!
+            Log.d(tag, "Log before the move: $log")
+            //log.movieIds!!.remove(movieId)
+
+            val updatedMovieIds = log.movieIds!!.toMutableMap().apply {
+                remove(movieId)
+            }
+
+            val updatedWatchedIds = log.watchedIds!!.toMutableMap().apply {
+                put(movieId, true)
+            }
+
+            val updatedLog = log.copy(movieIds = updatedMovieIds, watchedIds = updatedWatchedIds)
+            val indexToUpdate = existingLogs.indexOf(log)
+            existingLogs[indexToUpdate] = updatedLog
+
+            jsonUtility.overwriteJSON(existingLogs)
+            Log.d(tag, "Log after move: $updatedLog")
+        }
     }
     
     fun addMovieToLog(logId: String, movieId: String) {

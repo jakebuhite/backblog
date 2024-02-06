@@ -1,8 +1,16 @@
 package com.tabka.backblogapp.ui.screens
 
-import androidx.compose.material3.*
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasRequestFocusAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextInput
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.core.app.ApplicationProvider
@@ -94,7 +102,7 @@ class HomeScreenTest {
             isVisible = true,
             owner = Owner(userId = "user001", priority = 1),
             collaborators = emptyMap(),
-            movieIds = mapOf("531330" to true),
+            movieIds = mutableMapOf("531330" to true),
             watchedIds = emptyMap()
         ))
 
@@ -123,7 +131,7 @@ class HomeScreenTest {
                 isVisible = true,
                 owner = Owner(userId = "user001", priority = 1),
                 collaborators = emptyMap(),
-                movieIds = emptyMap(),
+                movieIds = mutableMapOf(),
                 watchedIds = emptyMap()
             )
         )
