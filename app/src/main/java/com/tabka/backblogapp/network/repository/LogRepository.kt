@@ -3,6 +3,7 @@ package com.tabka.backblogapp.network.repository
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.util.DataResult
@@ -16,15 +17,17 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 
-class LogRepository {
-
-    private val db = Firebase.firestore
+class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     private val tag = "FriendsRepo"
 
     suspend fun addLog(name: String, isVisible: Boolean, ownerId: String): DataResult<Boolean> {
         return try {
+            // Get new log id
+            val logId = db.collection("logs").document().id
+
             // Get all log data
             val logData = mapOf(
+                "log_id" to logId,
                 "name" to name,
                 "creation_date" to System.currentTimeMillis().toString(),
                 "last_modified_date" to System.currentTimeMillis().toString(),
@@ -35,7 +38,7 @@ class LogRepository {
                 "watched_ids" to emptyMap<String, Boolean>()
             )
 
-            db.collection("logs").add(logData).await()
+            db.collection("logs").document(logId).set(logData).await()
 
             Log.d(tag, "Log successfully written!")
             DataResult.Success(true)
