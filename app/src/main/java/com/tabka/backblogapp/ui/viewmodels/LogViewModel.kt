@@ -43,6 +43,7 @@ open class LogViewModel : ViewModel() {
     private fun loadLogs() {
         Log.d(TAG, "Load Logs")
         _allLogs.value = localLogRepository.getLogs()
+        Log.d(TAG, "Log: ${_allLogs.value}")
        /* sortLogsByOwnerPriority()*/
     }
 
@@ -70,6 +71,11 @@ open class LogViewModel : ViewModel() {
                 Log.e(TAG, "Failed to fetch details for movie ID $movieId: $e")
             }
         )
+    }
+
+    fun markMovieAsWatched(logId: String, movieId: String) {
+        localLogRepository.markMovie(logId, movieId, watched = true)
+        loadLogs()
     }
 
     data class MovieResult<T>(
@@ -111,10 +117,6 @@ open class LogViewModel : ViewModel() {
         )
     }
 
-    fun resetNextMovie() {
-        _nextMovie.value = null // Reset the value
-    }
-
     fun resetMovie() {
         _movie.value = null
     }
@@ -142,7 +144,7 @@ open class LogViewModel : ViewModel() {
             logId =  id,
             name = logName,
             isVisible = false,
-            movieIds = emptyMap(),
+            movieIds = mutableMapOf(),
             watchedIds = emptyMap(),
             owner = owner,
             collaborators = emptyMap(),
@@ -152,6 +154,7 @@ open class LogViewModel : ViewModel() {
         Log.d(TAG, "Creating Log: $log")
         localLogRepository.createLog(log)
         loadLogs()
+        resetMovie()
     }
 
     private fun findMaxPriority(): Int {

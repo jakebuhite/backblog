@@ -2,13 +2,27 @@ package com.tabka.backblogapp.ui.screens
 
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -22,9 +36,26 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddToPhotos
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -37,6 +68,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
@@ -113,7 +145,7 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
             }
             NextMovie(navController, image, it.id)
             Spacer(modifier = Modifier.height(5.dp))
-            NextMovieInfo(it.title, it.releaseDate, it.posterPath)
+            NextMovieInfo(it.id, it.title, it.releaseDate, it.posterPath, priorityLog.logId ?: "", logViewModel)
         } ?: run {
             NextMovie(navController, null, null)
             Spacer(modifier = Modifier.height(5.dp))
@@ -206,7 +238,14 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?) {
 
 
 @Composable
-fun NextMovieInfo(title: String?, releaseDate: String?, image: String?) {
+fun NextMovieInfo(
+    movieId: Int?,
+    title: String?,
+    releaseDate: String?,
+    image: String?,
+    logId: String,
+    logViewModel: LogViewModel
+) {
 
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -247,12 +286,17 @@ fun NextMovieInfo(title: String?, releaseDate: String?, image: String?) {
             .fillMaxHeight(),
             horizontalAlignment = Alignment.End
         ) {
+            val context = LocalContext.current
             Image(
                 painter = painterResource(id = R.drawable.checkbutton2),
                 contentDescription = "Check icon",
                 modifier = Modifier
                     .size(40.dp)
                     .testTag("CHECK_ICON")
+                    .clickable {
+                        Toast.makeText(context, "Successfully marked movie as watched!", Toast.LENGTH_SHORT).show()
+                        logViewModel.markMovieAsWatched(logId, movieId.toString())
+                    }
             )
         }
     }
@@ -606,26 +650,17 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(allLogs.size, key = { index -> allLogs!![index].logId!! }) { index ->
+            items(allLogs.size, key = { index -> allLogs[index].logId!! }) { index ->
 
                 var alpha by remember { mutableStateOf(1f) }
 
-                val log = allLogs!![index]
-                var movieData by remember(log.logId) { mutableStateOf<MovieData?>(null) }
+                val log = allLogs[index]
+                var movieData by remember(log.movieIds?.keys?.firstOrNull()) { mutableStateOf<MovieData?>(null) }
 
                 val movieId = log.movieIds?.keys?.firstOrNull()
                 Log.d(TAG, "First Movie ID: $movieId")
                 var painter = painterResource(id = R.drawable.icon_empty_log)
 
-/*                LaunchedEffect(movieId) {
-                    movieId?.let {
-                        logViewModel.fetchMovieDetails(it) { result ->
-                            if (result.data != null) {
-                                movieData = result.data
-                            }
-                        }
-                    }
-                }*/
                 LaunchedEffect(movieId) {
                     movieId?.let {
                         logViewModel.fetchMovieDetails(it) { result ->

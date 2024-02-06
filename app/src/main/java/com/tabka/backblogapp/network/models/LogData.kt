@@ -12,7 +12,7 @@ data class LogData(
     @SerialName("is_visible") val isVisible: Boolean?,
     val owner: Owner?,
     val collaborators: Map<String, Map<String, Int>>?,
-    @SerialName("movie_ids") val movieIds: Map<String, Boolean>?,
+    @SerialName("movie_ids") val movieIds: MutableMap<String, Boolean>?,
     @SerialName("watched_ids") val watchedIds: Map<String, Boolean>?
 )
 

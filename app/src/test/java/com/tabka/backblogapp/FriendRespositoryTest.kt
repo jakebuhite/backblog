@@ -1,8 +1,18 @@
+/*
 package com.tabka.backblogapp
+
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.tabka.backblogapp.network.repository.FriendRepository
+import org.junit.Before
+import org.junit.Test
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
 
 class FriendRepositoryTest {
 
-    /*@Mock
+    @Mock
     private lateinit var db: FirebaseFirestore
 
     @Mock
@@ -169,6 +179,6 @@ class FriendRepositoryTest {
         // Assert
         assertTrue(result[0].user_id == "friend1" || result[0].user_id == "friend2")
         assertEquals(2, result.size)
-    }*/
+    }
 
-}
+}*/
