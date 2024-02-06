@@ -1,17 +1,13 @@
 package com.tabka.backblogapp.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-
 import androidx.compose.foundation.layout.Column
-
 import androidx.compose.foundation.layout.Row
-
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,27 +20,25 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.*
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -102,7 +96,10 @@ fun SearchBarPlaceholder(navController: NavController) {
             shape = RoundedCornerShape(5.dp)
         ) {
             Row(
-                modifier = Modifier.clickable {  }
+                modifier = Modifier
+                    .clickable { navController.navigate("search_results") }
+                    .testTag("SEARCH_BAR_LAYOUT")
+
             ) {
                 TextField(
                     value = text,
@@ -121,7 +118,6 @@ fun SearchBarPlaceholder(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White)
-                        .clickable { navController.navigate("search_results") }
                 )
             }
         }
@@ -131,7 +127,8 @@ fun SearchBarPlaceholder(navController: NavController) {
 @Composable
 fun BrowseCategories() {
     Row(modifier = Modifier.fillMaxSize()) {
-        Text("Browse Categories", style = MaterialTheme.typography.headlineMedium)
+        Text("Browse Categories", style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.testTag("BROWSE_CATEGORIES_TITLE"))
     }
 
     Spacer(modifier = Modifier.height(15.dp))
@@ -225,7 +222,8 @@ fun Category(genre: String) {
 @Composable
 fun FriendsAdded() {
     Row(modifier = Modifier.fillMaxSize()) {
-        Text("Friends Recently Added", style = MaterialTheme.typography.headlineMedium)
+        Text("Friends Recently Added", style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.testTag("FRIENDS_RECENTLY_ADDED_TITLE"))
     }
 
     Spacer(modifier = Modifier.height(15.dp))

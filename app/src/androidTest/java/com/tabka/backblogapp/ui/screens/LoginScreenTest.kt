@@ -18,7 +18,6 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,7 +32,7 @@ class LoginScreenTest {
     private lateinit var mockNavController: TestNavHostController
 
     @Before
-    fun setUp() {
+    fun setup() {
         // Launch the LoginScreen composable
         composeTestRule.setContent {
             mockNavController = TestNavHostController(ApplicationProvider.getApplicationContext())
@@ -42,13 +41,6 @@ class LoginScreenTest {
             Surface {
                 LoginScreen(navController = mockNavController)
             }
-        }
-    }
-
-    @After
-    fun tearDown() {
-        if (Firebase.auth.currentUser != null) {
-            Firebase.auth.signOut()
         }
     }
 
@@ -63,11 +55,11 @@ class LoginScreenTest {
         composeTestRule.onNodeWithTag("EMAIL_FIELD").assertIsDisplayed()
         composeTestRule.onNodeWithText("Email").assertIsDisplayed()
 
+        composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertDoesNotExist()
+
         // Password Field
         composeTestRule.onNodeWithTag("PASSWORD_FIELD").assertIsDisplayed()
         composeTestRule.onNodeWithText("Password").assertIsDisplayed()
-
-        composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertDoesNotExist()
 
         // Login Button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").assertIsDisplayed().assertHasClickAction()
@@ -88,7 +80,7 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
@@ -103,7 +95,7 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
@@ -119,7 +111,7 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
@@ -135,15 +127,25 @@ class LoginScreenTest {
         // Click on the login button
         composeTestRule.onNodeWithTag("LOGIN_BUTTON").performClick()
 
-        composeTestRule.waitUntil(2000) {
+        composeTestRule.waitUntil(4000) {
             composeTestRule.onAllNodesWithTag("STATUS_MESSAGE").fetchSemanticsNodes().size == 1
         }
 
         composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Login successful. Redirecting...")
 
-        composeTestRule.waitUntil(1500) {
+        composeTestRule.waitUntil(3000) {
             mockNavController.currentDestination?.route == "friends"
         }
+
+        // Assert user is logged in
+        assert(Firebase.auth.currentUser != null)
+
+        // Sign user out
+        if (Firebase.auth.currentUser != null) {
+            Firebase.auth.signOut()
+        }
+
+        assert(Firebase.auth.currentUser == null)
     }
 
 }

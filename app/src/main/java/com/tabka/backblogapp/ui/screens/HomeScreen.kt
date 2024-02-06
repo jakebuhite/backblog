@@ -2,6 +2,7 @@ package com.tabka.backblogapp.ui.screens
 
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
@@ -9,7 +10,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -17,14 +31,32 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddToPhotos
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -37,21 +69,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
-import com.tabka.backblogapp.ui.bottomnav.logViewModel
+import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -61,49 +96,59 @@ private val TAG = "HomeScreen"
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(navController: NavHostController, backStackEntry: NavBackStackEntry) {
-    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+fun HomeScreen(navController: NavHostController, logViewModel: LogViewModel) {
     val allLogs by logViewModel.allLogs.collectAsState()
+    Log.d(TAG, "Here are the logs: $allLogs")
 
     val hasBackButton = false
     val pageTitle = "What's Next?"
-
-
     BaseScreen(navController, hasBackButton, pageTitle) { scrollState ->
 
         // If logs exist
         if (!allLogs.isNullOrEmpty()) {
-            WatchNextCard(navController, allLogs!![0])
-
+            Log.d(TAG, "This is the first Log: ${allLogs!![0]}")
+            WatchNextCard(navController, allLogs!![0], logViewModel)
         }
         Spacer(Modifier.height(40.dp))
-        MyLogsSection(navController, backStackEntry, allLogs, scrollState)
-
+        MyLogsSection(navController, allLogs, scrollState, logViewModel)
     }
 }
 
 
 @Composable
-fun WatchNextCard(navController: NavController, priorityLog: LogData) {
+fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logViewModel: LogViewModel) {
+
+    Log.d(TAG, "Priority Log: $priorityLog")
+    //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+    val movie = logViewModel.movie.collectAsState().value
+    LaunchedEffect(priorityLog.movieIds?.keys?.firstOrNull()) {
+        priorityLog.movieIds?.keys?.firstOrNull()?.let { movieId ->
+            logViewModel.getMovieById(movieId)
+        } ?: run {
+            logViewModel.resetMovie()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
 
-        PriorityLogTitle(priorityLog.name!!)
+        PriorityLogTitle(priorityLog.name ?: "")
 
         Spacer(modifier = Modifier.height(5.dp))
 
-        val movieId = priorityLog.movieIds?.keys?.firstOrNull()
-        if (movieId != null) {
-            // val movie: MovieData = Get movie by Id
-
-            // Change to movie
-            NextMovie(navController, movieId)
+        //val movieId = priorityLog.movieIds?.keys?.firstOrNull()
+        movie?.let {
+            Log.d(TAG, "This is the movie if it exists: $it")
+            var image: String? = null
+            if (it.backdropPath != null) {
+                image = it.backdropPath
+            }
+            NextMovie(navController, image, it.id)
             Spacer(modifier = Modifier.height(5.dp))
-            NextMovieInfo(movieId)
-        } else {
-            NextMovie(navController, null)
+            NextMovieInfo(it.id, it.title, it.releaseDate, it.posterPath, priorityLog.logId ?: "", logViewModel)
+        } ?: run {
+            NextMovie(navController, null, null)
             Spacer(modifier = Modifier.height(5.dp))
         }
     }
@@ -113,22 +158,53 @@ fun WatchNextCard(navController: NavController, priorityLog: LogData) {
 @Composable
 fun PriorityLogTitle(logName: String) {
     Row() {
-        Text("From $logName", style = MaterialTheme.typography.titleSmall)
+        Text("From $logName", style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.testTag("PRIORITY_LOG_TITLE"))
     }
 }
 
 
 @Composable
-fun NextMovie(navController: NavController, movie: String?) {
+fun NextMovie(navController: NavController, image: String?, movieId: Int?) {
 
-    val image = R.drawable.icon_empty_log
+    val imageUrl = image?.let { "https://image.tmdb.org/t/p/w500/$it" }
+    val painter = if (imageUrl != null) {
+        rememberAsyncImagePainter(model = imageUrl)
+    } else {
+        painterResource(id = R.drawable.icon_empty_log) // Placeholder image
+    }
 
-    if (movie != null) {
-     /*   if (movie.backdrop != null) {
-            image = URL of movie.backdrop
-        } else {
-            //image = URL of movie.half_sheet
-        }*/
+    var cardModifier = Modifier
+        .fillMaxWidth()
+/*        .height(200.dp)*/
+    movieId?.let {
+        cardModifier = cardModifier.clickable { navController.navigate("home_movie_details_$it") }
+    }
+
+    Card(
+        shape = RoundedCornerShape(5.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
+        modifier = cardModifier,
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(modifier = Modifier.height(200.dp)) {
+            Image(
+                painter = painter,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("MOVIE_IMAGE")
+            )
+        }
+    }
+    /*val painter = if (image == null) {
+        // Use painterResource for local drawable resources
+        painterResource(id = R.drawable.icon_empty_log)
+    } else {
+        // Use rememberAsyncImagePainter for remote images
+        val imageUrl = "https://image.tmdb.org/t/p/w500/$image"
+        rememberAsyncImagePainter(model = imageUrl)
     }
 
     // Next movie image
@@ -148,19 +224,29 @@ fun NextMovie(navController: NavController, movie: String?) {
                 modifier = Modifier.height(200.dp)
             ) {
                 Image(
-                    painter = painterResource(id = image),
+                    //painter = painterResource(id = image),
+                    painter = painter,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("MOVIE_IMAGE")
                 )
             }
         }
-    }
+    }*/
 }
 
 
 @Composable
-fun NextMovieInfo(movie: String) {
+fun NextMovieInfo(
+    movieId: Int?,
+    title: String?,
+    releaseDate: String?,
+    image: String?,
+    logId: String,
+    logViewModel: LogViewModel
+) {
 
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -173,13 +259,15 @@ fun NextMovieInfo(movie: String) {
         {
             // Title
             Row() {
-                Text(text = "Tenet", style = MaterialTheme.typography.headlineMedium)
+                Text(text = title ?: "", style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.testTag("MOVIE_TITLE"))
             }
 
             Row() {
                 // Rating
                 Column() {
-                    Text(text = "PG-13", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "PG-13", style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.testTag("MOVIE_RATING"))
                 }
 
                 Spacer(modifier = Modifier.width(5.dp))
@@ -187,7 +275,8 @@ fun NextMovieInfo(movie: String) {
                 // Release Date
                 Column(
                 ) {
-                    Text(text = "2022", style = MaterialTheme.typography.bodySmall)
+                    Text(text = releaseDate?.substring(0, 4) ?: "", style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.testTag("MOVIE_YEAR"))
                 }
             }
         }
@@ -198,10 +287,17 @@ fun NextMovieInfo(movie: String) {
             .fillMaxHeight(),
             horizontalAlignment = Alignment.End
         ) {
+            val context = LocalContext.current
             Image(
                 painter = painterResource(id = R.drawable.checkbutton2),
                 contentDescription = "Check icon",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("CHECK_ICON")
+                    .clickable {
+                        Toast.makeText(context, "Successfully marked movie as watched!", Toast.LENGTH_SHORT).show()
+                        logViewModel.markMovieAsWatched(logId, movieId.toString())
+                    }
             )
         }
     }
@@ -213,13 +309,8 @@ fun NextMovieInfo(movie: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun MyLogsSection(
-    navController: NavHostController,
-    backStackEntry: NavBackStackEntry,
-    allLogs: List<LogData>?,
-    scrollState: ScrollState
-) {
-    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scrollState: ScrollState, logViewModel: LogViewModel) {
+    //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
@@ -235,15 +326,17 @@ fun MyLogsSection(
                 .weight(1f)
                 .fillMaxHeight()
         ) {
-            Text("My Logs", style = MaterialTheme.typography.headlineMedium)
+            Text("My Logs",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.testTag("MY_LOGS_HEADER")
+            )
         }
 
         // Add Log Button
         Column(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
-            /*.padding(end = 5.dp)*/,
+                .fillMaxHeight(),
             horizontalAlignment = Alignment.End
         ) {
             Image(
@@ -252,7 +345,8 @@ fun MyLogsSection(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
-                    .clickable { isSheetOpen = true },
+                    .clickable { isSheetOpen = true }
+                    .testTag("ADD_LOG_BUTTON"),
                 colorFilter = tint(color = colorResource(id = R.color.sky_blue))
             )
         }
@@ -266,7 +360,9 @@ fun MyLogsSection(
             sheetState = sheetState,
             onDismissRequest = { isSheetOpen = false },
             containerColor = colorResource(id = R.color.bottomnav),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("ADD_LOG_POPUP")
         ) {
             val focusManager = LocalFocusManager.current
 
@@ -294,8 +390,13 @@ fun MyLogsSection(
                 TextField(
                     value = logName,
                     onValueChange = { logName = it },
-                    label = { Text("Log Name") },
+                    label = { Text(
+                        "Log Name",
+                        modifier = Modifier.testTag("ADD_LOG_POPUP_LOG_NAME_LABEL")
+                    ) },
                     singleLine = true,
+                    modifier = Modifier.testTag("LOG_NAME_INPUT"),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
@@ -357,32 +458,6 @@ fun MyLogsSection(
                     }
                 }
             }
-
-/*            Spacer(modifier = Modifier.height(30.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center) {
-                // Create Button
-                Button(
-                    onClick = {
-                        if (logName.isNotEmpty()) {
-                            logViewModel.createLog(logName)
-                            isSheetOpen = false
-                            logName = ""
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(horizontal = 24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.sky_blue),
-                        disabledContainerColor = colorResource(id = R.color.sky_blue)
-                    ),
-                ) {
-                    Text("Create", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                }*/
-          
             Spacer(modifier = Modifier.height(10.dp))
 
             // Create Button tab
@@ -398,15 +473,15 @@ fun MyLogsSection(
     Spacer(modifier = Modifier.height(15.dp))
 
     if (!allLogs.isNullOrEmpty()) {
-        DisplayLogsWithDrag(navController, backStackEntry, scrollState, allLogs)
-        Log.d(TAG, "ALL LOGS: $allLogs")
+        DisplayLogsWithDrag(navController, scrollState, allLogs, logViewModel)
     }
 }
 
 @Composable
-fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBackStackEntry, scrollState: ScrollState, allLogs: List<LogData>?) {
-    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
-    val allLogs by logViewModel.allLogs.collectAsState()
+fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollState, allLogs: List<LogData>?, logViewModel: LogViewModel) {
+    //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+    //val allLogs by logViewModel.allLogs.collectAsState()
+
 
     data class LogPosition(
         var index: Int,
@@ -417,7 +492,8 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
         val top: Float,
         val bottom: Float,
         val left: Float,
-        val right: Float
+        val right: Float,
+        var imageUrl: MutableState<String?>
     )
 
     val draggedItem = remember { mutableStateOf<LogPosition?>(null) }
@@ -437,9 +513,9 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
     var boxBottomInViewPort by remember { mutableStateOf(0f) }
     var height by remember { mutableStateOf(0f) }
     var width by remember { mutableStateOf(0f) }
-    val coroutineScope = rememberCoroutineScope()
+/*    val coroutineScope = rememberCoroutineScope()
     var isScrollingNeeded by remember { mutableStateOf(false) }
-    var scrollDown by remember { mutableStateOf(true) }
+    var scrollDown by remember { mutableStateOf(true) }*/
 
     var swapNeeded = false
     var firstIndexToSwap = -1
@@ -461,7 +537,14 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
         ) {
             if (draggedItem.value != null) {
                 val selectedLog = draggedItem.value
-                Log.d(TAG, "SELECTED LOG: $selectedLog")
+
+                Log.d(TAG, "Selected Log: $selectedLog")
+
+                val painter = if (selectedLog!!.imageUrl.value != null) {
+                    rememberAsyncImagePainter(model = selectedLog.imageUrl.value)
+                } else {
+                    painterResource(id = R.drawable.icon_empty_log) // Default image if URL is null
+                }
 
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -479,7 +562,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
                             .fillMaxSize()
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.creator),
+                            painter = painter,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -497,7 +580,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
 
                         // Text overlay
                         Text(
-                            text = "${selectedLog!!.name}",
+                            text = "${selectedLog.name}",
                             style = MaterialTheme.typography.headlineMedium,
                             color = Color.White,
                             textAlign = TextAlign.Center,
@@ -509,7 +592,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
                         )
                     }
                     for (log in logPositions) {
-                        if (log.logId != selectedLog!!.logId) {
+                        if (log.logId != selectedLog.logId) {
                             // Selected log is in the first column
                             if (selectedLog.index % 2 == 0) {
                                 if (middleHorizontal > log.top) {
@@ -538,23 +621,27 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
                     if (swapNeeded) {
                         val movingLogId = logPositions[firstIndexToSwap].logId
                         val movingLogName = logPositions[firstIndexToSwap].name
+                        val movingLogImage = logPositions[firstIndexToSwap].imageUrl
 
                         if (firstIndexToSwap < secondIndexToSwap) {
                             // Move each logId one position up in the range from firstIndexToSwap to secondIndexToSwap
                             for (i in firstIndexToSwap until secondIndexToSwap) {
                                 logPositions[i].logId = logPositions[i + 1].logId
                                 logPositions[i].name = logPositions[i + 1].name
+                                logPositions[i].imageUrl = logPositions[i + 1].imageUrl
                             }
                         } else {
                             // Move each logId one position down in the range from secondIndexToSwap to firstIndexToSwap
                             for (i in firstIndexToSwap downTo secondIndexToSwap + 1) {
                                 logPositions[i].logId = logPositions[i - 1].logId
                                 logPositions[i].name = logPositions[i - 1].name
+                                logPositions[i].imageUrl = logPositions[i - 1].imageUrl
                             }
                         }
 
                         logPositions[secondIndexToSwap].logId = movingLogId
                         logPositions[secondIndexToSwap].name = movingLogName
+                        logPositions[secondIndexToSwap].imageUrl = movingLogImage
                         draggedItem.value = logPositions[secondIndexToSwap]
                         logViewModel.onMove(firstIndexToSwap, secondIndexToSwap)
                     }
@@ -567,11 +654,37 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(allLogs!!.size, key = { index -> allLogs!![index].logId!! }) { index ->
+            items(allLogs.size, key = { index -> allLogs[index].logId!! }) { index ->
 
                 var alpha by remember { mutableStateOf(1f) }
 
-                val log = allLogs!![index]
+                val log = allLogs[index]
+                var movieData by remember(log.movieIds?.keys?.firstOrNull()) { mutableStateOf<MovieData?>(null) }
+
+                val movieId = log.movieIds?.keys?.firstOrNull()
+                Log.d(TAG, "First Movie ID: $movieId")
+                var painter = painterResource(id = R.drawable.icon_empty_log)
+
+                LaunchedEffect(movieId) {
+                    movieId?.let {
+                        logViewModel.fetchMovieDetails(it) { result ->
+                            result.data?.let { data ->
+                                movieData = data
+                                // Find the corresponding LogPosition and update its imageUrl
+                                logPositions.find { position -> position.logId == log.logId }?.imageUrl?.value = "https://image.tmdb.org/t/p/w500/${data.backdropPath}"
+                            }
+                        }
+                    }
+                }
+
+                movieData?.let {
+                    if (it.backdropPath != null) {
+                        val imageUrl = "https://image.tmdb.org/t/p/w500/${it.backdropPath}"
+                        painter = rememberAsyncImagePainter(model = imageUrl)
+                    }
+                }
+                Log.d(TAG, "Here is the painter: $painter")
+
                 Card(
                     modifier = Modifier
                         .size(175.dp)
@@ -596,7 +709,8 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
                                     currTop,
                                     currBottom,
                                     currLeft,
-                                    currRight
+                                    currRight,
+                                    mutableStateOf(null)
                                 )
                                 Log.d(TAG, newLog.toString())
                                 logPositions.add(newLog)
@@ -651,9 +765,6 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
                                     left = boxOverlayX
                                     right = left + width
 
-                                    Log.d(TAG, "Box Top: $boxOverlayY")
-
-
                                     // Calculate the midpoints
                                     middleVertical = (left + right) / 2
                                     middleHorizontal = (top + bottom) / 2
@@ -686,7 +797,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
                             .fillMaxSize()
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.creator),
+                            painter = painter,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -714,6 +825,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, backStackEntry: NavBac
                         )
                     }
                 }
+                //logViewModel.resetNextMovie()
             }
         }
     }
@@ -791,7 +903,8 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .testTag("CREATE_LOG_BUTTON"),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.sky_blue),
                 disabledContainerColor = colorResource(id = R.color.sky_blue)
@@ -838,219 +951,3 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
     }
 }
 
-
-
-
-/*
-@Composable
-fun ListLogs(navController: NavController, allLogs: List<LogData>) {
-                    for (log in logPositions) {
-                        if (log.logId != selectedLog!!.logId) {
-                            // Selected log is in the first column
-                            if (selectedLog.index % 2 == 0) {
-                                if (middleHorizontal > log.top) {
-                                    if (middleHorizontal < log.bottom) {
-                                        if (middleVertical > log.left) {
-                                            swapNeeded = true
-                                            firstIndexToSwap = selectedLog.index
-                                            secondIndexToSwap = log.index
-                                            break
-                                        }
-                                    }
-                                }
-                            // Selected log is in the second column
-                            } else {
-                                if ((middleHorizontal > log.top) && (middleHorizontal < log.bottom)) {
-                                    if (middleVertical < log.right) {
-                                        swapNeeded = true
-                                        firstIndexToSwap = selectedLog.index
-                                        secondIndexToSwap = log.index
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (swapNeeded) {
-                        val movingLogId = logPositions[firstIndexToSwap].logId
-                        val movingLogName = logPositions[firstIndexToSwap].name
-
-                        if (firstIndexToSwap < secondIndexToSwap) {
-                            // Move each logId one position up in the range from firstIndexToSwap to secondIndexToSwap
-                            for (i in firstIndexToSwap until secondIndexToSwap) {
-                                logPositions[i].logId = logPositions[i + 1].logId
-                                logPositions[i].name = logPositions[i + 1].name
-                            }
-                        } else {
-                            // Move each logId one position down in the range from secondIndexToSwap to firstIndexToSwap
-                            for (i in firstIndexToSwap downTo secondIndexToSwap + 1) {
-                                logPositions[i].logId = logPositions[i - 1].logId
-                                logPositions[i].name = logPositions[i - 1].name
-                            }
-                        }
-
-                        logPositions[secondIndexToSwap].logId = movingLogId
-                        logPositions[secondIndexToSwap].name = movingLogName
-                        draggedItem.value = logPositions[secondIndexToSwap]
-                        logViewModel.onMove(firstIndexToSwap, secondIndexToSwap)
-                    }
-                }
-            }
-        }
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.matchParentSize(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(allLogs!!.size, key = { index -> allLogs[index].logId!! }) { index ->
-
-                var alpha by remember { mutableStateOf(1f) }
-
-                val log = allLogs[index]
-                Card(
-                    modifier = Modifier
-                        .size(175.dp)
-                        .clickable { navController.navigate("home_log_details_${log.logId}") }
-                        .alpha(alpha)
-                        .onGloballyPositioned { coordinates ->
-                            height = coordinates.size.height.toFloat()
-                            width = coordinates.size.width.toFloat()
-
-                            val currTop = coordinates.positionInParent().y.toFloat()
-                            val currBottom = currTop + height
-                            val currLeft = coordinates.positionInParent().x.toFloat()
-                            val currRight = currLeft + width
-
-                            if (logPositions.none { it.logId == log.logId }) {
-                                val newLog = LogPosition(
-                                    index,
-                                    log.logId!!,
-                                    log.name,
-                                    coordinates.positionInParent().x,
-                                    coordinates.positionInParent().y,
-                                    currTop,
-                                    currBottom,
-                                    currLeft,
-                                    currRight
-                                )
-                                Log.d(TAG, newLog.toString())
-                                logPositions.add(newLog)
-                            }
-                        }
-                        /*.clickable { draggedItem.value = logPositions[index] }*/
-                        .pointerInput(log) {
-                            detectDragGesturesAfterLongPress(
-                                onDragStart = { _ ->
-                                    val currentIndex =
-                                        logPositions.indexOfFirst { it.logId == log.logId }
-                                    draggedItem.value = logPositions[currentIndex]
-                                    offset = offset
-                                    alpha = 0f
-                                    boxOverlayAlpha = 1f
-
-                                    Log.d(TAG, "Beginning to Drag: ${logPositions[index]}")
-                                    Log.d(TAG, "New index we found $currentIndex")
-                                    boxOverlayX = logPositions[currentIndex].initialX
-                                    boxOverlayY = logPositions[currentIndex].initialY
-                                    boxShown = true
-
-                                    Log.d(TAG, "We have begun")
-                                },
-                                onDrag = { change, dragAmount ->
-                                    //change.consume()
-
-                                    // Update positions if within bounds
-                                    offset = Offset(
-                                        x = offset.x + dragAmount.x,
-                                        y = offset.y + dragAmount.y
-                                    )
-
-                                    //Log.d(TAG, "Offset: $offset")
-                                    boxOverlayX += dragAmount.x
-                                    //boxOverlayX = (boxOverlayX + dragAmount.x).coerceIn(0f, parentWidth - width)
-                                    //boxOverlayY = (boxOverlayY + dragAmount.y).coerceIn(0f, parentHeight - height)
-                                    boxOverlayY += dragAmount.y
-
-                                    /*top = boxOverlayY
-                                    if (top < 0) {
-                                        middleHorizontal = 0f
-                                        middleVertical = 0f
-                                        alpha = 1f
-                                        boxOverlayAlpha = 0f
-                                        boxOverlayX = -1f
-                                        boxOverlayY = -1f
-                                        offset = Offset(0f, 0f)
-                                    } else {*/
-                                    top = boxOverlayY
-                                    bottom = top + height
-                                    left = boxOverlayX
-                                    right = left + width
-
-                                    Log.d(TAG, "Box Top: $boxOverlayY")
-
-
-                                    // Calculate the midpoints
-                                    middleVertical = (left + right) / 2
-                                    middleHorizontal = (top + bottom) / 2
-
-                                    /*                                    if (boxBottomInViewPort > screenHeight) {
-                                        isScrollingNeeded = true
-                                    } else {
-                                        isScrollingNeeded = false
-                                    }*/
-                                },
-                                onDragEnd = {
-                                    middleHorizontal = 0f
-                                    middleVertical = 0f
-                                    alpha = 1f
-                                    boxOverlayAlpha = 0f
-                                    boxOverlayX = -1f
-                                    boxOverlayY = -1f
-                                    offset = Offset(0f, 0f)
-                                }
-                            )
-                        },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Transparent
-                    )
-                    /*elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)*/
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.creator),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    color = Color.Black.copy(alpha = 0.75f), // Transparent black color
-                                    shape = RoundedCornerShape(5.dp)
-                                )
-                        )
-
-                        // Text overlay
-                        Text(
-                            text = "${log.name}",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                                .align(Alignment.Center)
-                                .wrapContentHeight(align = Alignment.CenterVertically)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-*/

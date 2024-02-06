@@ -18,14 +18,14 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
-class SettingsViewModel: ViewModel() {
+open class SettingsViewModel: ViewModel() {
     private val auth = Firebase.auth
     private val userRepository = UserRepository()
     private val logLocalRepository = LogLocalRepository()
     private val logRepository = LogRepository()
     private val tag = "SettingsViewModel"
 
-    suspend fun getUserData(): DataResult<UserData?> {
+    open suspend fun getUserData(): DataResult<UserData?> {
         return try {
             val userId = auth.currentUser!!.uid
             when(val userData = userRepository.getUser(userId)) {
@@ -67,11 +67,11 @@ class SettingsViewModel: ViewModel() {
         }
     }
 
-    fun getLogCount(): Int {
+    open fun getLogCount(): Int {
         return logLocalRepository.getLogCount()
     }
 
-    suspend fun syncLocalLogsToDB(): DataResult<Boolean> = coroutineScope {
+    open suspend fun syncLocalLogsToDB(): DataResult<Boolean> = coroutineScope {
         try {
             val logs = logLocalRepository.getLogs()
 

@@ -4,22 +4,37 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.Owner
+import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.repository.LogLocalRepository
+import com.tabka.backblogapp.network.repository.MovieRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.burnoutcrew.reorderable.ItemPosition
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class LogViewModel : ViewModel() {
+open class LogViewModel : ViewModel() {
     private val TAG = "LogViewModel"
     private val localLogRepository = LogLocalRepository()
 
+    // Log Data
     private val _allLogs = MutableStateFlow<List<LogData>?>(emptyList())
-    var allLogs = _allLogs.asStateFlow()
+    open var allLogs = _allLogs.asStateFlow()
+
+    // Movie Data
+    private val apiService = ApiClient.movieApiService
+    private val movieRepository = MovieRepository(apiService)
+    private val _movie = MutableStateFlow<MovieData?>(null)
+    open val movie = _movie.asStateFlow()
+
+    private val _nextMovie = MutableStateFlow<MovieData?>(null)
+    val nextMovie = _nextMovie.asStateFlow()
+
 
     init {
         loadLogs()
@@ -28,6 +43,7 @@ class LogViewModel : ViewModel() {
     private fun loadLogs() {
         Log.d(TAG, "Load Logs")
         _allLogs.value = localLogRepository.getLogs()
+        Log.d(TAG, "Log: ${_allLogs.value}")
        /* sortLogsByOwnerPriority()*/
     }
 
@@ -44,6 +60,66 @@ class LogViewModel : ViewModel() {
         loadLogs()
     }
 
+    open fun getMovieById(movieId: String) {
+        movieRepository.getMovieById(
+            movieId = movieId,
+            onResponse = { movieResponse ->
+                _movie.value = movieResponse
+                Log.d(TAG, "$movieResponse")
+            },
+            onFailure = { e ->
+                Log.e(TAG, "Failed to fetch details for movie ID $movieId: $e")
+            }
+        )
+    }
+
+    fun markMovieAsWatched(logId: String, movieId: String) {
+        localLogRepository.markMovie(logId, movieId, watched = true)
+        loadLogs()
+    }
+
+    data class MovieResult<T>(
+        val data: T? = null,
+        val error: String? = null
+    )
+    fun fetchMovieDetails(
+        movieId: String,
+        onResponse: (MovieResult<MovieData>) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                movieRepository.getMovieById(movieId, { movieData ->
+                    // Success response
+                    if (movieData != null) {
+                        onResponse(MovieResult(data = movieData))
+                    } else {
+                        onResponse(MovieResult(error = "No data received"))
+                    }
+                }, { errorMsg ->
+                    // Error response
+                    onResponse(MovieResult(error = errorMsg))
+                })
+            } catch (e: Exception) {
+                onResponse(MovieResult(error = e.message ?: "An unknown error occurred"))
+            }
+        }
+    }
+
+    fun getNextMovieById(movieId: String) {
+        movieRepository.getMovieById(
+            movieId = movieId,
+            onResponse = { movieResponse ->
+                _nextMovie.value = movieResponse
+            },
+            onFailure = { e ->
+                Log.e(TAG, "Failed to fetch details for movie ID $movieId: $e")
+            }
+        )
+    }
+
+    fun resetMovie() {
+        _movie.value = null
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun createLog(logName: String) {
@@ -68,7 +144,7 @@ class LogViewModel : ViewModel() {
             logId =  id,
             name = logName,
             isVisible = false,
-            movieIds = emptyMap(),
+            movieIds = mutableMapOf(),
             watchedIds = emptyMap(),
             owner = owner,
             collaborators = emptyMap(),
@@ -78,20 +154,8 @@ class LogViewModel : ViewModel() {
         Log.d(TAG, "Creating Log: $log")
         localLogRepository.createLog(log)
         loadLogs()
+        resetMovie()
     }
-
-/*    private fun sortLogsByOwnerPriority() {
-        CoroutineScope(Dispatchers.IO).launch {
-            allLogs.collect { logsList ->
-                logsList?.let { list ->
-                    val sortedList = list.sortedBy { logData ->
-                        // Assuming the map has an integer value and a key "x"
-                        logData.owner?.get("priority") as? Int ?: Int.MAX_VALUE
-                    }
-                }
-            }
-        }
-    }*/
 
     private fun findMaxPriority(): Int {
         var maxPriority = 0
@@ -101,21 +165,6 @@ class LogViewModel : ViewModel() {
             if (temp > maxPriority) {
                 maxPriority = temp
             }
-/*            val temp = log.owner?.get("priority")
-
-            if (temp is Int) { // Check if it's already an Int
-                if (temp > maxPriority) {
-                    maxPriority = temp
-                }
-            } else if (temp is Double) { // If it's a Double, convert it to Int
-                val intTemp = temp.toInt()
-                if (intTemp > maxPriority) {
-                    maxPriority = intTemp
-                }
-            }*/
-/*           if (temp > maxPriority) {
-                maxPriority = temp
-            }*/
         }
         return maxPriority
     }

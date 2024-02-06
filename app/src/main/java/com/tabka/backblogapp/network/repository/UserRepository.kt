@@ -2,10 +2,10 @@ package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import com.tabka.backblogapp.network.models.FriendRequestData
-import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
@@ -15,9 +15,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class UserRepository {
-    private val db = Firebase.firestore
-    private val auth = Firebase.auth
+class UserRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: FirebaseAuth = Firebase.auth) {
     private val tag = "UsersRepo"
 
     suspend fun addUser(userId: String, username: String, avatarPreset: Int): DataResult<Boolean> {
@@ -45,7 +43,7 @@ class UserRepository {
         try {
             val result = db.collection("users").document(userId).get().await()
 
-            return if (result != null && result.exists()) {
+            return if (result.exists()) {
                 val data = result.data
 
                 val userData = Json.decodeFromString<UserData>(Json.encodeToString(data.toJsonElement()))
@@ -85,48 +83,6 @@ class UserRepository {
             return DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error updating user", e)
-            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
-        }
-    }
-
-    suspend fun getLogRequests(userId: String): DataResult<List<LogRequestData>> {
-        try {
-            val snapshot = db.collection("log_requests")
-                .whereEqualTo("target_id", userId)
-                .get()
-                .await()
-
-            return if (!snapshot.isEmpty) {
-                val logRequests = snapshot.documents.map { document ->
-                    Json.decodeFromString<LogRequestData>(Json.encodeToString(document))
-                }
-                DataResult.Success(logRequests)
-            } else {
-                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
-            }
-        } catch (e: Exception) {
-            Log.w(tag, "Error receiving log request documents", e)
-            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
-        }
-    }
-
-    suspend fun getFriendRequests(userId: String): DataResult<List<FriendRequestData>> {
-        try {
-            val snapshot = db.collection("friend_requests")
-                .whereEqualTo("target_id", userId)
-                .get()
-                .await()
-
-            return if (!snapshot.isEmpty) {
-                val friendRequests = snapshot.documents.map { document ->
-                    Json.decodeFromString<FriendRequestData>(Json.encodeToString(document))
-                }
-                DataResult.Success(friendRequests)
-            } else {
-                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
-            }
-        } catch (e: Exception) {
-            Log.w(tag, "Error receiving friend request documents", e)
             return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
         }
     }

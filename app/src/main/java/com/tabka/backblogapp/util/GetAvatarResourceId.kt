@@ -10,6 +10,6 @@ fun getAvatarResourceId(avatarId: Int): Pair<String, Int> {
         4 -> Pair("Flux", R.drawable.avatar4)
         5 -> Pair("Torrent", R.drawable.avatar5)
         6 -> Pair("Odyssey", R.drawable.avatar6)
-        else -> Pair("Quasar", R.drawable.avatar1) // Default fallback
+        else -> Pair("Quasar", R.drawable.avatar1) // Default
     }
 }

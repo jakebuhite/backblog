@@ -3,11 +3,13 @@ package com.tabka.backblogapp.network.repository
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
+import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
@@ -15,15 +17,17 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 
-class LogRepository {
-
-    private val db = Firebase.firestore
+class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     private val tag = "FriendsRepo"
 
     suspend fun addLog(name: String, isVisible: Boolean, ownerId: String): DataResult<Boolean> {
         return try {
+            // Get new log id
+            val logId = db.collection("logs").document().id
+
             // Get all log data
             val logData = mapOf(
+                "log_id" to logId,
                 "name" to name,
                 "creation_date" to System.currentTimeMillis().toString(),
                 "last_modified_date" to System.currentTimeMillis().toString(),
@@ -34,7 +38,7 @@ class LogRepository {
                 "watched_ids" to emptyMap<String, Boolean>()
             )
 
-            db.collection("logs").add(logData).await()
+            db.collection("logs").document(logId).set(logData).await()
 
             Log.d(tag, "Log successfully written!")
             DataResult.Success(true)
@@ -74,7 +78,7 @@ class LogRepository {
             val doc = db.collection("logs").document(logId).get().await()
             if (doc.exists()) {
                 Log.d(tag, "Log successfully written!")
-                DataResult.Success(Json.decodeFromString(Json.encodeToString(doc)))
+                DataResult.Success(Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())))
             } else {
                 Log.d(tag, "Log not found.")
                 DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
@@ -97,11 +101,9 @@ class LogRepository {
                         val snapshot = if (private) {
                             logRef.whereEqualTo("owner.user_id", userId)
                         } else {
-                            logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("status", "PUBLIC")
+                            logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("is_visible", true)
                         }.get().await()
-                        logs.addAll(snapshot.documents.map { doc ->
-                            Json.decodeFromString(Json.encodeToString(doc.data))
-                        })
+                        logs.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
                     } catch (e: Exception) {
                         Log.w(tag, "Error receiving logs document (userOwned)", e)
                         return@async DataResult.Failure(e)
@@ -113,10 +115,10 @@ class LogRepository {
                         val snapshot = if (private) {
                             logRef.orderBy("collaborators.${userId}")
                         } else {
-                            logRef.orderBy("collaborators.${userId}").whereEqualTo("status", "PUBLIC")
+                            logRef.orderBy("collaborators.${userId}").whereEqualTo("is_visible", true)
                         }.get().await()
                         logs.addAll(snapshot.documents.map { doc ->
-                            Json.decodeFromString(Json.encodeToString(doc.data))
+                            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
                         })
                     } catch (e: Exception) {
                         Log.w(tag, "Error receiving logs document (userCollab)", e)
@@ -142,7 +144,7 @@ class LogRepository {
 
             // Add the modified properties to updatedUserObj
             updateData["name"]?.let { updatedLogObj["name"] = it }
-            updateData["status"]?.let { updatedLogObj["status"] = it }
+            updateData["is_visible"]?.let { updatedLogObj["is_visible"] = it }
             updateData["movie_ids"]?.let { updatedLogObj["movie_ids"] = it }
             updateData["watched_ids"]?.let { updatedLogObj["watched_ids"] = it }
 

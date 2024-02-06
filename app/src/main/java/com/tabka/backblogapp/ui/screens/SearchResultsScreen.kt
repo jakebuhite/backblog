@@ -1,5 +1,7 @@
 package com.tabka.backblogapp.ui.screens
 
+/*import com.tabka.backblogapp.ui.bottomnav.logViewModel
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel*/
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,8 +12,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,6 +21,8 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Icon
@@ -41,25 +45,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
-import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
-import com.tabka.backblogapp.ui.bottomnav.logViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
 
@@ -68,20 +71,21 @@ val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
 
 
 @Composable
-fun SearchResultsScreen(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewModel) {
     val hasBackButton = true
     val pageTitle = "Results"
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        SearchBar(navController, backStackEntry)
+        SearchBar(navController, logViewModel)
         //DisplayMovieResults
     }
 }
-
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
     var text by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Row(
         modifier = Modifier
@@ -99,14 +103,20 @@ fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntr
                     value = text,
                     onValueChange = {
                         text = it
-
                         // If there is something
-                        if (!text.isNullOrBlank()) {
+                        if (text.isNotBlank()) {
                             Log.d(TAG, "$text")
                             searchResultsViewModel.getMovieResults(text)
                         }
                     },
-                    placeholder = { Text("Search for a movie") },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusRequester.freeFocus()
+                            keyboardController?.hide()
+                        }
+                    ),
+                    placeholder = { Text("Search for a movie", modifier = Modifier.testTag("SEARCH_BAR_LABEL")) },
                     maxLines = 1,
                     leadingIcon = {
                         Icon(
@@ -120,6 +130,7 @@ fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntr
                         .fillMaxWidth()
                         .background(Color.White)
                         .focusRequester(focusRequester)
+                        .testTag("SEARCH_BAR_INPUT")
                 )
 
                 LaunchedEffect(Unit) {
@@ -135,9 +146,10 @@ fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntr
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = 20.dp)
+                    .testTag("MOVIE_RESULTS_LIST")
             ) {
                 items(movieResults) { movie ->
-                    MovieResult(navController, backStackEntry, movie)
+                    MovieResult(navController, movie, logViewModel)
                 }
             }
         }
@@ -148,8 +160,8 @@ fun SearchBar(navController: NavHostController, backStackEntry: NavBackStackEntr
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEntry, movie: MovieSearchResult) {
-    val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
+fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logViewModel: LogViewModel) {
+    //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val allLogs by logViewModel.allLogs.collectAsState()
 
     Row(modifier = Modifier.padding(bottom = 10.dp),
@@ -183,7 +195,8 @@ fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEn
             .fillMaxHeight()
             .height(70.dp)
             .padding(start = 8.dp)
-            .clickable { navController.navigate("search_movie_details_${movie.id}") },
+            .clickable { navController.navigate("search_movie_details_${movie.id}") }
+            .testTag("MOVIE_RESULT"),
             verticalArrangement = Arrangement.Center){
             Text("${movie.originalTitle}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
         }
@@ -197,7 +210,8 @@ fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEn
         Column(modifier = Modifier
             .weight(1F)
             .height(70.dp)
-            .clickable { isSheetOpen = true },
+            .clickable { isSheetOpen = true }
+            .testTag("ADD_MOVIE_TO_LOG_BUTTON"),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
             Image(
@@ -213,7 +227,7 @@ fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEn
                 sheetState = sheetState,
                 onDismissRequest = {isSheetOpen = false },
                 containerColor = colorResource(id = R.color.bottomnav),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().testTag("ADD_MOVIE_TO_LOG_POPUP")
             ){
 
                 //val allLogs = logViewModel.allLogs.collectAsState().value
@@ -237,6 +251,7 @@ fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEn
                                     onCheckedChange = { isChecked ->
                                         checkedStates[index] = isChecked
                                     },
+                                    modifier = Modifier.testTag("LOG_CHECKBOX")
                                 )
                             }
                         }
@@ -252,7 +267,8 @@ fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEn
                                 logViewModel.addMovieToLog(log.logId, movie.id.toString())
                                 /*Log.d(TAG, allLogs)*/
                             }
-                        }
+                        },
+                        modifier = Modifier.testTag("ADD_TO_LOG_BUTTON")
                     ) {
                         Text(
                             "Add to Log",
@@ -269,7 +285,8 @@ fun MovieResult(navController: NavHostController, backStackEntry: NavBackStackEn
 fun NoResults() {
     Row(modifier = Modifier
         .fillMaxSize()
-        .padding(top = 100.dp),
+        .padding(top = 100.dp)
+        .testTag("NO_RESULTS_ROW"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {

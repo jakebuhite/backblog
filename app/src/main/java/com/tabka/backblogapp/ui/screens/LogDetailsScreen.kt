@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -31,8 +33,6 @@ import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.DoNotDisturb
-import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -47,47 +47,63 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 
 private val TAG = "LogDetailsScreen"
 
 
 @Composable
-fun LogDetailsScreen(navController: NavController, logId: String?) {
-    val logDetailsViewModel: LogDetailsViewModel = viewModel()
-    val log = logDetailsViewModel.log!!
-
+fun LogDetailsScreen(
+    navController: NavHostController,
+    logDetailsViewModel: LogDetailsViewModel,
+    logId: String?
+) {
     val hasBackButton = true
-    val pageTitle = log.name!!
+
+    // Movies
+    val movieState = logDetailsViewModel.movies.observeAsState()
+    val movies = movieState.value ?: emptyList()
+
+    // Logs
+    val logState = logDetailsViewModel.logData.observeAsState()
+    val log = logState.value
+    val pageTitle = log?.name ?: ""
+
+    // Get data
+    LaunchedEffect(key1 = logId) {
+        logDetailsViewModel.getLogData(logId!!)
+    }
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        DetailBar()
+        DetailBar(movies.size)
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons(pageTitle)
         Spacer(modifier = Modifier.height(20.dp))
-        //LogList()
-
+        LogList(navController, movies)
     }
 }
 
 @Composable
-fun DetailBar() {
+fun DetailBar(movieCount: Int) {
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically) {
         // Creator Picture
@@ -97,7 +113,9 @@ fun DetailBar() {
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier
+                    .size(35.dp)
+                    .testTag("CREATOR_PICTURE"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -108,7 +126,9 @@ fun DetailBar() {
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier
+                    .size(35.dp)
+                    .testTag("COLLABS_PICTURE"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -116,7 +136,7 @@ fun DetailBar() {
         // Number of Movies
         Column(modifier = Modifier.padding(start = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("7 Movies", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -164,6 +184,7 @@ fun LogButtons(logName: String) {
                     contentDescription = "Add Icon",
                     modifier = Modifier
                         .size(35.dp)
+                        .testTag("ADD_ICON")
                         .clickable(onClick = {
                             sheetContent = { CollaboratorsSheetContent(logName) }
                             isSheetOpen = true
@@ -182,6 +203,7 @@ fun LogButtons(logName: String) {
                     contentDescription = "Edit",
                     modifier = Modifier
                         .size(35.dp)
+                         .testTag("EDIT_ICON")
                         .clickable(onClick = {
                             sheetContent = { EditSheetContent(logName) }
                             isSheetOpen = true
@@ -203,6 +225,7 @@ fun LogButtons(logName: String) {
                     modifier = Modifier
                         .size(35.dp)
                         .fillMaxHeight()
+                        .testTag("SHUFFLE_ICON")
                         .clickable(onClick = {  })
                 )
             }
@@ -218,6 +241,7 @@ fun LogButtons(logName: String) {
                     contentDescription = "Add Icon",
                     modifier = Modifier
                         .size(50.dp)
+                        .testTag("ADD_MOVIE_ICON")
                         .clickable(onClick = {
                             sheetContent = { AddMovieMenu() }
                             isSheetOpen = true
@@ -240,37 +264,30 @@ fun LogButtons(logName: String) {
 }
 
 @Composable
-fun LogList(logs: List<String>) {
-    val height: Dp = (70 * logs.size).dp
+fun LogList(navController: NavHostController, movies: List<MovieData>) {
+    Log.d(TAG, "Movies: $movies")
 
-    LazyColumn(userScrollEnabled = false, modifier = Modifier.height(height)) {
-        items(logs) { logName ->
-            LogEntry(logName)
+    if (movies.isNotEmpty()) {
+        // Height of image and padding times number of movies
+        val height: Dp = (80 * movies.size).dp
+
+        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(height)) {
+            items(movies.size) { index ->
+                val movie = movies[index]
+                MovieEntry(movie)
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun LogEntry(logName: String) {
+fun MovieEntry(movie: MovieData) {
     /*Row(modifier = swipeableModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
 
     }*/
-
-    val density = LocalDensity.current
-    val defaultActionSize = 80.dp
-    val endActionSizePx = with(density) { (defaultActionSize * 2).toPx() }
-    val startActionSizePx = with(density) { defaultActionSize.toPx() }
-
-  /*  val state = remember {
-        AnchoredDraggableState(
-
-        )
-    }*/
-
     Row(modifier = Modifier
         .fillMaxWidth()
         .padding(bottom = 10.dp),
@@ -287,11 +304,11 @@ fun LogEntry(logName: String) {
                     .height(70.dp)
                     .clip(RoundedCornerShape(5.dp))
             ) {
-                /*val imageBaseURL =
-                    "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"*/
+                val imageBaseURL =
+                    "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
                 Image(
-                    painter = painterResource(id = R.drawable.creator),
-                    contentDescription = "movie image",
+                    painter = rememberAsyncImagePainter(imageBaseURL),
+                    contentDescription = null,
                     contentScale = ContentScale.Crop
                 )
             }
@@ -304,7 +321,7 @@ fun LogEntry(logName: String) {
             .height(70.dp)
             .padding(start = 8.dp),
             verticalArrangement = Arrangement.Center){
-            Text(text = logName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = movie.title!!, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
         // Add Button

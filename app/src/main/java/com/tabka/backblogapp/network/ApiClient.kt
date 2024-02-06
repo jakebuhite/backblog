@@ -10,7 +10,10 @@ import retrofit2.Retrofit
 object ApiClient {
     private const val BASE_URL = "https://api.themoviedb.org/3/"
 
-    private val format = Json { explicitNulls = false }
+    private val format = Json {
+        explicitNulls = false
+        ignoreUnknownKeys = true
+    }
     private val contentType = "application/json".toMediaType()
 
     val movieApiService: ApiService by lazy {
