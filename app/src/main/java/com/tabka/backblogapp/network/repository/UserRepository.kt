@@ -21,10 +21,10 @@ class UserRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: F
     suspend fun addUser(userId: String, username: String, avatarPreset: Int): DataResult<Boolean> {
         try {
             val userData = mapOf(
-                "userId" to userId,
+                "user_id" to userId,
                 "username" to username,
-                "joinDate" to System.currentTimeMillis().toString(),
-                "avatarPreset" to avatarPreset,
+                "join_date" to System.currentTimeMillis().toString(),
+                "avatar_preset" to avatarPreset,
                 "friends" to emptyMap<String, Boolean>(),
                 "blocked" to emptyMap<String, Boolean>()
             )
