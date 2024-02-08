@@ -1,5 +1,5 @@
 package com.tabka.backblogapp.ui.screens
-/*
+
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
@@ -163,7 +163,7 @@ class SearchResultsScreenTest {
                 isVisible = null,
                 owner = null, // You might want to at least provide an Owner with an id for consistency
                 collaborators = emptyMap(),
-                movieIds = emptyMap(),
+                movieIds = mutableMapOf(),
                 watchedIds = emptyMap()
             ),
             LogData(
@@ -174,7 +174,7 @@ class SearchResultsScreenTest {
                 isVisible = null,
                 owner = null, // Same note as above regarding providing minimal Owner data
                 collaborators = emptyMap(),
-                movieIds = emptyMap(),
+                movieIds = mutableMapOf(),
                 watchedIds = emptyMap()
             )
         )
@@ -207,4 +207,4 @@ class SearchResultsScreenTest {
 
     }
 
-}*/
+}

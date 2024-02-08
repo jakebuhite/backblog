@@ -461,12 +461,13 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             Spacer(modifier = Modifier.height(10.dp))
 
             // Create Button tab
-            NewLogBottomSection(logName) {createdLogName ->
+            NewLogBottomSection(navController, logName, onCreateClick = { createdLogName ->
                 logViewModel.createLog(createdLogName)
                 isSheetOpen = false
                 logName = ""
-
-            }
+            }, onCloseClick = {
+                isSheetOpen = false
+            })
         }
     }
 
@@ -674,6 +675,8 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                                 logPositions.find { position -> position.logId == log.logId }?.imageUrl?.value = "https://image.tmdb.org/t/p/w500/${data.backdropPath}"
                             }
                         }
+                    } ?: run {
+                        logPositions.find { position -> position.logId == log.logId }?.imageUrl?.value = null
                     }
                 }
 
@@ -877,7 +880,7 @@ fun NewLogCollaborator(displayName: String) {
 }
 
 @Composable
-fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
+fun NewLogBottomSection(navController: NavController, logName: String, onCreateClick: (String) -> Unit, onCloseClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -896,7 +899,7 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
         // Create Button
         Button(
             onClick = {
-                if (!logName.isNullOrEmpty()) {
+                if (logName.isNotEmpty()) {
                     onCreateClick(logName)
                 }
             },
@@ -907,8 +910,9 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
                 .testTag("CREATE_LOG_BUTTON"),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.sky_blue),
-                disabledContainerColor = colorResource(id = R.color.sky_blue)
+                disabledContainerColor = Color.LightGray
             ),
+            enabled = logName.isNotEmpty()
         ) {
             Text(
                 "Create",
@@ -927,9 +931,7 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
         // Cancel Button
         Button(
             onClick = {
-                /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                onCloseClick()
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -942,7 +944,7 @@ fun NewLogBottomSection(logName: String, onCreateClick: (String) -> Unit) {
                 disabledContainerColor = Color.Transparent
             ),
         ) {
-            androidx.compose.material3.Text(
+            Text(
                 "Cancel",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold

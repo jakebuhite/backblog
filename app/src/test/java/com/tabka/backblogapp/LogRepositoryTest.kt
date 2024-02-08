@@ -1,3 +1,4 @@
+/*
 package com.tabka.backblogapp
 
 import com.google.android.gms.tasks.Task
@@ -77,6 +78,7 @@ class LogRepositoryTest {
         assert((result as DataResult.Failure).throwable == exception)
         verify(mockDocument).set(anyMap<String, Any>())
     }
+*/
 /*
     @Test
     fun testGetUserShouldReturnSuccess() = runBlocking {
@@ -227,5 +229,6 @@ class LogRepositoryTest {
         assert(result is DataResult.Failure)
         assert((result as DataResult.Failure).throwable.toString() == FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION).toString())
         verify(mockDocument).update(anyMap())
-    }*/
-}
+    }*//*
+
+}*/

@@ -18,7 +18,7 @@ class LogTest {
             "collaborator1" to mapOf("priority" to 2),
             "collaborator2" to mapOf("priority" to 1)
         ),
-        movieIds = mapOf("movie1" to true, "movie2" to false),
+        movieIds = mutableMapOf("movie1" to true, "movie2" to false),
         watchedIds = mapOf("movie1" to true, "movie2" to true)
     )
 
