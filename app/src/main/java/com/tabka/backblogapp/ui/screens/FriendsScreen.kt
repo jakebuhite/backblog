@@ -1,5 +1,6 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +31,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +59,7 @@ import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewModel) {
     val userDataState = friendsViewModel.userData.observeAsState()
@@ -76,8 +80,9 @@ fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewMod
     val logReqs = logReqState.value ?: emptyList()
 
     // Friend's data
-    val friendsState = friendsViewModel.friendsData.observeAsState()
-    val friends = friendsState.value ?: emptyList()
+    /*val friendsState = friendsViewModel.friendsData.observeAsState()
+    val friends = friendsState.value ?: emptyList()*/
+    val friends = friendsViewModel.friendsData.collectAsState()
 
     // Get data
     composableScope.launch {
@@ -95,13 +100,14 @@ fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewMod
 }
 
 @Composable
-fun FriendsContent(navController: NavController,
-                   pageTitle: String,
-                   publicLogs: List<LogData>,
-                   friendRequests:List<Pair<FriendRequestData, UserData>>,
-                   logRequests: List<Pair<LogRequestData, UserData>>,
-                   friends: List<UserData>,
-                   userAvatar: Int
+fun FriendsContent(
+    navController: NavController,
+    pageTitle: String,
+    publicLogs: List<LogData>,
+    friendRequests:List<Pair<FriendRequestData, UserData>>,
+    logRequests: List<Pair<LogRequestData, UserData>>,
+    friends: State<List<UserData>>,
+    userAvatar: Int
 ) {
     val scrollState = rememberScrollState()
 
@@ -118,7 +124,9 @@ fun FriendsContent(navController: NavController,
         ) {
             Row(horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.height(50.dp).fillMaxWidth()) {
+            modifier = Modifier
+                .height(50.dp)
+                .fillMaxWidth()) {
                 FriendHeader(navController)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -156,7 +164,7 @@ fun TabScreen(
     publicLogs: List<LogData>,
     friendRequests: List<Pair<FriendRequestData, UserData>>,
     logRequests: List<Pair<LogRequestData, UserData>>,
-    friends: List<UserData>
+    friends: State<List<UserData>>
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 

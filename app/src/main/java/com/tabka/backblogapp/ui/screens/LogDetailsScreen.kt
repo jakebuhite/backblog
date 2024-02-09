@@ -398,13 +398,13 @@ fun CollaboratorsSheetContent(logName: String) {
 
     Spacer(modifier = Modifier.height(15.dp))
 
-    Box(modifier = Modifier) {
+/*    Box(modifier = Modifier) {
         LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
             items(userList) { displayName ->
                 NewLogCollaborator(displayName)
             }
         }
-    }
+    }*/
 
     Column(modifier = Modifier
         .fillMaxWidth()
