@@ -1,5 +1,6 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -28,15 +29,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddToPhotos
+import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -57,6 +57,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -86,8 +87,11 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -96,7 +100,11 @@ private val TAG = "HomeScreen"
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(navController: NavHostController, logViewModel: LogViewModel) {
+fun HomeScreen(
+    navController: NavHostController,
+    logViewModel: LogViewModel,
+    friendsViewModel: FriendsViewModel
+) {
     val allLogs by logViewModel.allLogs.collectAsState()
     Log.d(TAG, "Here are the logs: $allLogs")
 
@@ -110,7 +118,7 @@ fun HomeScreen(navController: NavHostController, logViewModel: LogViewModel) {
             WatchNextCard(navController, allLogs!![0], logViewModel)
         }
         Spacer(Modifier.height(40.dp))
-        MyLogsSection(navController, allLogs, scrollState, logViewModel)
+        MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
     }
 }
 
@@ -295,7 +303,13 @@ fun NextMovieInfo(
                     .size(40.dp)
                     .testTag("CHECK_ICON")
                     .clickable {
-                        Toast.makeText(context, "Successfully marked movie as watched!", Toast.LENGTH_SHORT).show()
+                        Toast
+                            .makeText(
+                                context,
+                                "Successfully marked movie as watched!",
+                                Toast.LENGTH_SHORT
+                            )
+                            .show()
                         logViewModel.markMovieAsWatched(logId, movieId.toString())
                     }
             )
@@ -306,10 +320,11 @@ fun NextMovieInfo(
 
 // This function creates the "My Logs" header, as well as the button to create a new log
 // This function then calls ListLogs, which will list each log the user has
+@SuppressLint("MutableCollectionMutableState")
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scrollState: ScrollState, logViewModel: LogViewModel) {
+fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scrollState: ScrollState, logViewModel: LogViewModel, friendsViewModel: FriendsViewModel) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable {
@@ -411,33 +426,47 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                     ),
                 )
             }
-
             Spacer(modifier = Modifier.height(20.dp))
+
+            val userList = friendsViewModel.friendsData.collectAsState()
+            val collaboratorsList = remember { mutableStateListOf<String?>() }
+
+            val currentCollab = userList.value.filter { user ->
+                collaboratorsList.contains(user.userId.toString())
+            }.map { user ->
+                user.userId.toString()
+            }
+
+            val sortedUserList = userList.value.sortedByDescending { user ->
+                currentCollab.contains(user.userId.toString())
+            }
 
             // Collaborators Heading
             Row(modifier = Modifier.padding(start = 14.dp)) {
                 Text("Collaborators", style = MaterialTheme.typography.headlineMedium)
             }
 
-            Spacer(modifier = Modifier.height(15.dp))
+            if (currentCollab.isEmpty()) {
+                Spacer(modifier = Modifier.height(75.dp))
+            } else {
+                Spacer(modifier = Modifier.height(15.dp))
+                // Current collaborators sections
+                LazyRow(modifier = Modifier.padding(start = 24.dp)) {
+                    items(collaboratorsList.size) { index ->
+                        val userId = collaboratorsList[index]
+                        val friend = userList.value.find { it.userId == userId }
 
-            val userList = listOf(
-                "Nick Abegg",
-                "Josh Altmeyer",
-                "Christian Totaro",
-                "Jake Buhite"
-            )
-
-            LazyRow(modifier = Modifier.padding(start = 24.dp)) {
-                items(userList) { index ->
-                    Column() {
-                        Image(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(60.dp),
-                            colorFilter = tint(color = colorResource(id = R.color.white))
-                        )
+                        Column() {
+                            Image(
+                                painter = painterResource(
+                                    id = getAvatarResourceId(
+                                        friend?.avatarPreset ?: 1
+                                    ).second
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier.size(60.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -451,14 +480,21 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
 
             Spacer(modifier = Modifier.height(15.dp))
 
+            // Add collaborators section
             Box(modifier = Modifier.height(200.dp)) {
                 LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    items(userList) { displayName ->
-                        NewLogCollaborator(displayName)
+                    items(sortedUserList.size) { index ->
+                        val friend = sortedUserList[index]
+                        if (currentCollab.contains(friend.userId)) {
+                            NewLogCollaborator(friend, collaboratorsList, true)
+                        } else {
+                            NewLogCollaborator(friend, collaboratorsList, false)
+                        }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            //Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Create Button tab
             NewLogBottomSection(navController, logName, onCreateClick = { createdLogName ->
@@ -468,6 +504,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             }, onCloseClick = {
                 isSheetOpen = false
             })
+            Spacer(modifier = Modifier.height(45.dp))
         }
     }
 
@@ -475,6 +512,157 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
 
     if (!allLogs.isNullOrEmpty()) {
         DisplayLogsWithDrag(navController, scrollState, allLogs, logViewModel)
+    }
+}
+
+
+@Composable
+fun NewLogCollaborator(
+    friend: UserData,
+    collaboratorsList: SnapshotStateList<String?>,
+    currentCollab: Boolean
+) {
+    Row(
+        modifier = Modifier.padding(bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // User Icon
+        Column(modifier = Modifier.weight(1F)) {
+            Image(
+                painter = painterResource(id = getAvatarResourceId(friend.avatarPreset ?: 1).second),
+                contentDescription = null,
+                modifier = Modifier.size(60.dp),
+            )
+        }
+
+        // Username
+        Column(
+            modifier = Modifier
+                .weight(3F)
+                .height(60.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(friend.username ?: "", style = MaterialTheme.typography.bodyLarge)
+        }
+
+        if (currentCollab) {
+            // Minus Button
+            Column(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(60.dp)
+                    .clickable {
+                        if (collaboratorsList.contains(friend.userId)) {
+                            collaboratorsList.remove(friend.userId)
+                        }
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    imageVector = Icons.Default.RemoveCircle,
+                    contentDescription = "Add Icon",
+                    colorFilter = tint(color = Color.Red),
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+        } else {
+            // Add Button
+            Column(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(60.dp)
+                    .clickable {
+                        if (!collaboratorsList.contains(friend.userId)) {
+                            collaboratorsList.add(friend.userId)
+                        }
+
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.add),
+                    contentDescription = "Add Icon",
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NewLogBottomSection(navController: NavController, logName: String, onCreateClick: (String) -> Unit, onCloseClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Divider(thickness = 1.dp, color = Color(0xFF303437))
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // Create Button
+        Button(
+            onClick = {
+                if (logName.isNotEmpty()) {
+                    onCreateClick(logName)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .padding(horizontal = 24.dp)
+                .testTag("CREATE_LOG_BUTTON"),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.sky_blue),
+                disabledContainerColor = Color.LightGray
+            ),
+            enabled = logName.isNotEmpty()
+        ) {
+            Text(
+                "Create",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // Cancel Button
+        Button(
+            onClick = {
+                onCloseClick()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .padding(horizontal = 24.dp)
+                .background(color = Color.Transparent)
+                .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+        ) {
+            Text(
+                "Cancel",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -514,9 +702,9 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
     var boxBottomInViewPort by remember { mutableStateOf(0f) }
     var height by remember { mutableStateOf(0f) }
     var width by remember { mutableStateOf(0f) }
-/*    val coroutineScope = rememberCoroutineScope()
-    var isScrollingNeeded by remember { mutableStateOf(false) }
-    var scrollDown by remember { mutableStateOf(true) }*/
+    /*    val coroutineScope = rememberCoroutineScope()
+        var isScrollingNeeded by remember { mutableStateOf(false) }
+        var scrollDown by remember { mutableStateOf(true) }*/
 
     var swapNeeded = false
     var firstIndexToSwap = -1
@@ -568,7 +756,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
-                                /*.align(Alignment.Center)*/
+                            /*.align(Alignment.Center)*/
                         )
                         Box(
                             modifier = Modifier
@@ -830,125 +1018,6 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                 }
                 //logViewModel.resetNextMovie()
             }
-        }
-    }
-}
-
-@Composable
-fun NewLogCollaborator(displayName: String) {
-    Row(
-        modifier = Modifier.padding(bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        // User Icon
-        Column(modifier = Modifier.weight(1F)) {
-            Image(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.size(60.dp),
-                colorFilter = tint(color = colorResource(id = R.color.white))
-            )
-        }
-
-        // Username
-        Column(
-            modifier = Modifier
-                .weight(3F)
-                .height(60.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(displayName, style = MaterialTheme.typography.bodyLarge)
-        }
-
-        // Add Button
-        Column(
-            modifier = Modifier
-                .width(40.dp)
-                .height(60.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.add),
-                contentDescription = "Add Icon",
-                modifier = Modifier.size(25.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun NewLogBottomSection(navController: NavController, logName: String, onCreateClick: (String) -> Unit, onCloseClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Divider(thickness = 1.dp, color = Color(0xFF303437))
-    }
-
-    Spacer(modifier = Modifier.height(10.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        // Create Button
-        Button(
-            onClick = {
-                if (logName.isNotEmpty()) {
-                    onCreateClick(logName)
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(horizontal = 24.dp)
-                .testTag("CREATE_LOG_BUTTON"),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.sky_blue),
-                disabledContainerColor = Color.LightGray
-            ),
-            enabled = logName.isNotEmpty()
-        ) {
-            Text(
-                "Create",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        // Cancel Button
-        Button(
-            onClick = {
-                onCloseClick()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(horizontal = 24.dp)
-                .background(color = Color.Transparent)
-                .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-        ) {
-            Text(
-                "Cancel",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }

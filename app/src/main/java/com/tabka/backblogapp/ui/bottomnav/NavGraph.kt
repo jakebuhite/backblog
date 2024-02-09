@@ -3,10 +3,7 @@ package com.tabka.backblogapp.ui.bottomnav
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
@@ -40,15 +37,8 @@ fun BottomNavGraph(navController: NavHostController) {
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()
 
-    var friendsStartDest by remember { mutableStateOf("login") }
     val auth = Firebase.auth
-    auth.addAuthStateListener {
-        friendsStartDest = if (auth.currentUser == null) {
-            "login"
-        } else {
-            "friends"
-        }
-    }
+    //auth.signOut()
 
     NavHost(
         navController = navController,
@@ -57,7 +47,7 @@ fun BottomNavGraph(navController: NavHostController) {
         navigation(startDestination = "home", route = BottomNavigationBar.Home.route) {
 
             composable(route = "home") {
-                HomeScreen(navController, logViewModel)
+                HomeScreen(navController, logViewModel, friendsViewModel)
             }
 
             composable(
@@ -93,8 +83,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
         }
 
-        navigation(startDestination = friendsStartDest, route = BottomNavigationBar.Friends.route) {
-
+        navigation(startDestination = if (auth.currentUser == null) "login" else "friends", route = BottomNavigationBar.Friends.route) {
             composable(route = "friends") {
                 FriendsScreen(navController, friendsViewModel)
             }

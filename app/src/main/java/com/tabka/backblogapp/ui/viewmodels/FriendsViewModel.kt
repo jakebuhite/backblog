@@ -15,6 +15,8 @@ import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -34,7 +36,10 @@ class FriendsViewModel : ViewModel() {
     private val friendRepository = FriendRepository()
     val friendReqData: MutableLiveData<List<Pair<FriendRequestData, UserData>>> = MutableLiveData()
     val logReqData: MutableLiveData<List<Pair<LogRequestData, UserData>>> = MutableLiveData()
-    val friendsData: MutableLiveData<List<UserData>> = MutableLiveData()
+
+    //val friendsData: MutableLiveData<List<UserData>> = MutableLiveData()
+    private val _friendsData = MutableStateFlow<List<UserData>>(emptyList())
+    val friendsData = _friendsData.asStateFlow()
 
     private fun updateUserData(user: UserData) {
         userData.value = user
@@ -53,7 +58,7 @@ class FriendsViewModel : ViewModel() {
     }
 
     private fun updateFriends(newFriends: List<UserData>) {
-        friendsData.value = newFriends
+        _friendsData.value = newFriends
     }
 
     suspend fun getUserData() {

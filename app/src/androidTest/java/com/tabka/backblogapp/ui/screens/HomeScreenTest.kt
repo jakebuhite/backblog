@@ -19,6 +19,7 @@ import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.Owner
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.screens.models.createFakeMovieData
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +81,7 @@ class HomeScreenTest {
 
         // Launch compose
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("PRIORITY_LOG_TITLE").assertDoesNotExist()
@@ -109,7 +110,7 @@ class HomeScreenTest {
         // Launch compose
         composeTestRule.setContent {
             fakeLogViewModel.addLogs(initialLogs)
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("PRIORITY_LOG_TITLE").assertExists()
@@ -138,7 +139,7 @@ class HomeScreenTest {
 
         composeTestRule.setContent {
             fakeLogViewModel.addLogs(initialLogs)
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("MOVIE_IMAGE", useUnmergedTree = true).assertIsDisplayed()
@@ -147,7 +148,7 @@ class HomeScreenTest {
     @Test
     fun testAddLogPopupExists() {
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         // Verify My Logs Header
@@ -179,7 +180,7 @@ class HomeScreenTest {
     @Test
     fun testAddLogWithName() {
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("ADD_LOG_BUTTON").performClick()
@@ -203,7 +204,7 @@ class HomeScreenTest {
     @Test
     fun testAddLogWithNoName() {
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
         composeTestRule.onNodeWithTag("ADD_LOG_BUTTON").performClick()
         val inputText = ""

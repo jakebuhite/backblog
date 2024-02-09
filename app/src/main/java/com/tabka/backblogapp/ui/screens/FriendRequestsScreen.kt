@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,9 +28,11 @@ import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.util.getAvatarResourceId
 
 @Composable
-fun FriendRequestsScreen(friendRequests: List<Pair<FriendRequestData, UserData>>,
-                         logRequests: List<Pair<LogRequestData, UserData>>,
-                         friends: List<UserData>) {
+fun FriendRequestsScreen(
+    friendRequests: List<Pair<FriendRequestData, UserData>>,
+    logRequests: List<Pair<LogRequestData, UserData>>,
+    friends: State<List<UserData>>
+) {
     Row(horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()) {
@@ -89,11 +92,11 @@ fun SocialRequests(friendRequests: List<Pair<FriendRequestData, UserData>>, logR
 }
 
 @Composable
-fun FriendsList(friends: List<UserData>) {
+fun FriendsList(friends: State<List<UserData>>) {
     RequestHeader(title = "Friends")
 
     // List of Friends
-    friends.forEach { friend ->
+    friends.value.forEach { friend ->
         Row(modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
