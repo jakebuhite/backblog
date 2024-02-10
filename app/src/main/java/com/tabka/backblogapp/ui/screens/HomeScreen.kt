@@ -310,7 +310,7 @@ fun NextMovieInfo(
                                 Toast.LENGTH_SHORT
                             )
                             .show()
-                        logViewModel.markMovieAsWatched(logId, movieId.toString())
+                         logViewModel.markMovieAsWatched(logId, movieId.toString())
                     }
             )
         }
@@ -498,7 +498,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
 
             // Create Button tab
             NewLogBottomSection(navController, logName, onCreateClick = { createdLogName ->
-                logViewModel.createLog(createdLogName)
+                logViewModel.createLog(createdLogName, currentCollab)
                 isSheetOpen = false
                 logName = ""
             }, onCloseClick = {

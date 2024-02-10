@@ -5,18 +5,24 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.Owner
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.repository.LogLocalRepository
+import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
+import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+
 
 open class LogViewModel : ViewModel() {
     private val TAG = "LogViewModel"
@@ -26,25 +32,42 @@ open class LogViewModel : ViewModel() {
     private val _allLogs = MutableStateFlow<List<LogData>?>(emptyList())
     open var allLogs = _allLogs.asStateFlow()
 
+
     // Movie Data
     private val apiService = ApiClient.movieApiService
     private val movieRepository = MovieRepository(apiService)
+
+    private val logRepository = LogRepository()
+
+    // Up Next Movie
     private val _movie = MutableStateFlow<MovieData?>(null)
     open val movie = _movie.asStateFlow()
 
-    private val _nextMovie = MutableStateFlow<MovieData?>(null)
-    val nextMovie = _nextMovie.asStateFlow()
-
-
+    private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+        // This will be called on initialization and whenever the user state changes
+        viewModelScope.launch {
+            loadLogs()
+        }
+    }
     init {
-        loadLogs()
+        Firebase.auth.addAuthStateListener(authListener)
     }
 
     private fun loadLogs() {
-        Log.d(TAG, "Load Logs")
-        _allLogs.value = localLogRepository.getLogs()
-        Log.d(TAG, "Log: ${_allLogs.value}")
-       /* sortLogsByOwnerPriority()*/
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser != null) {
+            Log.d(TAG, "Getting the logs from DB: ${currentUser.uid}")
+            viewModelScope.launch {
+                val result = logRepository.getLogs(currentUser.uid, private = false)
+                when (result) {
+                    is DataResult.Success -> _allLogs.value = result.item
+                    is DataResult.Failure -> throw result.throwable
+                }
+                Log.d(TAG, "Here are the results from DB: $result")
+            }
+        } else {
+            _allLogs.value = localLogRepository.getLogs()
+        }
     }
 
     fun onMove(from: Int, to: Int) {
@@ -52,7 +75,23 @@ open class LogViewModel : ViewModel() {
         _allLogs.value = _allLogs.value!!.toMutableList().apply {
             add(to, removeAt(from))
         }
-        localLogRepository.reorderLogs(allLogs.value!!)
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser != null) {
+            val logIds = allLogs.value?.map { log ->
+                if (log.owner!!.userId == currentUser.uid) {
+                    Pair(log.logId ?: "", true)
+                } else {
+                    Pair(log.logId ?: "", false)
+                }
+            } ?: emptyList()
+
+            Log.d(TAG, "NEW ORDER: $logIds")
+            viewModelScope.launch {
+                logRepository.updateUserLogOrder(currentUser.uid, logIds)
+            }
+        } else {
+            localLogRepository.reorderLogs(allLogs.value!!)
+        }
     }
 
     fun addMovieToLog(logId: String?, movieId: String?) {
@@ -105,54 +144,53 @@ open class LogViewModel : ViewModel() {
         }
     }
 
-    fun getNextMovieById(movieId: String) {
-        movieRepository.getMovieById(
-            movieId = movieId,
-            onResponse = { movieResponse ->
-                _nextMovie.value = movieResponse
-            },
-            onFailure = { e ->
-                Log.e(TAG, "Failed to fetch details for movie ID $movieId: $e")
-            }
-        )
-    }
-
     fun resetMovie() {
         _movie.value = null
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun createLog(logName: String) {
-        // Create an ID
-        val id = UUID.randomUUID().toString()
+    fun createLog(logName: String, collaborators: List<String>) {
+        val currentUser = Firebase.auth.currentUser
 
-        // Find the next priority
-        val priority: Int = findMaxPriority() + 1
-        Log.d(TAG, "Priority of new log: $priority")
+        // If logged in
+        if (currentUser != null) {
+            Log.d(TAG, "User is logged in")
+            viewModelScope.launch {
+                logRepository.addLog(logName, isVisible = true, currentUser.uid)
+            }
+        } else {
+            Log.d(TAG, "User is not logged in")
+            // Create an ID
+            val id = UUID.randomUUID().toString()
 
-        // Create the date
-        val currentDate = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val formattedDate = currentDate.format(formatter)
+            // Find the next priority
+            val priority: Int = findMaxPriority() + 1
+            Log.d(TAG, "Priority of new log: $priority")
 
-        val owner = Owner(
-            userId = null,
-            priority = priority
-        )
+            // Create the date
+            val currentDate = LocalDate.now()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val formattedDate = currentDate.format(formatter)
 
-        val log = LogData(
-            logId =  id,
-            name = logName,
-            isVisible = false,
-            movieIds = mutableMapOf(),
-            watchedIds = emptyMap(),
-            owner = owner,
-            collaborators = emptyMap(),
-            creationDate = formattedDate,
-            lastModifiedDate = formattedDate
-        )
-        Log.d(TAG, "Creating Log: $log")
-        localLogRepository.createLog(log)
+            val owner = Owner(
+                userId = id,
+                priority = priority
+            )
+
+            val log = LogData(
+                logId = id,
+                name = logName,
+                isVisible = false,
+                movieIds = mutableMapOf(),
+                watchedIds = emptyMap(),
+                owner = owner,
+                collaborators = emptyMap(),
+                creationDate = formattedDate,
+                lastModifiedDate = formattedDate
+            )
+            Log.d(TAG, "Creating Log: $log")
+            localLogRepository.createLog(log)
+        }
         loadLogs()
         resetMovie()
     }
