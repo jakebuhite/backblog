@@ -5,10 +5,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserData(
-    @SerialName("user_id") val userId: String?,
-    val username: String?,
-    @SerialName("join_date") val joinDate: String?,
-    @SerialName("avatar_preset") val avatarPreset: Int?,
-    val friends: Map<String, Boolean>?,
-    val blocked: Map<String, Boolean>?
+    @SerialName("user_id") val userId: String? = null,
+    val username: String? = null,
+    @SerialName("join_date") val joinDate: String? = null,
+    @SerialName("avatar_preset") val avatarPreset: Int? = 1,
+    val friends: Map<String, Boolean>? = emptyMap(),
+    val blocked: Map<String, Boolean>? = emptyMap()
 )

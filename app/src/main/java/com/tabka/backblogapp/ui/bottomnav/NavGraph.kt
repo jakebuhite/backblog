@@ -25,7 +25,6 @@ import com.tabka.backblogapp.ui.screens.SearchScreen
 import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
-import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 
@@ -33,7 +32,7 @@ import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
     val friendsViewModel = FriendsViewModel()
-    val logDetailsViewModel = LogDetailsViewModel()
+    //val logDetailsViewModel = LogDetailsViewModel()
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()
 
@@ -54,7 +53,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "home_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, logDetailsViewModel, backStackEntry.arguments?.getString("logId"))
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel)
             }
 
             composable(
@@ -104,7 +103,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "public_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, logDetailsViewModel, backStackEntry.arguments?.getString("logId"))
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel)
             }
         }
     }

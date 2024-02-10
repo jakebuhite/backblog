@@ -113,7 +113,11 @@ fun RequestHeader(title: String) {
         .fillMaxWidth()
         .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.bodySmall)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(end = 10.dp)
+            )
         Box(
             modifier = Modifier
                 .height(1.dp)

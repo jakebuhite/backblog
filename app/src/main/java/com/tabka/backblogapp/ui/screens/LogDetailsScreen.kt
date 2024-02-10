@@ -56,11 +56,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
+import com.tabka.backblogapp.util.getAvatarResourceId
 
 private val TAG = "LogDetailsScreen"
 
@@ -68,8 +72,9 @@ private val TAG = "LogDetailsScreen"
 @Composable
 fun LogDetailsScreen(
     navController: NavHostController,
-    logDetailsViewModel: LogDetailsViewModel,
-    logId: String?
+    logId: String?,
+    friendsViewModel: FriendsViewModel,
+    logDetailsViewModel: LogDetailsViewModel = viewModel()
 ) {
     val hasBackButton = true
 
@@ -77,7 +82,19 @@ fun LogDetailsScreen(
     val movieState = logDetailsViewModel.movies.observeAsState()
     val movies = movieState.value ?: emptyList()
 
-    // Logs
+    // Watched Movies
+    val watchedMovieState = logDetailsViewModel.watchedMovies.observeAsState()
+    val watchedMovies = watchedMovieState.value ?: emptyList()
+
+    // Owner
+    val ownerState = logDetailsViewModel.owner.observeAsState()
+    val owner = ownerState.value ?: UserData()
+
+    // Collaborators
+    val collaboratorsState = logDetailsViewModel.collaboratorsList.observeAsState()
+    val collaborators = collaboratorsState.value ?: emptyList()
+
+    // Log
     val logState = logDetailsViewModel.logData.observeAsState()
     val log = logState.value
     val pageTitle = log?.name ?: ""
@@ -85,46 +102,57 @@ fun LogDetailsScreen(
     // Get data
     LaunchedEffect(key1 = logId) {
         logDetailsViewModel.getLogData(logId!!)
+        Log.d(TAG, "Launching the effect with logId: $logId")
     }
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        DetailBar(movies.size)
+        DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons(pageTitle)
         Spacer(modifier = Modifier.height(20.dp))
-        LogList(navController, movies)
+        LogList(navController, movies, watchedMovies)
     }
 }
 
 @Composable
-fun DetailBar(movieCount: Int) {
+fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically) {
+
         // Creator Picture
         Column(modifier = Modifier.padding(end = 5.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                imageVector = Icons.Default.AccountCircle,
+                painter = painterResource(id = getAvatarResourceId(owner.avatarPreset ?: 1).second),
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
                     .testTag("CREATOR_PICTURE"),
-                colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
 
         // Collaborator Pictures
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(35.dp)
-                    .testTag("COLLABS_PICTURE"),
-                colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
-            )
+            LazyRow {
+                val itemsToShow = if (collaborators.size > 4) 4 else collaborators.size
+                items(count = itemsToShow) { index ->
+                    val collaborator = collaborators[index]
+                    Image(
+                        painter = painterResource(id = getAvatarResourceId(collaborator.avatarPreset ?: 1).second),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(35.dp)
+                            .testTag("COLLABS_PICTURE"), // Unique tag for each image
+                    )
+                }
+                if (collaborators.size > 4) {
+                    item {
+                        Button(onClick = { /* TODO: Implement your click action here */ }) {
+                            Text("+${collaborators.size - 4} more")
+                        }
+                    }
+                }
+            }
         }
 
         // Number of Movies
@@ -197,7 +225,7 @@ fun LogButtons(logName: String) {
                     contentDescription = "Edit",
                     modifier = Modifier
                         .size(35.dp)
-                         .testTag("EDIT_ICON")
+                        .testTag("EDIT_ICON")
                         .clickable(onClick = {
                             sheetContent = { EditSheetContent(logName) }
                             isSheetOpen = true
@@ -220,7 +248,7 @@ fun LogButtons(logName: String) {
                         .size(35.dp)
                         .fillMaxHeight()
                         .testTag("SHUFFLE_ICON")
-                        .clickable(onClick = {  })
+                        .clickable(onClick = { })
                 )
             }
 
@@ -258,20 +286,35 @@ fun LogButtons(logName: String) {
 }
 
 @Composable
-fun LogList(navController: NavHostController, movies: List<MovieData>) {
+fun LogList(navController: NavHostController, movies: List<MovieData>, watchedMovies: List<MovieData>) {
     Log.d(TAG, "Movies: $movies")
 
     if (movies.isNotEmpty()) {
         // Height of image and padding times number of movies
-        val height: Dp = (80 * movies.size).dp
+        val moviesHeight: Dp = (80 * movies.size).dp
 
-        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(height)) {
+        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(moviesHeight)) {
             items(movies.size) { index ->
                 val movie = movies[index]
                 MovieEntry(movie)
             }
         }
     }
+
+    if (watchedMovies.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(50.dp))
+        // Watched Movie Section
+        val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
+
+        RequestHeader(title = "Watched Movies")
+        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(watchedMoviesHeight)) {
+            items(watchedMovies.size) { index ->
+                val movie = watchedMovies[index]
+                MovieEntry(movie)
+            }
+        }
+    }
+    Log.d(TAG, "Watched List: $watchedMovies")
 }
 
 @Composable
