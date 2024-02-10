@@ -13,23 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="testInputTextUpdatesSearchQuery()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="testLoginScreenInView()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="testLoginButtonClickSuccess()">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-02-06T22:32:46.145047800Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=1070016023031283" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="LoginScreenTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>

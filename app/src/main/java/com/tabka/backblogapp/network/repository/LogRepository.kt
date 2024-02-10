@@ -113,9 +113,9 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                 val userCollab = async {
                     try {
                         val snapshot = if (private) {
-                            logRef.orderBy("collaborators.${userId}")
+                            logRef.whereArrayContains("collaborators", userId)
                         } else {
-                            logRef.orderBy("collaborators.${userId}").whereEqualTo("is_visible", true)
+                            logRef.whereArrayContains("collaborators", userId).whereEqualTo("is_visible", true)
                         }.get().await()
                         logs.addAll(snapshot.documents.map { doc ->
                             Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
@@ -128,6 +128,15 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
 
                 userOwned.await()
                 userCollab.await()
+
+                // Sort the logs based on priority
+                logs.sortBy { log ->
+                    if (log.owner?.userId == userId) {
+                        log.owner.priority ?: 0
+                    } else {
+                        log.collaborators?.get(userId)?.get("priority") ?: 0
+                    }
+                }
 
                 DataResult.Success(logs)
             }
