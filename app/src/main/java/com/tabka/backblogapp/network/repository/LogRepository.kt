@@ -207,27 +207,16 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
 
     suspend fun updateUserLogOrder(userId: String, logIds: List<Pair<String, Boolean>>): DataResult<Boolean> {
         return try {
-            val batch = db.batch()
-
-            // Iterate through each log_id in the array
-            logIds.forEachIndexed { index, log ->
-                // Update log priority in the batch
-                // Boolean represents whether user owns this log
+            logIds.mapIndexed { index, log ->
                 val logRef = db.collection("logs").document(log.first)
-                if (log.second) {
-                    batch.update(logRef, mapOf("owner.priority" to index))
-                } else {
-                    batch.update(logRef, mapOf("collaborators.$userId.priority" to index))
-                }
+                val priorityField = if (log.second) "owner.priority" else "collaborators.$userId.priority"
+                logRef.update(priorityField, index).await()
             }
 
-            // Commit the batch
-            batch.commit().await()
-
-            Log.d(tag, "Log order successfully written!")
+            Log.d(tag, "Log order successfully updated!")
             DataResult.Success(true)
         } catch (e: Exception) {
-            Log.w(tag, "Error writing log order", e)
+            Log.w(tag, "Error updating log order", e)
             DataResult.Failure(e)
         }
     }
