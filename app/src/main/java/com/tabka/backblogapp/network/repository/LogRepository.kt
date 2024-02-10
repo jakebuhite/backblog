@@ -51,9 +51,12 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     // For syncing local logs
     suspend fun addLog(name: String, ownerId: String, priority: Int, creationDate: String, movieIds: Map<String, Boolean>, watchedIds: Map<String, Boolean>): DataResult<Boolean> {
         return try {
+            // Get new log id
+            val logId = db.collection("logs").document().id
+
             // Get all log data
             val logData = mapOf(
-                "name" to name,
+                "log_id" to logId,
                 "creation_date" to creationDate,
                 "last_modified_date" to System.currentTimeMillis().toString(),
                 "is_visible" to false, // Hiding logs default
