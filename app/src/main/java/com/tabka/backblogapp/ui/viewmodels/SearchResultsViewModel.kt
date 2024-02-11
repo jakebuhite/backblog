@@ -3,7 +3,6 @@ package com.tabka.backblogapp.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.tabka.backblogapp.network.ApiClient
-import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
 import com.tabka.backblogapp.network.repository.MovieRepository
 import kotlinx.coroutines.flow.MutableStateFlow

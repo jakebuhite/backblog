@@ -40,24 +40,21 @@ class LogLocalRepository {
 
     fun markMovie(logId: String, movieId: String, watched: Boolean) {
         if (watched) {
-            // Mark as watched
-            Log.d(tag, "Mark as watched")
-
-            // Get all logs
+            // Get specific log
             val existingLogs = jsonUtility.readFromFile()
+            val log = existingLogs.find { it.logId == logId }
 
-            // Find specific log
-            val log = existingLogs.find { it.logId == logId }!!
+            if (log == null) {
+                return
+            }
+
             Log.d(tag, "Log before the move: $log")
-            //log.movieIds!!.remove(movieId)
 
-            val updatedMovieIds = log.movieIds!!.toMutableMap().apply {
-                remove(movieId)
-            }
+            val updatedMovieIds = log.movieIds ?: mutableListOf()
+            updatedMovieIds.remove(movieId)
 
-            val updatedWatchedIds = log.watchedIds!!.toMutableMap().apply {
-                put(movieId, true)
-            }
+            val updatedWatchedIds = log.watchedIds ?: mutableListOf()
+            updatedWatchedIds.add(movieId)
 
             val updatedLog = log.copy(movieIds = updatedMovieIds, watchedIds = updatedWatchedIds)
             val indexToUpdate = existingLogs.indexOf(log)
@@ -69,10 +66,8 @@ class LogLocalRepository {
     }
     
     fun addMovieToLog(logId: String, movieId: String) {
-        // Get all logs
-        val existingLogs = jsonUtility.readFromFile()
-
         // Find specific log
+        val existingLogs = jsonUtility.readFromFile()
         val log = existingLogs.find { it.logId == logId }
 
         if (log == null) {
@@ -80,10 +75,10 @@ class LogLocalRepository {
         }
 
         // Add movieId to log
-        val updatedMovieIds = log.movieIds!!.toMutableMap()
-        updatedMovieIds[movieId] = true
+        val updatedMovieIds = log.movieIds ?: mutableListOf()
+        updatedMovieIds.add(movieId)
 
-        // Update Log accordingly
+        // Update log
         val updatedLog = log.copy(movieIds = updatedMovieIds)
         val indexToUpdate = existingLogs.indexOf(log)
         existingLogs[indexToUpdate] = updatedLog

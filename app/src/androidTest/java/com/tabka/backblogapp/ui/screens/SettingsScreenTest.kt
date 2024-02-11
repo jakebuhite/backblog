@@ -149,7 +149,11 @@ class SettingsScreenTest {
             friends = mapOf("67890" to true, "11223" to false),
             blocked = mapOf("44556" to true)
         )
-        fakeSettingsViewModel = FakeSettingsViewModel(userData, true, false, 0)
+        fakeSettingsViewModel = FakeSettingsViewModel(userData,
+            success = true,
+            successSync = false,
+            logsCount = 0
+        )
         composeTestRule.setContent {
             BottomNavGraph(mockNavController)
             Surface {
@@ -193,7 +197,7 @@ class SettingsScreenTest {
             friends = mapOf("67890" to true, "11223" to false),
             blocked = mapOf("44556" to true)
         )
-        fakeSettingsViewModel = FakeSettingsViewModel(userData, true, false)
+        fakeSettingsViewModel = FakeSettingsViewModel(userData, success = true, successSync = false)
         composeTestRule.setContent {
             BottomNavGraph(mockNavController)
             Surface {

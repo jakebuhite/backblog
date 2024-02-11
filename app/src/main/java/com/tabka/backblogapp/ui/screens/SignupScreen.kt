@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 fun SignupScreen(navController: NavController) {
     val authViewModel = AuthViewModel()
 
-    AuthScreen(navController) {
+    AuthScreen {
         CardGradient {
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
