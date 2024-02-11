@@ -62,7 +62,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -305,7 +304,7 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
         val moviesHeight: Dp = (80 * movies.size).dp
 
         LazyColumn(userScrollEnabled = false, modifier = Modifier.height(moviesHeight)) {
-            items(movies.size) { index ->
+            items(movies.size, key = { index -> movies[index].id!! }) { index ->
                 val movie = movies[index]
 
                 val state = rememberDismissState(
@@ -321,8 +320,6 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
                 LaunchedEffect(state.currentValue) {
                     if (state.currentValue == DismissValue.DismissedToStart) {
                         logDetailsViewModel.getLogData(logId)
-                        //logDetailsViewModel.getWatchedMovies()
-                        //logDetailsViewModel.getMovies()
                     }
                 }
 
@@ -345,26 +342,26 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
                                 modifier = Modifier.align(Alignment.CenterEnd))
                         }
                     },
-                    dismissContent =  { MovieEntry(movie) }
+                    dismissContent =  { MovieEntry(navController, movie) }
                 )
-                //MovieEntry(movie)
             }
         }
     }
 
     if (watchedMovies.isNotEmpty()) {
         Spacer(modifier = Modifier.height(50.dp))
+
         // Watched Movie Section
         val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
 
         RequestHeader(title = "Watched Movies")
         LazyColumn(userScrollEnabled = false, modifier = Modifier.height(watchedMoviesHeight)) {
-            items(watchedMovies.size) { index ->
+            items(watchedMovies.size, key = { index -> watchedMovies[index].id!! }) { index ->
                 val movie = watchedMovies[index]
                 val state = rememberDismissState(
                     confirmStateChange = {
                         if (it == DismissValue.DismissedToStart) {
-                            Log.d(TAG, "Remove movie!")
+                            Log.d(TAG, "Unmark Movie as watched!")
                             logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
                         }
                         true
@@ -374,8 +371,6 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
                 LaunchedEffect(state.currentValue) {
                     if (state.currentValue == DismissValue.DismissedToStart) {
                         logDetailsViewModel.getLogData(logId)
-                        //logDetailsViewModel.getWatchedMovies()
-                        //logDetailsViewModel.getMovies()
                     }
                 }
 
@@ -398,7 +393,7 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
                                 modifier = Modifier.align(Alignment.CenterEnd))
                         }
                     },
-                    dismissContent =  { MovieEntry(movie) }
+                    dismissContent =  { MovieEntry(navController, movie) }
                 )
             }
         }
@@ -407,18 +402,12 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
 }
 
 @Composable
-fun MovieEntry(movie: MovieData) {
-    /*Row(modifier = swipeableModifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
+fun MovieEntry(navController: NavHostController, movie: MovieData) {
 
-    }*/
     Row(modifier = Modifier
         .fillMaxWidth()
-        .zIndex(100f)
-        .background(Color.Black)
-        .padding(top = 5.dp, bottom = 5.dp),
+        .padding(top = 5.dp, bottom = 5.dp)
+        .clickable { navController.navigate("home_movie_details_${movie.id}") },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
 
@@ -455,7 +444,8 @@ fun MovieEntry(movie: MovieData) {
         // Add Button
         Column(modifier = Modifier
             .weight(1F)
-            .height(70.dp),
+            .height(70.dp)
+            .width(48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
             Image(
