@@ -1,6 +1,8 @@
 package com.tabka.backblogapp.ui.viewmodels
 
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -40,6 +42,18 @@ class FriendsViewModel : ViewModel() {
     //val friendsData: MutableLiveData<List<UserData>> = MutableLiveData()
     private val _friendsData = MutableStateFlow<List<UserData>>(emptyList())
     val friendsData = _friendsData.asStateFlow()
+
+    // Status Message
+    private val _snackbarMessage = mutableStateOf<String?>(null)
+    val snackbarMessage: State<String?> = _snackbarMessage
+
+    private fun showSnackbar(message: String) {
+        _snackbarMessage.value = message
+    }
+
+    fun clearSnackbar() {
+        _snackbarMessage.value = null
+    }
 
     private fun updateUserData(user: UserData) {
         userData.value = user
@@ -136,8 +150,7 @@ class FriendsViewModel : ViewModel() {
                             is DataResult.Success -> {
                                 val friends = result.item.friends ?: emptyMap()
                                 if (friends.containsKey(userId)) {
-                                    // TODO: Add UI Message
-                                    // USER IS ALREADY A FRIEND
+                                    showSnackbar("$targetUsername is already a friend!")
                                     return@withContext
                                 }
 
@@ -147,8 +160,7 @@ class FriendsViewModel : ViewModel() {
                                 when (targetRequests) {
                                     is DataResult.Success -> {
                                         if (targetRequests.item.any { it.senderId == targetId && it.targetId == userId }) {
-                                            // TODO: Add UI Message
-                                            // Request already made
+                                            showSnackbar("$targetUsername has already sent you a friend request!")
                                             return@withContext
                                         }
 
@@ -157,8 +169,7 @@ class FriendsViewModel : ViewModel() {
                                         when (userRequests) {
                                             is DataResult.Success -> {
                                                 if (userRequests.item.any { it.senderId == userId && it.targetId == targetId }) {
-                                                    // TODO: Add UI Message
-                                                    // Request already made
+                                                    showSnackbar("You've already sent a request to $targetUsername!")
                                                     return@withContext
                                                 }
 
@@ -166,7 +177,7 @@ class FriendsViewModel : ViewModel() {
                                                 val addFriendReq = friendRepository.addFriendRequest(userId, targetId, System.currentTimeMillis().toString())
                                                 when (addFriendReq) {
                                                     is DataResult.Success -> {
-                                                        // TODO: Add UI Message of Success
+                                                        showSnackbar("Friend request sent to $targetUsername!")
                                                     }
                                                     is DataResult.Failure -> addFriendReq.throwable
                                                 }
@@ -183,7 +194,7 @@ class FriendsViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.d(tag, "Error: $e")
-                // TODO: Add UI message
+                showSnackbar("There was an error sending a request")
             }
         }
     }

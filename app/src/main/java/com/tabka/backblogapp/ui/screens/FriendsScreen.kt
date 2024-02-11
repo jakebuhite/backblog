@@ -30,6 +30,9 @@ import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -91,12 +94,27 @@ fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewMod
         friendsViewModel.getLogRequests()
     }
 
-    // UI Content
-    FriendsContent(navController, pageTitle, publicLogs,
-        friendReqs, logReqs, friends, userAvatar) {
-        friendsViewModel.sendFriendRequest(it)
+    val snackbarHostState = remember { SnackbarHostState() }
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }
+        /* composableScope.launch {
+                        snackbarHostState.showSnackbar("Snackbar")
+                    } */
+    ) { contentPadding ->
+        Box(
+            modifier = Modifier
+                .padding(contentPadding)
+                .fillMaxSize()
+        ) {
+            // UI Content
+            FriendsContent(navController, pageTitle, publicLogs,
+                friendReqs, logReqs, friends, userAvatar) {
+                friendsViewModel.sendFriendRequest(it)
+            }
+        }
     }
-
 }
 
 @Composable

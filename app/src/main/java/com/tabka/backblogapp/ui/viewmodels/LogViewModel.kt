@@ -207,7 +207,8 @@ open class LogViewModel : ViewModel() {
                 movieIds = mutableListOf(),
                 watchedIds = mutableListOf(),
                 owner = owner,
-                collaborators = emptyMap(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 creationDate = formattedDate,
                 lastModifiedDate = formattedDate
             )

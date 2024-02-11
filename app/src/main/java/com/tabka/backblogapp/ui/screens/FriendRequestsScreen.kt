@@ -55,7 +55,7 @@ fun FriendRequestsScreen(
     friendRequests: List<Pair<FriendRequestData, UserData>>,
     logRequests: List<Pair<LogRequestData, UserData>>,
     friends: State<List<UserData>>,
-    addFriend: (String) -> Unit
+    addFriend: (String) -> Unit,
 ) {
     // Add Friend Sheet
     var isSheetOpen by remember { mutableStateOf(false) }

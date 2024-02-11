@@ -43,7 +43,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-04",
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId"),
                 watchedIds = mutableListOf("fakeWatchedId")),
             LogData(logId = "fakeLogId2", name = "Fake Log 2",
@@ -51,7 +52,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId2"),
                 watchedIds = mutableListOf("fakeWatchedId3")
             ))
@@ -72,7 +74,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-04",
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId"),
                 watchedIds = mutableListOf("fakeWatchedId")
         )
@@ -95,7 +98,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-04",
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId"),
                 watchedIds = mutableListOf("fakeWatchedId")
             ),
@@ -104,7 +108,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId2"),
                 watchedIds = mutableListOf("fakeWatchedId3")
             ))
@@ -128,7 +133,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-04",
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId"),
                 watchedIds = mutableListOf("fakeWatchedId")
             ),
@@ -137,7 +143,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId2"),
                 watchedIds = mutableListOf("fakeWatchedId3")
             ))
@@ -168,7 +175,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-04",
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId"),
                 watchedIds = mutableListOf("fakeWatchedId")
             ),
@@ -177,7 +185,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId2"),
                 watchedIds = mutableListOf("fakeWatchedId3")
             )
@@ -199,7 +208,8 @@ class LogLocalRepositoryTest {
             lastModifiedDate = "2024-02-04",
             isVisible = true,
             owner = Owner("fakeUserId", 0),
-            collaborators = mapOf(),
+            collaborators = mutableListOf(),
+            order = emptyMap(),
             movieIds = mutableListOf("fakeMovieId"),
             watchedIds = mutableListOf("fakeWatchedId")
         )
@@ -222,7 +232,8 @@ class LogLocalRepositoryTest {
             lastModifiedDate = "2024-02-04",
             isVisible = true,
             owner = Owner("fakeUserId", 0),
-            collaborators = mapOf(),
+            collaborators = mutableListOf(),
+            order = emptyMap(),
             movieIds = mutableListOf("fakeMovieId"),
             watchedIds = mutableListOf("fakeWatchedId")
         )
@@ -245,7 +256,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-04",
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId"),
                 watchedIds = mutableListOf("fakeWatchedId")
             ),
@@ -254,7 +266,8 @@ class LogLocalRepositoryTest {
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
-                collaborators = mapOf(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf("fakeMovieId2"),
                 watchedIds = mutableListOf("fakeWatchedId3")
             )

@@ -33,7 +33,8 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                 "last_modified_date" to System.currentTimeMillis().toString(),
                 "is_visible" to isVisible,
                 "owner" to mapOf("user_id" to ownerId, "priority" to 0),
-                "collaborators" to emptyMap<String, Map<String, Int>>(),
+                "collaborators" to mutableListOf<String>(),
+                "order" to emptyMap<String, Int>(),
                 "movie_ids" to mutableListOf<String>(),
                 "watched_ids" to mutableListOf<String>()
             )
@@ -62,7 +63,8 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                 "last_modified_date" to System.currentTimeMillis().toString(),
                 "is_visible" to false, // Hiding logs default
                 "owner" to mapOf("user_id" to ownerId, "priority" to priority),
-                "collaborators" to emptyMap<String, Map<String, Int>>(),
+                "collaborators" to mutableListOf<String>(),
+                "order" to emptyMap<String, Int>(),
                 "movie_ids" to movieIds,
                 "watched_ids" to watchedIds
             )
@@ -139,7 +141,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                     if (log.owner?.userId == userId) {
                         log.owner.priority ?: 0
                     } else {
-                        log.collaborators?.get(userId)?.get("priority") ?: 0
+                        log.order?.get(userId) ?: 0
                     }
                 }
 
@@ -226,7 +228,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         return try {
             logIds.mapIndexed { index, log ->
                 val logRef = db.collection("logs").document(log.first)
-                val priorityField = if (log.second) "owner.priority" else "collaborators.$userId.priority"
+                val priorityField = if (log.second) "owner.priority" else "order.$userId"
                 logRef.update(priorityField, index).await()
             }
 
@@ -243,21 +245,22 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         return try {
             val logRef = db.collection("logs").document(logId)
 
-            val collabs = mutableMapOf<String, Any>()
+            val updates = mutableMapOf<String, Any>()
 
             // Iterate through each collaborator in the array
             collaborators.forEach { collaborator ->
                 // Add collaborator to the updatedCollaborators object
                 when (val result = getLogs(collaborator, true)) {
                     is DataResult.Success ->  {
-                        collabs["collaborators.${collaborator}"] = mapOf("priority" to result.item.size)
+                        updates["collaborators"] = FieldValue.arrayUnion(collaborator)
+                        updates["order.${collaborator}"] = result.item.size
                     }
                     is DataResult.Failure -> Log.d(tag, "Error getting logs ${result.throwable.message}")
                 }
             }
 
             // Remove collaborators from the log
-            logRef.update(collabs).await()
+            logRef.update(updates).await()
 
             Log.d(tag, "Collaborators successfully updated!")
             DataResult.Success(true)
@@ -272,16 +275,17 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         return try {
             val logRef = db.collection("logs").document(logId)
 
-            val collabs = mutableMapOf<String, Any>()
+            val updates = mutableMapOf<String, Any>()
 
             // Iterate through each collaborator in the array
             collaborators.forEach { collaborator ->
                 // Remove collaborator from the updatedCollaborators object
-                collabs["collaborators.${collaborator}"] = FieldValue.delete()
+                updates["order.${collaborator}"] = FieldValue.delete()
+                updates["collaborators"] = FieldValue.arrayRemove(collaborator)
             }
 
             // Remove collaborators from the log
-            logRef.update(collabs).await()
+            logRef.update(updates).await()
 
             Log.d(tag, "Collaborators successfully updated!")
             DataResult.Success(true)

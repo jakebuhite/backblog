@@ -81,7 +81,7 @@ class LogDetailsViewModel: ViewModel() {
             listOfNotNull(logData.value?.owner?.userId)
         } else {
             // If isOwner is false, use the keys from collaborators
-            logData.value?.collaborators?.keys ?: emptyList()
+            logData.value?.collaborators ?: emptyList()
         }
 
         for (userId in userIds) {
