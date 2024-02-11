@@ -14,11 +14,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.tabka.backblogapp.ui.screens.BackgroundGradient
 
 @Composable
-fun AuthScreen(navController: NavController, content: @Composable (scrollState: ScrollState) -> Unit) {
+fun AuthScreen(content: @Composable (scrollState: ScrollState) -> Unit) {
     val scrollState = rememberScrollState()
 
     Surface(

@@ -44,16 +44,17 @@ class LogLocalRepositoryTest {
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId" to true),
-                watchedIds = mapOf("fakeWatchedId" to true)),
+                movieIds = mutableListOf("fakeMovieId"),
+                watchedIds = mutableListOf("fakeWatchedId")),
             LogData(logId = "fakeLogId2", name = "Fake Log 2",
                 creationDate = "2024-02-05",
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId2" to true),
-                watchedIds = mapOf("fakeWatchedId3" to true)))
+                movieIds = mutableListOf("fakeMovieId2"),
+                watchedIds = mutableListOf("fakeWatchedId3")
+            ))
         whenever(mockJsonUtility.readFromFile()).thenReturn(expectedLogs.toMutableList())
 
         // Act
@@ -72,8 +73,9 @@ class LogLocalRepositoryTest {
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId" to true),
-                watchedIds = mapOf("fakeWatchedId" to true))
+                movieIds = mutableListOf("fakeMovieId"),
+                watchedIds = mutableListOf("fakeWatchedId")
+        )
 
         // Act
         logLocalRepository.createLog(logData)
@@ -94,16 +96,18 @@ class LogLocalRepositoryTest {
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId" to true),
-                watchedIds = mapOf("fakeWatchedId" to true)),
+                movieIds = mutableListOf("fakeMovieId"),
+                watchedIds = mutableListOf("fakeWatchedId")
+            ),
             LogData(logId = "fakeLogId2", name = "Fake Log 2",
                 creationDate = "2024-02-05",
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId2" to true),
-                watchedIds = mapOf("fakeWatchedId3" to true)))
+                movieIds = mutableListOf("fakeMovieId2"),
+                watchedIds = mutableListOf("fakeWatchedId3")
+            ))
         whenever(mockJsonUtility.readFromFile()).thenReturn(existingLogs.toMutableList())
 
         // Act
@@ -125,16 +129,18 @@ class LogLocalRepositoryTest {
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId" to true),
-                watchedIds = mapOf("fakeWatchedId" to true)),
+                movieIds = mutableListOf("fakeMovieId"),
+                watchedIds = mutableListOf("fakeWatchedId")
+            ),
             LogData(logId = "fakeLogId2", name = "Fake Log 2",
                 creationDate = "2024-02-05",
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId2" to true),
-                watchedIds = mapOf("fakeWatchedId3" to true)))
+                movieIds = mutableListOf("fakeMovieId2"),
+                watchedIds = mutableListOf("fakeWatchedId3")
+            ))
         whenever(mockJsonUtility.readFromFile()).thenReturn(existingLogs.toMutableList())
 
         // Act
@@ -163,16 +169,18 @@ class LogLocalRepositoryTest {
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId" to true),
-                watchedIds = mapOf("fakeWatchedId" to true)),
+                movieIds = mutableListOf("fakeMovieId"),
+                watchedIds = mutableListOf("fakeWatchedId")
+            ),
             LogData(logId = "fakeLogId2", name = "Fake Log 2",
                 creationDate = "2024-02-05",
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId2" to true),
-                watchedIds = mapOf("fakeWatchedId3" to true))
+                movieIds = mutableListOf("fakeMovieId2"),
+                watchedIds = mutableListOf("fakeWatchedId3")
+            )
         )
 
         // Act
@@ -192,8 +200,9 @@ class LogLocalRepositoryTest {
             isVisible = true,
             owner = Owner("fakeUserId", 0),
             collaborators = mapOf(),
-            movieIds = mutableMapOf("fakeMovieId" to true),
-            watchedIds = mapOf("fakeWatchedId" to true))
+            movieIds = mutableListOf("fakeMovieId"),
+            watchedIds = mutableListOf("fakeWatchedId")
+        )
 
         whenever(mockJsonUtility.readFromFile()).thenReturn(listOf(expectedLog).toMutableList())
 
@@ -214,8 +223,9 @@ class LogLocalRepositoryTest {
             isVisible = true,
             owner = Owner("fakeUserId", 0),
             collaborators = mapOf(),
-            movieIds = mutableMapOf("fakeMovieId" to true),
-            watchedIds = mapOf("fakeWatchedId" to true))
+            movieIds = mutableListOf("fakeMovieId"),
+            watchedIds = mutableListOf("fakeWatchedId")
+        )
 
         whenever(mockJsonUtility.readFromFile()).thenReturn(listOf(expectedLog).toMutableList())
 
@@ -236,16 +246,18 @@ class LogLocalRepositoryTest {
                 isVisible = true,
                 owner = Owner("fakeUserId", 0),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId" to true),
-                watchedIds = mapOf("fakeWatchedId" to true)),
+                movieIds = mutableListOf("fakeMovieId"),
+                watchedIds = mutableListOf("fakeWatchedId")
+            ),
             LogData(logId = "fakeLogId2", name = "Fake Log 2",
                 creationDate = "2024-02-05",
                 lastModifiedDate = "2024-02-05",
                 isVisible = true,
                 owner = Owner("fakeUserId", 1),
                 collaborators = mapOf(),
-                movieIds = mutableMapOf("fakeMovieId2" to true),
-                watchedIds = mapOf("fakeWatchedId3" to true))
+                movieIds = mutableListOf("fakeMovieId2"),
+                watchedIds = mutableListOf("fakeWatchedId3")
+            )
         )
 
         whenever(mockJsonUtility.readFromFile()).thenReturn(logs.toMutableList())

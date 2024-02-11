@@ -163,8 +163,8 @@ class SearchResultsScreenTest {
                 isVisible = null,
                 owner = null, // You might want to at least provide an Owner with an id for consistency
                 collaborators = emptyMap(),
-                movieIds = mutableMapOf(),
-                watchedIds = emptyMap()
+                movieIds = mutableListOf(),
+                watchedIds = mutableListOf()
             ),
             LogData(
                 logId = "log2",
@@ -174,8 +174,8 @@ class SearchResultsScreenTest {
                 isVisible = null,
                 owner = null, // Same note as above regarding providing minimal Owner data
                 collaborators = emptyMap(),
-                movieIds = mutableMapOf(),
-                watchedIds = emptyMap()
+                movieIds = mutableListOf(),
+                watchedIds = mutableListOf()
             )
         )
 

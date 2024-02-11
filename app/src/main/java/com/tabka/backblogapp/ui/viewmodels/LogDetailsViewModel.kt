@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class LogDetailsViewModel(): ViewModel() {
+class LogDetailsViewModel: ViewModel() {
     private val tag = "LogDetailsViewModel"
     private val auth = Firebase.auth
 
@@ -130,7 +130,7 @@ class LogDetailsViewModel(): ViewModel() {
 
     suspend fun getMovies() {
         val movieDataList = mutableListOf<MovieData>()
-        val movieIds = logData.value?.movieIds?.keys ?: listOf()
+        val movieIds = logData.value?.movieIds ?: mutableListOf()
 
         viewModelScope.launch {
             try {
@@ -157,14 +157,14 @@ class LogDetailsViewModel(): ViewModel() {
 
     suspend fun getWatchedMovies() {
         val movieDataList = mutableListOf<MovieData>()
-        val watchedMovieIds = logData.value?.watchedIds?.keys ?: listOf()
+        val watchedMovieIds = logData.value?.watchedIds ?: mutableListOf()
         Log.d("Testing", "Here are the watchedMovieIds: $watchedMovieIds")
 
         viewModelScope.launch {
             try {
                 watchedMovieIds.forEach { movieId ->
                     try {
-                        val movieData = suspendCoroutine<MovieData?> { cont ->
+                        val movieData = suspendCoroutine { cont ->
                             movieRepository.getMovieById(
                                 movieId = movieId,
                                 onResponse = { movieResponse ->

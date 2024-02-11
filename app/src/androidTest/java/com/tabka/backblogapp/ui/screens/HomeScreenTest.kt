@@ -103,8 +103,8 @@ class HomeScreenTest {
             isVisible = true,
             owner = Owner(userId = "user001", priority = 1),
             collaborators = emptyMap(),
-            movieIds = mutableMapOf("531330" to true),
-            watchedIds = emptyMap()
+            movieIds = mutableListOf("531330"),
+            watchedIds = mutableListOf()
         ))
 
         // Launch compose
@@ -132,8 +132,8 @@ class HomeScreenTest {
                 isVisible = true,
                 owner = Owner(userId = "user001", priority = 1),
                 collaborators = emptyMap(),
-                movieIds = mutableMapOf(),
-                watchedIds = emptyMap()
+                movieIds = mutableListOf(),
+                watchedIds = mutableListOf()
             )
         )
 

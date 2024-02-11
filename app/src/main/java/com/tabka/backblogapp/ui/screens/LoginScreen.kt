@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(navController: NavController) {
     val authViewModel = AuthViewModel()
 
-    AuthScreen(navController) {
+    AuthScreen {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

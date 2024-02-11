@@ -129,8 +129,8 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
     Log.d(TAG, "Priority Log: $priorityLog")
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val movie = logViewModel.movie.collectAsState().value
-    LaunchedEffect(priorityLog.movieIds?.keys?.firstOrNull()) {
-        priorityLog.movieIds?.keys?.firstOrNull()?.let { movieId ->
+    LaunchedEffect(priorityLog.movieIds?.firstOrNull()) {
+        priorityLog.movieIds?.firstOrNull()?.let { movieId ->
             logViewModel.getMovieById(movieId)
         } ?: run {
             logViewModel.resetMovie()
@@ -848,9 +848,9 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                 var alpha by remember { mutableStateOf(1f) }
 
                 val log = allLogs[index]
-                var movieData by remember(log.movieIds?.keys?.firstOrNull()) { mutableStateOf<MovieData?>(null) }
+                var movieData by remember(log.movieIds?.firstOrNull()) { mutableStateOf<MovieData?>(null) }
 
-                val movieId = log.movieIds?.keys?.firstOrNull()
+                val movieId = log.movieIds?.firstOrNull()
                 Log.d(TAG, "First Movie ID: $movieId")
                 var painter = painterResource(id = R.drawable.icon_empty_log)
 
@@ -885,9 +885,9 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                             height = coordinates.size.height.toFloat()
                             width = coordinates.size.width.toFloat()
 
-                            val currTop = coordinates.positionInParent().y.toFloat()
+                            val currTop = coordinates.positionInParent().y
                             val currBottom = currTop + height
-                            val currLeft = coordinates.positionInParent().x.toFloat()
+                            val currLeft = coordinates.positionInParent().x
                             val currRight = currLeft + width
 
                             if (logPositions.none { it.logId == log.logId }) {

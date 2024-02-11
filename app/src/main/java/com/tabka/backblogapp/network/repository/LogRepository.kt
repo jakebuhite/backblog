@@ -34,8 +34,8 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                 "is_visible" to isVisible,
                 "owner" to mapOf("user_id" to ownerId, "priority" to 0),
                 "collaborators" to emptyMap<String, Map<String, Int>>(),
-                "movie_ids" to emptyMap<String, Boolean>(),
-                "watched_ids" to emptyMap<String, Boolean>()
+                "movie_ids" to mutableListOf<String>(),
+                "watched_ids" to mutableListOf<String>()
             )
 
             db.collection("logs").document(logId).set(logData).await()
@@ -49,7 +49,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     }
 
     // For syncing local logs
-    suspend fun addLog(name: String, ownerId: String, priority: Int, creationDate: String, movieIds: Map<String, Boolean>, watchedIds: Map<String, Boolean>): DataResult<Boolean> {
+    suspend fun addLog(name: String, ownerId: String, priority: Int, creationDate: String, movieIds: MutableList<String>, watchedIds: MutableList<String>): DataResult<Boolean> {
         return try {
             // Get new log id
             val logId = db.collection("logs").document().id
