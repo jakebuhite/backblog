@@ -18,9 +18,9 @@ import kotlinx.serialization.json.Json
 
 
 class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
-    private val tag = "FriendsRepo"
+    private val tag = "LogRepo"
 
-    suspend fun addLog(name: String, isVisible: Boolean, ownerId: String): DataResult<Boolean> {
+    suspend fun addLog(name: String, isVisible: Boolean, ownerId: String): DataResult<String> {
         return try {
             // Get new log id
             val logId = db.collection("logs").document().id
@@ -41,7 +41,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             db.collection("logs").document(logId).set(logData).await()
 
             Log.d(tag, "Log successfully written!")
-            DataResult.Success(true)
+            DataResult.Success(logId)
         } catch (e: Exception) {
             Log.w(tag, "Error writing log document", e)
             DataResult.Failure(e)
@@ -66,7 +66,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                 "watched_ids" to watchedIds
             )
 
-            db.collection("logs").add(logData).await()
+            db.collection("logs").document(logId).set(logData).await()
 
             Log.d(tag, "Log successfully written!")
             DataResult.Success(true)
@@ -93,6 +93,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     }
 
     suspend fun getLogs(userId: String, private: Boolean): DataResult<List<LogData>> {
+        Log.d(tag, "Getting logs")
         return try {
             coroutineScope {
                 // Query logs based on the owner_id field

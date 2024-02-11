@@ -10,7 +10,6 @@ class BackBlog : Application() {
         super.onCreate()
         appContext = applicationContext
         FirebaseApp.initializeApp(this)
-
     }
 
     companion object {

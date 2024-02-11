@@ -98,12 +98,13 @@ class LogDetailsViewModel(): ViewModel() {
     }
 
     suspend fun getLogData(logId: String) {
-        Log.d("Testing", "Getting log data!")
+        Log.d(tag, "Getting log data!")
         viewModelScope.launch {
             try {
-                Log.d("Testing", "Trying now!")
-                val user = auth.currentUser?.uid
-                if (user != null) {
+                Log.d(tag, "Trying now!")
+                //val user = auth.currentUser?.uid
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
                     val result: DataResult<LogData> = logRepository.getLog(logId)
                     withContext(Dispatchers.Main) {
                         when (result) {
@@ -113,9 +114,9 @@ class LogDetailsViewModel(): ViewModel() {
                     }
                 } else {
                     val result = localRepository.getLogById(logId)
-                    Log.d("Testing", "Here is the log: $result")
+                    Log.d(tag, "Here is the log: $result")
                     if (result != null) {
-                        Log.d("Testing", "The log result: $result")
+                        Log.d(tag, "The log result: $result")
                         updateLogData(result)
                     } else {
                         throw Throwable("Failed to get log from local log repository")
@@ -127,7 +128,7 @@ class LogDetailsViewModel(): ViewModel() {
         }
     }
 
-    private suspend fun getMovies() {
+    suspend fun getMovies() {
         val movieDataList = mutableListOf<MovieData>()
         val movieIds = logData.value?.movieIds?.keys ?: listOf()
 
@@ -154,7 +155,7 @@ class LogDetailsViewModel(): ViewModel() {
         }
     }
 
-    private suspend fun getWatchedMovies() {
+    suspend fun getWatchedMovies() {
         val movieDataList = mutableListOf<MovieData>()
         val watchedMovieIds = logData.value?.watchedIds?.keys ?: listOf()
         Log.d("Testing", "Here are the watchedMovieIds: $watchedMovieIds")

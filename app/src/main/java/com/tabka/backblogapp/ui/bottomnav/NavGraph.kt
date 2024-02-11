@@ -1,6 +1,7 @@
 package com.tabka.backblogapp.ui.bottomnav
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -36,8 +37,9 @@ fun BottomNavGraph(navController: NavHostController) {
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()
 
+    Log.d("Something", "PLEASE LOG SOMETHING")
     val auth = Firebase.auth
-    //auth.signOut()
+    auth.signOut()
 
     NavHost(
         navController = navController,
@@ -53,7 +55,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "home_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel)
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel)
             }
 
             composable(
@@ -103,7 +105,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "public_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel)
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel)
             }
         }
     }

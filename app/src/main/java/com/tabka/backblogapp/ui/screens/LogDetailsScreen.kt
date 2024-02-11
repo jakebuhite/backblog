@@ -23,11 +23,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -56,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -64,6 +71,7 @@ import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
 
 private val TAG = "LogDetailsScreen"
@@ -74,6 +82,7 @@ fun LogDetailsScreen(
     navController: NavHostController,
     logId: String?,
     friendsViewModel: FriendsViewModel,
+    logViewModel: LogViewModel,
     logDetailsViewModel: LogDetailsViewModel = viewModel()
 ) {
     val hasBackButton = true
@@ -110,7 +119,7 @@ fun LogDetailsScreen(
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons(pageTitle)
         Spacer(modifier = Modifier.height(20.dp))
-        LogList(navController, movies, watchedMovies)
+        LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
     }
 }
 
@@ -285,8 +294,10 @@ fun LogButtons(logName: String) {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun LogList(navController: NavHostController, movies: List<MovieData>, watchedMovies: List<MovieData>) {
+fun LogList(navController: NavHostController, logId: String, movies: List<MovieData>, watchedMovies: List<MovieData>,
+            logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
     Log.d(TAG, "Movies: $movies")
 
     if (movies.isNotEmpty()) {
@@ -296,7 +307,47 @@ fun LogList(navController: NavHostController, movies: List<MovieData>, watchedMo
         LazyColumn(userScrollEnabled = false, modifier = Modifier.height(moviesHeight)) {
             items(movies.size) { index ->
                 val movie = movies[index]
-                MovieEntry(movie)
+
+                val state = rememberDismissState(
+                    confirmStateChange = {
+                        if (it == DismissValue.DismissedToStart) {
+                            Log.d(TAG, "Remove movie!")
+                            logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                        }
+                        true
+                    }
+                )
+
+                LaunchedEffect(state.currentValue) {
+                    if (state.currentValue == DismissValue.DismissedToStart) {
+                        logDetailsViewModel.getLogData(logId)
+                        //logDetailsViewModel.getWatchedMovies()
+                        //logDetailsViewModel.getMovies()
+                    }
+                }
+
+                // Add to Watched
+                SwipeToDismiss(
+                    state = state,
+                    directions = setOf(DismissDirection.EndToStart),
+                    background = {
+                      val color = when(state.dismissDirection) {
+                          DismissDirection.EndToStart -> Color.Red
+                          else -> Color.Transparent
+                      }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(top = 5.dp, bottom = 5.dp),
+                        ) {
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = null,
+                                modifier = Modifier.align(Alignment.CenterEnd))
+                        }
+                    },
+                    dismissContent =  { MovieEntry(movie) }
+                )
+                //MovieEntry(movie)
             }
         }
     }
@@ -310,7 +361,45 @@ fun LogList(navController: NavHostController, movies: List<MovieData>, watchedMo
         LazyColumn(userScrollEnabled = false, modifier = Modifier.height(watchedMoviesHeight)) {
             items(watchedMovies.size) { index ->
                 val movie = watchedMovies[index]
-                MovieEntry(movie)
+                val state = rememberDismissState(
+                    confirmStateChange = {
+                        if (it == DismissValue.DismissedToStart) {
+                            Log.d(TAG, "Remove movie!")
+                            logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                        }
+                        true
+                    }
+                )
+
+                LaunchedEffect(state.currentValue) {
+                    if (state.currentValue == DismissValue.DismissedToStart) {
+                        logDetailsViewModel.getLogData(logId)
+                        //logDetailsViewModel.getWatchedMovies()
+                        //logDetailsViewModel.getMovies()
+                    }
+                }
+
+                // Add to Watched
+                SwipeToDismiss(
+                    state = state,
+                    directions = setOf(DismissDirection.EndToStart),
+                    background = {
+                        val color = when(state.dismissDirection) {
+                            DismissDirection.EndToStart -> Color.Red
+                            else -> Color.Transparent
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(top = 5.dp, bottom = 5.dp),
+                        ) {
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = null,
+                                modifier = Modifier.align(Alignment.CenterEnd))
+                        }
+                    },
+                    dismissContent =  { MovieEntry(movie) }
+                )
             }
         }
     }
@@ -327,7 +416,9 @@ fun MovieEntry(movie: MovieData) {
     }*/
     Row(modifier = Modifier
         .fillMaxWidth()
-        .padding(bottom = 10.dp),
+        .zIndex(100f)
+        .background(Color.Black)
+        .padding(top = 5.dp, bottom = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
 
