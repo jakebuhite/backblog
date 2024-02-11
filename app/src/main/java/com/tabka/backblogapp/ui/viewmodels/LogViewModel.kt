@@ -95,8 +95,16 @@ open class LogViewModel : ViewModel() {
     }
 
     fun addMovieToLog(logId: String?, movieId: String?) {
-        localLogRepository.addMovieToLog(logId!!, movieId!!)
-        loadLogs()
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                movieRepository.addMovie(logId ?: "", movieId ?: "")
+                loadLogs()
+            }
+        } else {
+            localLogRepository.addMovieToLog(logId!!, movieId!!)
+            loadLogs()
+        }
     }
 
     open fun getMovieById(movieId: String) {
@@ -180,6 +188,8 @@ open class LogViewModel : ViewModel() {
                     }
                     is DataResult.Failure -> throw result.throwable
                 }
+                loadLogs()
+                resetMovie()
             }
         } else {
             Log.d(TAG, "User is not logged in")
@@ -214,9 +224,9 @@ open class LogViewModel : ViewModel() {
             )
             Log.d(TAG, "Creating Log: $log")
             localLogRepository.createLog(log)
+            loadLogs()
+            resetMovie()
         }
-        loadLogs()
-        resetMovie()
     }
 
     private fun findMaxPriority(): Int {

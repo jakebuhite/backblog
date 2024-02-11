@@ -17,6 +17,7 @@ import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -70,8 +71,10 @@ class LogDetailsViewModel: ViewModel() {
 
     private fun updateCollaboratorsList(user: UserData) {
         val currentList = collaboratorsList.value ?: emptyList()
-        val updatedList = currentList + user
-        collaboratorsList.postValue(updatedList)
+        if (!currentList.contains(user)) {
+            val updatedList = currentList + user
+            collaboratorsList.postValue(updatedList)
+        }
     }
 
     private suspend fun getUserData(isOwner: Boolean) {
@@ -206,15 +209,16 @@ class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    fun deleteLog() {
+    suspend fun deleteLog(): Job? {
         val logId = logData.value?.logId!!
         val currentUser = auth.currentUser
-        if (currentUser != null) {
+        return if (currentUser != null) {
             viewModelScope.launch {
                 logRepository.deleteLog(logId)
             }
         } else {
             localRepository.deleteLog(logId)
+            null
         }
     }
 }
