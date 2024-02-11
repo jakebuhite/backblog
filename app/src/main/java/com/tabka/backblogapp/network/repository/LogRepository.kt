@@ -244,7 +244,12 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             // Iterate through each collaborator in the array
             collaborators.forEach { collaborator ->
                 // Add collaborator to the updatedCollaborators object
-                collabs["collaborators.${collaborator}"] = true
+                when (val result = getLogs(collaborator, true)) {
+                    is DataResult.Success ->  {
+                        collabs["collaborators.${collaborator}"] = result.item.size
+                    }
+                    is DataResult.Failure -> Log.d(tag, "Error getting logs ${result.throwable.message}")
+                }
             }
 
             // Remove collaborators from the log
