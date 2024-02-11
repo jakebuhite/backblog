@@ -74,6 +74,9 @@ import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private val TAG = "LogDetailsScreen"
 
@@ -103,6 +106,7 @@ fun LogDetailsScreen(
     // Collaborators
     val collaboratorsState = logDetailsViewModel.collaboratorsList.observeAsState()
     val collaborators = collaboratorsState.value ?: emptyList()
+    Log.d(TAG, "List of collaborators: $collaborators")
 
     // Log
     val logState = logDetailsViewModel.logData.observeAsState()
@@ -137,6 +141,7 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
                 contentDescription = null,
                 modifier = Modifier
                     .size(35.dp)
+                    //.border(BorderStroke(2.dp, Color.Yellow))
                     .testTag("CREATOR_PICTURE"),
             )
         }
@@ -238,7 +243,8 @@ fun LogButtons(
                                     logName,
                                     movies,
                                     logDetailsViewModel,
-                                    logViewModel)
+                                    logViewModel
+                                )
                             }
                             isSheetOpen = true
                         })
@@ -709,13 +715,18 @@ fun EditSheetContent(
             // Delete Button
             Button(
                 onClick = {
-                    logDetailsViewModel.deleteLog()
-                    logViewModel.loadLogs()
-                    navController.navigate("home")
-                    Toast.makeText(context, "Successfully deleted $logName!",
+                    CoroutineScope(Dispatchers.Main).launch {
+                        val asyncJob = logDetailsViewModel.deleteLog()
+                        asyncJob?.join()
+
+                        logViewModel.loadLogs()
+                        navController.navigate("home")
+                        Toast.makeText(
+                            context, "Successfully deleted $logName!",
                             Toast.LENGTH_SHORT
                         )
-                        .show()
+                            .show()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
