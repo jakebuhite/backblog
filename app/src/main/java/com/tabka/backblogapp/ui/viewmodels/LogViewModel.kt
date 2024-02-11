@@ -113,12 +113,26 @@ open class LogViewModel : ViewModel() {
     }
 
     fun markMovieAsWatched(logId: String, movieId: String) {
-        localLogRepository.markMovie(logId, movieId, watched = true)
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                movieRepository.markMovie(logId, movieId, watched = true)
+            }
+        } else {
+            localLogRepository.markMovie(logId, movieId, watched = true)
+        }
         loadLogs()
     }
 
     fun unmarkMovieAsWatched(logId: String, movieId: String) {
-        localLogRepository.markMovie(logId, movieId, watched = false)
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                movieRepository.markMovie(logId, movieId, watched = false)
+            }
+        } else {
+            localLogRepository.markMovie(logId, movieId, watched = false)
+        }
         loadLogs()
     }
 
@@ -126,10 +140,7 @@ open class LogViewModel : ViewModel() {
         val data: T? = null,
         val error: String? = null
     )
-    fun fetchMovieDetails(
-        movieId: String,
-        onResponse: (MovieResult<MovieData>) -> Unit
-    ) {
+    fun fetchMovieDetails(movieId: String, onResponse: (MovieResult<MovieData>) -> Unit) {
         viewModelScope.launch {
             try {
                 movieRepository.getMovieById(movieId, { movieData ->
@@ -160,7 +171,7 @@ open class LogViewModel : ViewModel() {
         // If logged in
         if (currentUser != null) {
             Log.d(TAG, "User is logged in")
-            /*viewModelScope.launch {
+            viewModelScope.launch {
                 val result = logRepository.addLog(logName, isVisible = true, currentUser.uid)
                 when (result) {
                     is DataResult.Success -> {
@@ -169,7 +180,7 @@ open class LogViewModel : ViewModel() {
                     }
                     is DataResult.Failure -> throw result.throwable
                 }
-            }*/
+            }
         } else {
             Log.d(TAG, "User is not logged in")
             // Create an ID

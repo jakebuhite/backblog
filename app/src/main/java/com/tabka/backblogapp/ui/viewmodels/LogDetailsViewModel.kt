@@ -207,6 +207,14 @@ class LogDetailsViewModel: ViewModel() {
     }
 
     fun deleteLog() {
-        localRepository.deleteLog(logData.value?.logId!!)
+        val logId = logData.value?.logId!!
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                logRepository.deleteLog(logId)
+            }
+        } else {
+            localRepository.deleteLog(logId)
+        }
     }
 }

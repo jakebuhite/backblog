@@ -178,6 +178,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         }
     }
 
+
     suspend fun updateLogsBatch(logs: List<LogData>): DataResult<Boolean> {
         try {
             val batch = db.batch()
@@ -211,6 +212,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         }
     }
 
+
     suspend fun deleteLog(logId: String): DataResult<Boolean> {
         return try {
             db.collection("logs").document(logId).delete().await()
@@ -220,6 +222,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             DataResult.Failure(e)
         }
     }
+
 
     suspend fun updateUserLogOrder(userId: String, logIds: List<Pair<String, Boolean>>): DataResult<Boolean> {
         return try {
@@ -236,6 +239,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             DataResult.Failure(e)
         }
     }
+
 
     suspend fun addCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
         return try {
@@ -265,6 +269,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             DataResult.Failure(e)
         }
     }
+
 
     suspend fun removeCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
         return try {
