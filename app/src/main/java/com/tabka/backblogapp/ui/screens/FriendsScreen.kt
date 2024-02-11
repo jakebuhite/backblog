@@ -80,8 +80,6 @@ fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewMod
     val logReqs = logReqState.value ?: emptyList()
 
     // Friend's data
-    /*val friendsState = friendsViewModel.friendsData.observeAsState()
-    val friends = friendsState.value ?: emptyList()*/
     val friends = friendsViewModel.friendsData.collectAsState()
 
     // Get data
@@ -95,7 +93,9 @@ fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewMod
 
     // UI Content
     FriendsContent(navController, pageTitle, publicLogs,
-        friendReqs, logReqs, friends, userAvatar)
+        friendReqs, logReqs, friends, userAvatar) {
+        friendsViewModel.sendFriendRequest(it)
+    }
 
 }
 
@@ -107,7 +107,8 @@ fun FriendsContent(
     friendRequests:List<Pair<FriendRequestData, UserData>>,
     logRequests: List<Pair<LogRequestData, UserData>>,
     friends: State<List<UserData>>,
-    userAvatar: Int
+    userAvatar: Int,
+    addFriend: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -139,7 +140,7 @@ fun FriendsContent(
                 )
                 pageTitle(pageTitle)
             }
-            TabScreen(navController, publicLogs, friendRequests, logRequests, friends)
+            TabScreen(navController, publicLogs, friendRequests, logRequests, friends, addFriend)
             Spacer(modifier = Modifier.height(70.dp))
         }
     }
@@ -164,7 +165,8 @@ fun TabScreen(
     publicLogs: List<LogData>,
     friendRequests: List<Pair<FriendRequestData, UserData>>,
     logRequests: List<Pair<LogRequestData, UserData>>,
-    friends: State<List<UserData>>
+    friends: State<List<UserData>>,
+    addFriend: (String) -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -212,7 +214,7 @@ fun TabScreen(
         }
         when (selectedTab) {
             0 -> PublicLogs(navController, publicLogs)
-            1 -> FriendRequestsScreen(friendRequests, logRequests, friends)
+            1 -> FriendRequestsScreen(friendRequests, logRequests, friends, addFriend)
         }
     }
 }

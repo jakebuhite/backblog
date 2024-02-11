@@ -124,6 +124,70 @@ class FriendsViewModel : ViewModel() {
         }
     }
 
+    fun sendFriendRequest(targetUsername: String) {
+        viewModelScope.launch {
+            try {
+                val userId = auth.currentUser?.uid
+                if (userId != null) {
+                    // Check if users are already friends
+                    val result = userRepository.getUserByUsername(targetUsername)
+                    withContext(Dispatchers.Main) {
+                        when (result) {
+                            is DataResult.Success -> {
+                                val friends = result.item.friends ?: emptyMap()
+                                if (friends.containsKey(userId)) {
+                                    // TODO: Add UI Message
+                                    // USER IS ALREADY A FRIEND
+                                    return@withContext
+                                }
+
+                                // Check if target sent a request to this user
+                                val targetId = result.item.userId ?: ""
+                                val targetRequests = friendRepository.getFriendRequests(targetId)
+                                when (targetRequests) {
+                                    is DataResult.Success -> {
+                                        if (targetRequests.item.any { it.senderId == targetId && it.targetId == userId }) {
+                                            // TODO: Add UI Message
+                                            // Request already made
+                                            return@withContext
+                                        }
+
+                                        // Check if user already sent a request to this target
+                                        val userRequests = friendRepository.getFriendRequests(userId)
+                                        when (userRequests) {
+                                            is DataResult.Success -> {
+                                                if (userRequests.item.any { it.senderId == userId && it.targetId == targetId }) {
+                                                    // TODO: Add UI Message
+                                                    // Request already made
+                                                    return@withContext
+                                                }
+
+                                                // Try adding friend request
+                                                val addFriendReq = friendRepository.addFriendRequest(userId, targetId, System.currentTimeMillis().toString())
+                                                when (addFriendReq) {
+                                                    is DataResult.Success -> {
+                                                        // TODO: Add UI Message of Success
+                                                    }
+                                                    is DataResult.Failure -> addFriendReq.throwable
+                                                }
+                                            }
+                                            is DataResult.Failure -> throw userRequests.throwable
+                                        }
+                                    }
+                                    is DataResult.Failure -> throw targetRequests.throwable
+                                }
+                            }
+                            is DataResult.Failure -> throw result.throwable
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d(tag, "Error: $e")
+                // TODO: Add UI message
+            }
+        }
+    }
+
     suspend fun getLogRequests() {
         viewModelScope.launch {
             try {
