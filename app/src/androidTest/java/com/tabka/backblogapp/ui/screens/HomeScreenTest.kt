@@ -102,7 +102,8 @@ class HomeScreenTest {
             lastModifiedDate = "2024-02-01",
             isVisible = true,
             owner = Owner(userId = "user001", priority = 1),
-            collaborators = emptyMap(),
+            collaborators = mutableListOf(),
+            order = emptyMap(),
             movieIds = mutableListOf("531330"),
             watchedIds = mutableListOf()
         ))
@@ -131,7 +132,8 @@ class HomeScreenTest {
                 lastModifiedDate = "2024-02-01",
                 isVisible = true,
                 owner = Owner(userId = "user001", priority = 1),
-                collaborators = emptyMap(),
+                collaborators = mutableListOf(),
+                order = emptyMap(),
                 movieIds = mutableListOf(),
                 watchedIds = mutableListOf()
             )

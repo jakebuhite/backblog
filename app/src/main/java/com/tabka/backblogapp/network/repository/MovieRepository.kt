@@ -87,7 +87,7 @@ class MovieRepository(private val movieApiService: ApiService) {
                         val userPriority: Int = if (log.owner?.userId == userId) {
                             log.owner.priority ?: 0
                         } else {
-                            log.collaborators?.get(userId)?.toMap()?.get("priority") ?: 0
+                            log.order?.get(userId) ?: 0
                         }
 
                         if (userPriority < highestPriority && !log.movieIds.isNullOrEmpty()) {

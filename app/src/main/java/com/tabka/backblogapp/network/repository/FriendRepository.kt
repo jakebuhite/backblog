@@ -46,10 +46,10 @@ class FriendRepository {
     suspend fun addFriendRequest(senderId: String, targetId: String, requestDate: String): DataResult<Boolean> {
         return try {
             val friendRequestData = mapOf(
-                "senderId" to senderId,
-                "targetId" to targetId,
-                "requestDate" to requestDate,
-                "isComplete" to false
+                "sender_id" to senderId,
+                "target_id" to targetId,
+                "request_date" to requestDate,
+                "is_complete" to false
             )
 
             db.collection("friend_requests")
