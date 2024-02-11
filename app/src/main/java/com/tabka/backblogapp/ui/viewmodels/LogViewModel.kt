@@ -58,7 +58,7 @@ open class LogViewModel : ViewModel() {
         if (currentUser != null) {
             Log.d(TAG, "Getting the logs from DB: ${currentUser.uid}")
             viewModelScope.launch {
-                val result = logRepository.getLogs(currentUser.uid, private = false)
+                val result = logRepository.getLogs(currentUser.uid, private = true)
                 when (result) {
                     is DataResult.Success -> _allLogs.value = result.item
                     is DataResult.Failure -> throw result.throwable
