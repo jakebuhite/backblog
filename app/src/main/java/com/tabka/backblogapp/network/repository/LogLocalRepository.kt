@@ -70,13 +70,11 @@ class LogLocalRepository {
             // Find specific log
             val log = existingLogs.find { it.logId == logId }!!
 
-            val updatedMovieIds = log.movieIds!!.toMutableMap().apply {
-                put(movieId, true)
-            }
+            val updatedMovieIds = log.movieIds ?: mutableListOf()
+            updatedMovieIds.add(movieId)
 
-            val updatedWatchedIds = log.watchedIds!!.toMutableMap().apply {
-                remove(movieId)
-            }
+            val updatedWatchedIds = log.watchedIds ?: mutableListOf()
+            updatedWatchedIds.remove(movieId)
 
             val updatedLog = log.copy(movieIds = updatedMovieIds, watchedIds = updatedWatchedIds)
             Log.d(tag, "This is the updated log: $updatedLog")
@@ -107,4 +105,13 @@ class LogLocalRepository {
 
         jsonUtility.overwriteJSON(existingLogs)
     }
+
+    fun deleteLog(logId: String) {
+        // Find specific log
+        val existingLogs = jsonUtility.readFromFile()
+        existingLogs.removeIf { it.logId == logId }
+
+        jsonUtility.overwriteJSON(existingLogs)
+    }
+
 }
