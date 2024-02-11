@@ -53,7 +53,7 @@ open class LogViewModel : ViewModel() {
         Firebase.auth.addAuthStateListener(authListener)
     }
 
-    private fun loadLogs() {
+    fun loadLogs() {
         val currentUser = Firebase.auth.currentUser
         if (currentUser != null) {
             Log.d(TAG, "Getting the logs from DB: ${currentUser.uid}")

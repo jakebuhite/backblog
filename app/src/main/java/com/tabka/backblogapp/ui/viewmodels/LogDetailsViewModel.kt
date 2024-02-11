@@ -15,7 +15,10 @@ import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
@@ -42,7 +45,6 @@ class LogDetailsViewModel: ViewModel() {
 
     private suspend fun updateLogData(newLog: LogData) {
         logData.value = newLog
-        Log.d("Testing", "MY LOG: ${logData.value}")
         getMovies()
         getWatchedMovies()
         // Get the owner
@@ -54,10 +56,11 @@ class LogDetailsViewModel: ViewModel() {
 
     private fun updateMovieList(newList: List<MovieData>) {
         movies.value = newList
+        Log.d(tag, "Here are my updated movies: $newList")
+
     }
 
     private fun updateWatchedMovieList(newList: List<MovieData>) {
-        Log.d("Testing", "Updating watched movie: $newList")
         watchedMovies.value = newList
     }
 
@@ -129,35 +132,48 @@ class LogDetailsViewModel: ViewModel() {
     }
 
     private suspend fun getMovies() {
-        val movieDataList = mutableListOf<MovieData>()
-        val movieIds = logData.value?.movieIds ?: mutableListOf()
+        val movieIds = logData.value?.movieIds ?: listOf()
 
         viewModelScope.launch {
             try {
-                for (movieId in movieIds) {
-                    movieRepository.getMovieById(
-                        movieId = movieId,
-                        onResponse = { movieResponse ->
-                            movieResponse?.let { movieDataList.add(it) }
-                        },
-                        onFailure = { e ->
-                            Log.e("Movies", "Failed to fetch details for movie ID $movieId: $e")
-                        }
-                    )
-                    withContext(Dispatchers.Main) {
-                        updateMovieList(movieDataList)
+                val movieDataList = mutableListOf<MovieData>()
+
+                // Launch all fetch operations in parallel
+                val fetchJobs = movieIds.map { movieId ->
+                    async {
+                        val deferredMovie = CompletableDeferred<MovieData?>()
+                        movieRepository.getMovieById(
+                            movieId = movieId,
+                            onResponse = { movieResponse ->
+                                deferredMovie.complete(movieResponse)
+                            },
+                            onFailure = { e ->
+                                Log.e(tag, "Failed to fetch details for movie ID $movieId: $e")
+                                deferredMovie.complete(null) // Complete with null on failure
+                            }
+                        )
+                        deferredMovie.await() // Wait for the callback to complete
                     }
                 }
+
+                // Await all the operations to complete and filter out nulls
+                fetchJobs.awaitAll().filterNotNull().also { fetchedMovies ->
+                    movieDataList.addAll(fetchedMovies)
+                }
+
+                withContext(Dispatchers.Main) {
+                    Log.d(tag, "Here are my movies: $movieDataList")
+                    updateMovieList(movieDataList)
+                }
             } catch (e: Exception) {
-                Log.e("Movies", "Failed to fetch details for movies: $e")
+                Log.e(tag, "Failed to fetch details for movies: $e")
             }
         }
     }
 
-    suspend fun getWatchedMovies() {
+    private suspend fun getWatchedMovies() {
         val movieDataList = mutableListOf<MovieData>()
         val watchedMovieIds = logData.value?.watchedIds ?: mutableListOf()
-        Log.d("Testing", "Here are the watchedMovieIds: $watchedMovieIds")
 
         viewModelScope.launch {
             try {
@@ -181,7 +197,6 @@ class LogDetailsViewModel: ViewModel() {
                         Log.e("Movies", "Error fetching movie ID $movieId: $e")
                     }
                 }
-
                 withContext(Dispatchers.Main) {
                     updateWatchedMovieList(movieDataList)
                 }
@@ -189,5 +204,9 @@ class LogDetailsViewModel: ViewModel() {
                 Log.e("Movies", "Failed to fetch details for movies: $e")
             }
         }
+    }
+
+    fun deleteLog() {
+        localRepository.deleteLog(logData.value?.logId!!)
     }
 }

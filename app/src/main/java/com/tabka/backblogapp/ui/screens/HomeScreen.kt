@@ -504,7 +504,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             }, onCloseClick = {
                 isSheetOpen = false
             })
-            Spacer(modifier = Modifier.height(45.dp))
+            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 

@@ -2,6 +2,7 @@ package com.tabka.backblogapp.ui.screens
 
 import android.annotation.SuppressLint
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,6 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -116,7 +118,7 @@ fun LogDetailsScreen(
     BaseScreen(navController, hasBackButton, pageTitle) {
         DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
-        LogButtons(pageTitle)
+        LogButtons(navController, pageTitle, movies, logDetailsViewModel, logViewModel)
         Spacer(modifier = Modifier.height(20.dp))
         LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
     }
@@ -173,25 +175,18 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun LogButtons(logName: String) {
+fun LogButtons(
+    navController: NavHostController,
+    logName: String,
+    movies: List<MovieData>,
+    logDetailsViewModel: LogDetailsViewModel,
+    logViewModel: LogViewModel
+) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
     }
-
-    var logs by remember { mutableStateOf(
-        listOf(
-            "Aquaman and the Lost Kingdom",
-            "NOPE",
-            "The Batman",
-            "Get Out",
-            "Interstellar",
-            "Joker",
-            "The Creator",
-            "Spider-Man"
-        )
-    )}
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -235,7 +230,16 @@ fun LogButtons(logName: String) {
                         .size(35.dp)
                         .testTag("EDIT_ICON")
                         .clickable(onClick = {
-                            sheetContent = { EditSheetContent(logName) }
+                            sheetContent = {
+                                EditSheetContent(
+                                    navController,
+                                    isSheetOpen,
+                                    onDismiss = { isSheetOpen = false },
+                                    logName,
+                                    movies,
+                                    logDetailsViewModel,
+                                    logViewModel)
+                            }
                             isSheetOpen = true
                         })
                 )
@@ -304,7 +308,7 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
         val moviesHeight: Dp = (80 * movies.size).dp
 
         LazyColumn(userScrollEnabled = false, modifier = Modifier.height(moviesHeight)) {
-            items(movies.size, key = { index -> movies[index].id!! }) { index ->
+            items(movies.size) { index ->
                 val movie = movies[index]
 
                 val state = rememberDismissState(
@@ -356,7 +360,7 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
 
         RequestHeader(title = "Watched Movies")
         LazyColumn(userScrollEnabled = false, modifier = Modifier.height(watchedMoviesHeight)) {
-            items(watchedMovies.size, key = { index -> watchedMovies[index].id!! }) { index ->
+            items(watchedMovies.size) { index ->
                 val movie = watchedMovies[index]
                 val state = rememberDismissState(
                     confirmStateChange = {
@@ -598,7 +602,7 @@ fun CollaboratorsSheetContent(logName: String) {
                     disabledContainerColor = Color.Transparent
                 ),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     "Cancel",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
@@ -610,14 +614,23 @@ fun CollaboratorsSheetContent(logName: String) {
 }
 
 @Composable
-fun EditSheetContent(logName: String) {
+fun EditSheetContent(
+    navController: NavHostController,
+    isSheetOpen: Boolean,
+    onDismiss: () -> Unit,
+    logName: String,
+    movies: List<MovieData>,
+    logDetailsViewModel: LogDetailsViewModel,
+    logViewModel: LogViewModel
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        androidx.compose.material3.Text(
+        Text(
+            // Log Name
             logName,
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center
@@ -626,51 +639,19 @@ fun EditSheetContent(logName: String) {
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    Row(
+/*    Row(
         modifier = Modifier.padding(horizontal = 50.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Log Name
-        /*TextField(
-            value = logName,
-            *//*onValueChange = { logName = it },*//*
-            label = { androidx.compose.material3.Text(logName) },
-            singleLine = true,
-           *//* keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus()
-                }*//*
-            ),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFF373737),
-                focusedLabelColor = Color(0xFF979C9E),
-                unfocusedLabelColor = Color(0xFF979C9E),
-                unfocusedBorderColor = Color(0xFF373737),
-                backgroundColor = Color(0xFF373737)
-            ),
-        )*/
-    }
+    }*/
 
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Spacer(modifier = Modifier.height(20.dp))
-
-    val userList = listOf(
-        "Aquaman and the Lost Kingdom",
-        "NOPE",
-        "The Batman",
-        "Get Out",
-        "Interstellar",
-        "Joker",
-        "The Creator",
-        "Spider-Man"
-    )
+    Spacer(modifier = Modifier.height(40.dp))
 
     Box(modifier = Modifier.height(450.dp)) {
         LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-            items(userList) { movieName ->
-                EditLogEntry(movieName)
+            items(movies) { movie ->
+                EditLogEntry(movie)
             }
         }
     }
@@ -724,12 +705,17 @@ fun EditSheetContent(logName: String) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
+            val context = LocalContext.current
             // Delete Button
             Button(
                 onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                    logDetailsViewModel.deleteLog()
+                    logViewModel.loadLogs()
+                    navController.navigate("home")
+                    Toast.makeText(context, "Successfully deleted $logName!",
+                            Toast.LENGTH_SHORT
+                        )
+                        .show()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -742,7 +728,7 @@ fun EditSheetContent(logName: String) {
                     disabledContainerColor = Color.Transparent
                 ),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     "Delete",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
@@ -759,11 +745,7 @@ fun EditSheetContent(logName: String) {
         ) {
             // Cancel Button
             Button(
-                onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
-                },
+                onClick = { onDismiss() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp)
@@ -775,20 +757,20 @@ fun EditSheetContent(logName: String) {
                     disabledContainerColor = Color.Transparent
                 ),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     "Cancel",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(50.dp))
     }
 }
 
 
 @Composable
-fun EditLogEntry(movieName: String) {
+fun EditLogEntry(movie: MovieData) {
     Row(
         modifier = Modifier.padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -813,7 +795,7 @@ fun EditLogEntry(movieName: String) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(movieName, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+            Text(movie.title ?: "", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
         }
 
         // Drag Icon
