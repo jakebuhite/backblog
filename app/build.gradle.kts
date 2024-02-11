@@ -110,7 +110,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
-    implementation("androidx.navigation:navigation-compose:2.4.0-alpha10")
+    implementation("androidx.navigation:navigation-compose:2.8.0-alpha02")
     implementation("androidx.compose.material:material:1.4.2")
     implementation("androidx.compose.material:material-icons-extended:1.4.2")
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")

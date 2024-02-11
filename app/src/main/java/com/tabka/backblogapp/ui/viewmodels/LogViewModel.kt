@@ -44,7 +44,7 @@ open class LogViewModel : ViewModel() {
     open val movie = _movie.asStateFlow()
 
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-        // This will be called on initialization and whenever the user state changes
+        Log.d(TAG, "We are here")
         viewModelScope.launch {
             loadLogs()
         }
@@ -117,6 +117,11 @@ open class LogViewModel : ViewModel() {
         loadLogs()
     }
 
+    fun unmarkMovieAsWatched(logId: String, movieId: String) {
+        localLogRepository.markMovie(logId, movieId, watched = false)
+        loadLogs()
+    }
+
     data class MovieResult<T>(
         val data: T? = null,
         val error: String? = null
@@ -155,9 +160,16 @@ open class LogViewModel : ViewModel() {
         // If logged in
         if (currentUser != null) {
             Log.d(TAG, "User is logged in")
-            viewModelScope.launch {
-                logRepository.addLog(logName, isVisible = true, currentUser.uid)
-            }
+            /*viewModelScope.launch {
+                val result = logRepository.addLog(logName, isVisible = true, currentUser.uid)
+                when (result) {
+                    is DataResult.Success -> {
+                        val logId = result.item
+                        logRepository.addCollaborators(logId, collaborators)
+                    }
+                    is DataResult.Failure -> throw result.throwable
+                }
+            }*/
         } else {
             Log.d(TAG, "User is not logged in")
             // Create an ID
