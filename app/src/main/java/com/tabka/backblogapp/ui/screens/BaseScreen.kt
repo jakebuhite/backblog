@@ -18,6 +18,10 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -62,14 +66,20 @@ fun backButton(navController: NavController, visible: Boolean) {
 
     val alpha = if (visible) 1f else 0f
 
+    // State to track if the button is enabled or not
+    var isEnabled by remember { mutableStateOf(true) }
+
     var modifier = Modifier
         .size(36.dp)
         .clip(CircleShape)
         .alpha(alpha)
         .testTag("BACK_BUTTON")
 
-    if (visible) {
-        modifier = modifier.clickable { navController.popBackStack() }
+    if (visible && isEnabled) {
+        modifier = modifier.clickable {
+            navController.popBackStack()
+            isEnabled = false
+        }
     }
 
     Image(
