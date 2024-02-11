@@ -176,6 +176,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         }
     }
 
+
     suspend fun updateLogsBatch(logs: List<LogData>): DataResult<Boolean> {
         try {
             val batch = db.batch()
@@ -209,6 +210,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         }
     }
 
+
     suspend fun deleteLog(logId: String): DataResult<Boolean> {
         return try {
             db.collection("logs").document(logId).delete().await()
@@ -218,6 +220,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             DataResult.Failure(e)
         }
     }
+
 
     suspend fun updateUserLogOrder(userId: String, logIds: List<Pair<String, Boolean>>): DataResult<Boolean> {
         return try {
@@ -235,6 +238,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
         }
     }
 
+
     suspend fun addCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
         return try {
             val logRef = db.collection("logs").document(logId)
@@ -246,7 +250,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                 // Add collaborator to the updatedCollaborators object
                 when (val result = getLogs(collaborator, true)) {
                     is DataResult.Success ->  {
-                        collabs["collaborators.${collaborator}"] = result.item.size
+                        collabs["collaborators.${collaborator}"] = mapOf("priority" to result.item.size)
                     }
                     is DataResult.Failure -> Log.d(tag, "Error getting logs ${result.throwable.message}")
                 }
@@ -262,6 +266,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             DataResult.Failure(e)
         }
     }
+
 
     suspend fun removeCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
         return try {
