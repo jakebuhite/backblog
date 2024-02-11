@@ -25,24 +25,31 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             // Get new log id
             val logId = db.collection("logs").document().id
 
-            // Get all log data
-            val logData = mapOf(
-                "log_id" to logId,
-                "name" to name,
-                "creation_date" to System.currentTimeMillis().toString(),
-                "last_modified_date" to System.currentTimeMillis().toString(),
-                "is_visible" to isVisible,
-                "owner" to mapOf("user_id" to ownerId, "priority" to 0),
-                "collaborators" to mutableListOf<String>(),
-                "order" to emptyMap<String, Int>(),
-                "movie_ids" to mutableListOf<String>(),
-                "watched_ids" to mutableListOf<String>()
-            )
+            when (val result = getLogs(ownerId, true)) {
+                is DataResult.Success ->  {
+                    val priority = result.item.size
 
-            db.collection("logs").document(logId).set(logData).await()
+                    // Get all log data
+                    val logData = mapOf(
+                        "log_id" to logId,
+                        "name" to name,
+                        "creation_date" to System.currentTimeMillis().toString(),
+                        "last_modified_date" to System.currentTimeMillis().toString(),
+                        "is_visible" to isVisible,
+                        "owner" to mapOf("user_id" to ownerId, "priority" to priority),
+                        "collaborators" to mutableListOf<String>(),
+                        "order" to emptyMap<String, Int>(),
+                        "movie_ids" to mutableListOf<String>(),
+                        "watched_ids" to mutableListOf<String>()
+                    )
 
-            Log.d(tag, "Log successfully written!")
-            DataResult.Success(logId)
+                    db.collection("logs").document(logId).set(logData).await()
+
+                    Log.d(tag, "Log successfully written!")
+                    DataResult.Success(logId)
+                }
+                is DataResult.Failure -> DataResult.Failure(result.throwable)
+            }
         } catch (e: Exception) {
             Log.w(tag, "Error writing log document", e)
             DataResult.Failure(e)
