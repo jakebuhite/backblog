@@ -62,6 +62,28 @@ class LogLocalRepository {
 
             jsonUtility.overwriteJSON(existingLogs)
             Log.d(tag, "Log after move: $updatedLog")
+        } else {
+            // Unmark as watched
+            // Get all logs
+            val existingLogs = jsonUtility.readFromFile()
+
+            // Find specific log
+            val log = existingLogs.find { it.logId == logId }!!
+
+            val updatedMovieIds = log.movieIds!!.toMutableMap().apply {
+                put(movieId, true)
+            }
+
+            val updatedWatchedIds = log.watchedIds!!.toMutableMap().apply {
+                remove(movieId)
+            }
+
+            val updatedLog = log.copy(movieIds = updatedMovieIds, watchedIds = updatedWatchedIds)
+            Log.d(tag, "This is the updated log: $updatedLog")
+            val indexToUpdate = existingLogs.indexOf(log)
+            existingLogs[indexToUpdate] = updatedLog
+
+            jsonUtility.overwriteJSON(existingLogs)
         }
     }
     

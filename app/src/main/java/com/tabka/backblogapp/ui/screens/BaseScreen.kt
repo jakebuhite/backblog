@@ -60,20 +60,22 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title
 fun backButton(navController: NavController, visible: Boolean) {
     val icon = painterResource(R.drawable.button_back_arrow)
 
-    var alpha = 0f
+    val alpha = if (visible) 1f else 0f
+
+    var modifier = Modifier
+        .size(36.dp)
+        .clip(CircleShape)
+        .alpha(alpha)
+        .testTag("BACK_BUTTON")
+
     if (visible) {
-        alpha = 1f
+        modifier = modifier.clickable { navController.popBackStack() }
     }
 
     Image(
         painter = icon,
         contentDescription = "Back Button",
-        modifier = Modifier
-            .size(36.dp)
-            .clip(CircleShape)
-            .alpha(alpha)
-            .clickable { navController.popBackStack() }
-            .testTag("BACK_BUTTON")
+        modifier = modifier
     )
 }
 

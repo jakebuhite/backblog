@@ -128,7 +128,7 @@ class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    suspend fun getMovies() {
+    private suspend fun getMovies() {
         val movieDataList = mutableListOf<MovieData>()
         val movieIds = logData.value?.movieIds ?: mutableListOf()
 
@@ -144,10 +144,9 @@ class LogDetailsViewModel: ViewModel() {
                             Log.e("Movies", "Failed to fetch details for movie ID $movieId: $e")
                         }
                     )
-                }
-
-                withContext(Dispatchers.Main) {
-                    updateMovieList(movieDataList)
+                    withContext(Dispatchers.Main) {
+                        updateMovieList(movieDataList)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("Movies", "Failed to fetch details for movies: $e")
