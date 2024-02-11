@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.UserData
@@ -45,6 +46,25 @@ class UserRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: F
 
             return if (result.exists()) {
                 val data = result.data
+
+                val userData = Json.decodeFromString<UserData>(Json.encodeToString(data.toJsonElement()))
+
+                DataResult.Success(userData)
+            } else {
+                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
+            }
+        } catch (e: Exception) {
+            Log.w(tag, "Error receiving user document", e)
+            return DataResult.Failure(e)
+        }
+    }
+
+    suspend fun getUserByUsername(username: String): DataResult<UserData> {
+        try {
+            val result = db.collection("users").whereEqualTo("username", username).get().await()
+
+            return if (!result.isEmpty) {
+                val data = result.documents.first().data
 
                 val userData = Json.decodeFromString<UserData>(Json.encodeToString(data.toJsonElement()))
 

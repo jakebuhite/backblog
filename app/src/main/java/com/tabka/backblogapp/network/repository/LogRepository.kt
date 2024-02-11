@@ -57,6 +57,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             // Get all log data
             val logData = mapOf(
                 "log_id" to logId,
+                "name" to name,
                 "creation_date" to creationDate,
                 "last_modified_date" to System.currentTimeMillis().toString(),
                 "is_visible" to false, // Hiding logs default
