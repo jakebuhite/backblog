@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class LogRequestData (
+    @SerialName("request_id") val requestId: String?,
     @SerialName("sender_id") val senderId: String?,
     @SerialName("target_id") val targetId: String?,
     @SerialName("log_id") val logId: String?,

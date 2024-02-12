@@ -3,8 +3,8 @@ package com.tabka.backblogapp.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,19 +43,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
-import com.tabka.backblogapp.util.getAvatarResourceId
+import com.tabka.backblogapp.ui.shared.FriendsList
+import com.tabka.backblogapp.ui.shared.RequestHeader
+import com.tabka.backblogapp.ui.shared.UserInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendRequestsScreen(
+    navController: NavController,
     friendRequests: List<Pair<FriendRequestData, UserData>>,
     logRequests: List<Pair<LogRequestData, UserData>>,
     friends: State<List<UserData>>,
     addFriend: (String) -> Unit,
+    updateRequest: (String, String, Boolean) -> Unit
 ) {
     // Add Friend Sheet
     var isSheetOpen by remember { mutableStateOf(false) }
@@ -87,12 +92,16 @@ fun FriendRequestsScreen(
         }
     }
 
-    SocialRequests(friendRequests, logRequests)
-    FriendsList(friends)
+    SocialRequests(navController, friendRequests, logRequests, updateRequest)
+    FriendsList(navController, friends)
 }
 
 @Composable
-fun SocialRequests(friendRequests: List<Pair<FriendRequestData, UserData>>, logRequests: List<Pair<LogRequestData, UserData>>) {
+fun SocialRequests(navController: NavController,
+                   friendRequests: List<Pair<FriendRequestData, UserData>>,
+                   logRequests: List<Pair<LogRequestData, UserData>>,
+                   updateRequest: (String, String, Boolean) -> Unit
+) {
     RequestHeader(title = "Friend Request")
 
     // List of Friend Requests
@@ -102,8 +111,8 @@ fun SocialRequests(friendRequests: List<Pair<FriendRequestData, UserData>>, logR
             .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-            UserInfo(userData = req.second)
-            RequestActions(req.first)
+            UserInfo(navController = navController, userData = req.second)
+            RequestActions(req.first, updateRequest)
         }
     }
 
@@ -116,70 +125,15 @@ fun SocialRequests(friendRequests: List<Pair<FriendRequestData, UserData>>, logR
             .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-            UserInfo(userData = req.second)
-            RequestActions(req.first)
+            UserInfo(navController = navController, userData = req.second)
+            RequestActions(req.first, updateRequest)
         }
     }
 
 }
 
 @Composable
-fun FriendsList(friends: State<List<UserData>>) {
-    RequestHeader(title = "Friends")
-
-    // List of Friends
-    friends.value.forEach { friend ->
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically) {
-            UserInfo(userData = friend)
-        }
-    }
-}
-
-@Composable
-fun RequestHeader(title: String) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            title,
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(end = 10.dp)
-            )
-        Box(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-                .background(Color.Gray)
-        )
-    }
-}
-
-@Composable
-fun UserInfo(userData: UserData) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Image(
-            painter = painterResource(id = getAvatarResourceId(userData.avatarPreset ?: 1).second),
-            contentDescription = "Avatar",
-            modifier = Modifier
-                .size(50.dp)
-        )
-        Text(
-            text = userData.username ?: "null",
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
-}
-
-@Composable
-fun RequestActions(requestData: LogRequestData) {
+fun RequestActions(requestData: LogRequestData, updateRequest: (String, String, Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -189,18 +143,20 @@ fun RequestActions(requestData: LogRequestData) {
             contentDescription = "Accept request",
             modifier = Modifier
                 .size(30.dp)
+                .clickable { updateRequest(requestData.requestId ?: "", "log", true) }
         )
         Image(
             painter = painterResource(id = R.drawable.delete_icon),
             contentDescription = "Delete request",
             modifier = Modifier
                 .size(30.dp)
+                .clickable { updateRequest(requestData.requestId ?: "", "log", false) }
         )
     }
 }
 
 @Composable
-fun RequestActions(requestData: FriendRequestData) {
+fun RequestActions(requestData: FriendRequestData, updateRequest: (String, String, Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -210,12 +166,14 @@ fun RequestActions(requestData: FriendRequestData) {
             contentDescription = "Accept request",
             modifier = Modifier
                 .size(30.dp)
+                .clickable { updateRequest(requestData.requestId ?: "", "friend", true) }
         )
         Image(
             painter = painterResource(id = R.drawable.delete_icon),
             contentDescription = "Delete request",
             modifier = Modifier
                 .size(30.dp)
+                .clickable { updateRequest(requestData.requestId ?: "", "friend", false)  }
         )
     }
 }
@@ -226,7 +184,8 @@ fun AddLogModalBottomSheet(
     sheetState: SheetState,
     isSheetOpen: Boolean,
     onDismiss: () -> Unit,
-    addFriend: (String) -> Unit
+    addFriend: (String) -> Unit,
+
 ) {
     if (isSheetOpen) {
         ModalBottomSheet(

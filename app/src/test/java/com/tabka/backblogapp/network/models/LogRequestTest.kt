@@ -7,8 +7,9 @@ import org.junit.Test
 
 class LogRequestDataTest {
 
-    private val testJson = """{"sender_id":"test123","target_id":"test456","log_id":"log123","request_date":"1706751265551","is_complete":true}"""
+    private val testJson = """{"request_id":"req123","sender_id":"test123","target_id":"test456","log_id":"log123","request_date":"1706751265551","is_complete":true}"""
     private val logRequestData = LogRequestData(
+        requestId = "req123",
         senderId = "test123",
         targetId = "test456",
         logId = "log123",
@@ -27,6 +28,7 @@ class LogRequestDataTest {
     fun testDeserializationSuccess() {
         val testData = Json.decodeFromString<LogRequestData>(testJson)
 
+        assertEquals(testData.requestId, logRequestData.requestId)
         assertEquals(testData.senderId, logRequestData.senderId)
         assertEquals(testData.targetId, logRequestData.targetId)
         assertEquals(testData.requestDate, logRequestData.requestDate)
