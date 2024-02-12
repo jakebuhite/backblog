@@ -42,6 +42,7 @@ class LogDetailsViewModel: ViewModel() {
     val movies: MutableLiveData<List<MovieData>> = MutableLiveData()
     val watchedMovies: MutableLiveData<List<MovieData>> = MutableLiveData()
     val owner: MutableLiveData<UserData> = MutableLiveData()
+    val isOwner: MutableLiveData<Boolean> = MutableLiveData()
     val collaboratorsList: MutableLiveData<List<UserData>> = MutableLiveData()
 
     private suspend fun updateLogData(newLog: LogData) {
@@ -50,15 +51,19 @@ class LogDetailsViewModel: ViewModel() {
         getWatchedMovies()
         // Get the owner
         getUserData(isOwner = true)
-
         // Get the collaborators
         getUserData(isOwner = false)
+        Log.d(tag, "New Log get: ${logData.value}")
     }
 
     private fun updateMovieList(newList: List<MovieData>) {
         movies.value = newList
         Log.d(tag, "Here are my updated movies: $newList")
 
+    }
+
+    private fun updateIsOwner(userIsOwner: Boolean) {
+        isOwner.value = userIsOwner
     }
 
     private fun updateWatchedMovieList(newList: List<MovieData>) {
@@ -69,13 +74,20 @@ class LogDetailsViewModel: ViewModel() {
         owner.value = user
     }
 
-    private fun updateCollaboratorsList(user: UserData) {
-        val currentList = collaboratorsList.value ?: emptyList()
-        if (!currentList.contains(user)) {
-            val updatedList = currentList + user
-            collaboratorsList.postValue(updatedList)
+    private fun updateCollaboratorsList(collaborators: List<UserData>) {
+        collaboratorsList.value = collaborators
+    }
+
+    suspend fun updateLogCollaborators(collaboratorsToAdd: List<String>, collaboratorsToRemove: List<String>) {
+        val logId = logData.value?.logId!!
+        viewModelScope.launch {
+            Log.d(tag, "Add: ${collaboratorsToAdd.toList()}\nRemove: ${collaboratorsToRemove.toList()}")
+            logRepository.addCollaborators(logId, collaboratorsToAdd)
+            logRepository.removeCollaborators(logId, collaboratorsToRemove)
+            getLogData(logId)
         }
     }
+
 
     private suspend fun getUserData(isOwner: Boolean) {
 
@@ -87,6 +99,8 @@ class LogDetailsViewModel: ViewModel() {
             logData.value?.collaborators ?: emptyList()
         }
 
+        val collabList = mutableListOf<UserData>()
+
         for (userId in userIds) {
             val result: DataResult<UserData> = userRepository.getUser(userId)
             if (isOwner) {
@@ -96,10 +110,13 @@ class LogDetailsViewModel: ViewModel() {
                 }
             } else {
                 when (result) {
-                    is DataResult.Success -> updateCollaboratorsList(result.item)
+                    is DataResult.Success -> collabList.add(result.item)
                     is DataResult.Failure -> throw result.throwable
                 }
             }
+        }
+        if (!isOwner) {
+            updateCollaboratorsList(collabList)
         }
     }
 
@@ -114,7 +131,14 @@ class LogDetailsViewModel: ViewModel() {
                     val result: DataResult<LogData> = logRepository.getLog(logId)
                     withContext(Dispatchers.Main) {
                         when (result) {
-                            is DataResult.Success -> updateLogData(result.item)
+                            is DataResult.Success -> {
+                                updateLogData(result.item)
+                                if (result.item.owner?.userId == currentUser.uid) {
+                                    updateIsOwner(true)
+                                } else {
+                                    updateIsOwner(false)
+                                }
+                            }
                             is DataResult.Failure -> throw result.throwable
                         }
                     }
@@ -170,6 +194,35 @@ class LogDetailsViewModel: ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e(tag, "Failed to fetch details for movies: $e")
+            }
+        }
+    }
+
+    fun updateLog() {
+        Log.d(tag, "Update log!")
+    }
+
+    fun shuffleMovies() {
+        Log.d(tag, "Shuffle now!")
+        val logId = logData.value?.logId!!
+
+        val movies = logData.value?.movieIds ?: emptyList()
+        val shuffledMovies = movies.shuffled()
+        val newMovies = mapOf("movie_ids" to shuffledMovies)
+
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                val result = logRepository.updateLog(logId, newMovies)
+                when (result) {
+                    is DataResult.Success -> getLogData(logId)
+                    is DataResult.Failure -> result.throwable
+                }
+            }
+        } else {
+            localRepository.updateLog(logId, newMovies)
+            viewModelScope.launch {
+                getLogData(logId)
             }
         }
     }

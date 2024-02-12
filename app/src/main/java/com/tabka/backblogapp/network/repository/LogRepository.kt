@@ -259,14 +259,15 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
                 // Add collaborator to the updatedCollaborators object
                 when (val result = getLogs(collaborator, true)) {
                     is DataResult.Success ->  {
-                        updates["collaborators"] = FieldValue.arrayUnion(collaborator)
                         updates["order.${collaborator}"] = result.item.size
                     }
                     is DataResult.Failure -> Log.d(tag, "Error getting logs ${result.throwable.message}")
                 }
             }
 
-            // Remove collaborators from the log
+            updates["collaborators"] = FieldValue.arrayUnion(*collaborators.toTypedArray())
+
+            // Add collaborators to the log
             logRef.update(updates).await()
 
             Log.d(tag, "Collaborators successfully updated!")
@@ -280,20 +281,22 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
 
     suspend fun removeCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
         return try {
+            Log.d(tag, "Collabs to remove: $collaborators")
             val logRef = db.collection("logs").document(logId)
-
             val updates = mutableMapOf<String, Any>()
 
             // Iterate through each collaborator in the array
             collaborators.forEach { collaborator ->
                 // Remove collaborator from the updatedCollaborators object
                 updates["order.${collaborator}"] = FieldValue.delete()
-                updates["collaborators"] = FieldValue.arrayRemove(collaborator)
             }
+
+            updates["collaborators"] = FieldValue.arrayRemove(*collaborators.toTypedArray())
 
             // Remove collaborators from the log
             logRef.update(updates).await()
 
+            Log.d(tag, "after removal: $updates")
             Log.d(tag, "Collaborators successfully updated!")
             DataResult.Success(true)
         } catch (e: Exception) {

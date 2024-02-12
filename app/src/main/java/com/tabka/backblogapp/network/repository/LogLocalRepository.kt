@@ -38,6 +38,40 @@ class LogLocalRepository {
         jsonUtility.deleteAllLogs()
     }
 
+    fun updateLog(logId: String, updateData: Map<String, Any?>) {
+        // Read all logs from the file
+        val existingLogs = jsonUtility.readFromFile().toMutableList()
+
+        // Find the index of the log with the specified logId
+        val logIndex = existingLogs.indexOfFirst { it.logId == logId }
+        if (logIndex == -1) {
+            Log.d(tag, "Log with ID $logId not found.")
+            return
+        }
+
+        // Get the current log data
+        val currentLog = existingLogs[logIndex]
+        Log.d(tag, "Old Log: $currentLog")
+
+        // Prepare updated log data based on the provided updates
+        val updatedLog = currentLog.copy(
+            name = updateData["name"] as? String ?: currentLog.name,
+            isVisible = updateData["is_visible"] as? Boolean ?: currentLog.isVisible,
+            movieIds = updateData["movie_ids"] as? MutableList<String> ?: currentLog.movieIds,
+            watchedIds = updateData["watched_ids"] as? MutableList<String> ?: currentLog.watchedIds
+        )
+
+        Log.d(tag, "New Log: $updatedLog")
+
+        // Replace the old log data with the updated log data in the list
+        existingLogs[logIndex] = updatedLog
+
+        // Write the updated logs back to the JSON file
+        jsonUtility.overwriteJSON(existingLogs)
+
+        Log.d(tag, "Log with ID $logId has been updated.")
+    }
+
     fun markMovie(logId: String, movieId: String, watched: Boolean) {
         if (watched) {
             // Get specific log
