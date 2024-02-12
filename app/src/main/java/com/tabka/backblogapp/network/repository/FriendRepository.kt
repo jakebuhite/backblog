@@ -25,7 +25,10 @@ class FriendRepository {
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
         return try {
+            val reqId = db.collection("log_requests").document().id
+
             val logRequestData = mapOf(
+                "request_id" to reqId,
                 "sender_id" to senderId,
                 "target_id" to targetId,
                 "log_id" to logId,
@@ -34,7 +37,8 @@ class FriendRepository {
             )
 
             db.collection("log_requests")
-                .add(logRequestData)
+                .document(reqId)
+                .set(logRequestData)
                 .await()
 
             DataResult.Success(true)
@@ -45,7 +49,10 @@ class FriendRepository {
 
     suspend fun addFriendRequest(senderId: String, targetId: String, requestDate: String): DataResult<Boolean> {
         return try {
+            val reqId = db.collection("friend_requests").document().id
+
             val friendRequestData = mapOf(
+                "request_id" to reqId,
                 "sender_id" to senderId,
                 "target_id" to targetId,
                 "request_date" to requestDate,
@@ -53,7 +60,8 @@ class FriendRepository {
             )
 
             db.collection("friend_requests")
-                .add(friendRequestData)
+                .document(reqId)
+                .set(friendRequestData)
                 .await()
 
             DataResult.Success(true)

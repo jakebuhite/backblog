@@ -1,8 +1,6 @@
 package com.tabka.backblogapp.ui.viewmodels
 
 import android.util.Log
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -44,15 +42,14 @@ class FriendsViewModel : ViewModel() {
     val friendsData = _friendsData.asStateFlow()
 
     // Status Message
-    private val _snackbarMessage = mutableStateOf<String?>(null)
-    val snackbarMessage: State<String?> = _snackbarMessage
+    val notificationMsg: MutableLiveData<String> = MutableLiveData("")
 
-    private fun showSnackbar(message: String) {
-        _snackbarMessage.value = message
+    private fun updateMessage(message: String) {
+        notificationMsg.value = message
     }
 
-    fun clearSnackbar() {
-        _snackbarMessage.value = null
+    fun clearMessage() {
+        notificationMsg.value = ""
     }
 
     private fun updateUserData(user: UserData) {
@@ -142,59 +139,92 @@ class FriendsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val userId = auth.currentUser?.uid
-                if (userId != null) {
-                    // Check if users are already friends
-                    val result = userRepository.getUserByUsername(targetUsername)
-                    withContext(Dispatchers.Main) {
-                        when (result) {
-                            is DataResult.Success -> {
-                                val friends = result.item.friends ?: emptyMap()
-                                if (friends.containsKey(userId)) {
-                                    showSnackbar("$targetUsername is already a friend!")
-                                    return@withContext
-                                }
+                if (userId == null) {
+                    updateMessage("User not authenticated")
+                    return@launch
+                }
 
-                                // Check if target sent a request to this user
-                                val targetId = result.item.userId ?: ""
-                                val targetRequests = friendRepository.getFriendRequests(targetId)
-                                when (targetRequests) {
-                                    is DataResult.Success -> {
-                                        if (targetRequests.item.any { it.senderId == targetId && it.targetId == userId }) {
-                                            showSnackbar("$targetUsername has already sent you a friend request!")
-                                            return@withContext
-                                        }
+                if (targetUsername == userData.value?.username) {
+                    updateMessage("You cannot friend yourself!")
+                    return@launch
+                }
 
-                                        // Check if user already sent a request to this target
-                                        val userRequests = friendRepository.getFriendRequests(userId)
-                                        when (userRequests) {
-                                            is DataResult.Success -> {
-                                                if (userRequests.item.any { it.senderId == userId && it.targetId == targetId }) {
-                                                    showSnackbar("You've already sent a request to $targetUsername!")
-                                                    return@withContext
-                                                }
+                val result = userRepository.getUserByUsername(targetUsername)
+                if (result is DataResult.Failure) {
+                    throw result.throwable
+                }
 
-                                                // Try adding friend request
-                                                val addFriendReq = friendRepository.addFriendRequest(userId, targetId, System.currentTimeMillis().toString())
-                                                when (addFriendReq) {
-                                                    is DataResult.Success -> {
-                                                        showSnackbar("Friend request sent to $targetUsername!")
-                                                    }
-                                                    is DataResult.Failure -> addFriendReq.throwable
-                                                }
-                                            }
-                                            is DataResult.Failure -> throw userRequests.throwable
-                                        }
-                                    }
-                                    is DataResult.Failure -> throw targetRequests.throwable
-                                }
-                            }
-                            is DataResult.Failure -> throw result.throwable
-                        }
+                val user = (result as DataResult.Success).item
+                val friends = user.friends ?: emptyMap()
+                if (friends.containsKey(userId)) {
+                    updateMessage("$targetUsername is already a friend!")
+                    return@launch
+                }
+
+                val targetId = user.userId ?: ""
+                val targetRequests = friendRepository.getFriendRequests(targetId)
+                if (targetRequests is DataResult.Failure) {
+                    throw targetRequests.throwable
+                }
+
+                if ((targetRequests as DataResult.Success).item.any {
+                        it.senderId == targetId && it.targetId == userId
+                }) {
+                    updateMessage("$targetUsername has already sent you a friend request!")
+                    return@launch
+                }
+
+                val userRequests = friendRepository.getFriendRequests(userId)
+                if (userRequests is DataResult.Failure) {
+                    throw userRequests.throwable
+                }
+
+                if ((userRequests as DataResult.Success).item.any {
+                    it.senderId == userId && it.targetId == targetId
+                }) {
+                    updateMessage("You've already sent a request to $targetUsername!")
+                    return@launch
+                }
+
+                val addFriendReq = friendRepository.addFriendRequest(userId, targetId, System.currentTimeMillis().toString())
+                if (addFriendReq is DataResult.Failure) {
+                    throw addFriendReq.throwable
+                }
+
+                updateMessage("Friend request sent to $targetUsername!")
+            } catch (e: Exception) {
+                Log.d(tag, "Error: $e")
+                updateMessage("There was an error sending a request")
+            }
+        }
+    }
+
+    fun updateRequest(reqId: String, reqType: String, accepted: Boolean) {
+        viewModelScope.launch {
+            try {
+                val userId = auth.currentUser?.uid
+                if (userId == null) {
+                    updateMessage("User not authenticated")
+                    return@launch
+                }
+
+                val result = if (reqType.lowercase() == "log") {
+                    // Log request
+                    friendRepository.updateLogRequest(reqId, accepted)
+                } else {
+                    // Friend request
+                    friendRepository.updateFriendRequest(reqId, accepted)
+                }
+
+                when (result) {
+                    is DataResult.Failure -> result.throwable
+                    is DataResult.Success -> {
+                        updateMessage("Successfully updated request!")
                     }
                 }
             } catch (e: Exception) {
                 Log.d(tag, "Error: $e")
-                showSnackbar("There was an error sending a request")
+                updateMessage("There was an error sending a request")
             }
         }
     }

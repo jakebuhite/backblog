@@ -7,8 +7,9 @@ import org.junit.Test
 
 class FriendRequestTest {
 
-    private val testJson = """{"sender_id":"sender123","target_id":"target456","request_date":"1706751265551","is_complete":true}"""
+    private val testJson = """{"request_id":"req123","sender_id":"sender123","target_id":"target456","request_date":"1706751265551","is_complete":true}"""
     private val friendRequestData = FriendRequestData(
+        requestId = "req123",
         senderId = "sender123",
         targetId = "target456",
         requestDate = "1706751265551",
@@ -26,6 +27,7 @@ class FriendRequestTest {
     fun testDeserializationSuccess() {
         val testData = Json.decodeFromString<FriendRequestData>(testJson)
 
+        assertEquals(testData.requestId, friendRequestData.requestId)
         assertEquals(testData.senderId, friendRequestData.senderId)
         assertEquals(testData.targetId, friendRequestData.targetId)
         assertEquals(testData.requestDate, friendRequestData.requestDate)

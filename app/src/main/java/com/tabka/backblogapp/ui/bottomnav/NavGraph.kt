@@ -21,12 +21,14 @@ import com.tabka.backblogapp.ui.screens.HomeScreen
 import com.tabka.backblogapp.ui.screens.LogDetailsScreen
 import com.tabka.backblogapp.ui.screens.LoginScreen
 import com.tabka.backblogapp.ui.screens.MovieDetailsScreen
+import com.tabka.backblogapp.ui.screens.ProfileScreen
 import com.tabka.backblogapp.ui.screens.SearchResultsScreen
 import com.tabka.backblogapp.ui.screens.SearchScreen
 import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.ProfileViewModel
 import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -36,6 +38,7 @@ fun BottomNavGraph(navController: NavHostController) {
     //val logDetailsViewModel = LogDetailsViewModel()
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()
+    val profileViewModel = ProfileViewModel()
 
     Log.d("Something", "PLEASE LOG SOMETHING")
     val auth = Firebase.auth
@@ -106,6 +109,13 @@ fun BottomNavGraph(navController: NavHostController) {
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
                 LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel)
+            }
+
+            composable(
+                route = "friends_page_{friendId}",
+                arguments = listOf(navArgument("friendId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                ProfileScreen(navController, backStackEntry.arguments?.getString("friendId"), profileViewModel)
             }
         }
     }
