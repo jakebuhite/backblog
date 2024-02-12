@@ -4,6 +4,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,6 +34,9 @@ import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
     val friendsViewModel = FriendsViewModel()
+    LaunchedEffect(true) {
+        friendsViewModel.getFriends()
+    }
     //val logDetailsViewModel = LogDetailsViewModel()
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()

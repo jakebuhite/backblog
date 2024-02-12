@@ -44,10 +44,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -81,6 +84,7 @@ import kotlinx.coroutines.launch
 private val TAG = "LogDetailsScreen"
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LogDetailsScreen(
     navController: NavHostController,
@@ -90,6 +94,7 @@ fun LogDetailsScreen(
     logDetailsViewModel: LogDetailsViewModel = viewModel()
 ) {
     val hasBackButton = true
+    val composableScope = rememberCoroutineScope()
 
     // Movies
     val movieState = logDetailsViewModel.movies.observeAsState()
@@ -103,6 +108,10 @@ fun LogDetailsScreen(
     val ownerState = logDetailsViewModel.owner.observeAsState()
     val owner = ownerState.value ?: UserData()
 
+    // Is Current User Owner
+    val isOwnerState = logDetailsViewModel.isOwner.observeAsState()
+    val isOwner = isOwnerState.value ?: true
+
     // Collaborators
     val collaboratorsState = logDetailsViewModel.collaboratorsList.observeAsState()
     val collaborators = collaboratorsState.value ?: emptyList()
@@ -114,15 +123,16 @@ fun LogDetailsScreen(
     val pageTitle = log?.name ?: ""
 
     // Get data
-    LaunchedEffect(key1 = logId) {
+    composableScope.launch {
         logDetailsViewModel.getLogData(logId!!)
-        Log.d(TAG, "Launching the effect with logId: $logId")
+        //logDetailsViewModel.getCollaborators()
+        Log.d(TAG, "Doing this launch now")
     }
 
     BaseScreen(navController, hasBackButton, pageTitle) {
         DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
-        LogButtons(navController, pageTitle, movies, logDetailsViewModel, logViewModel)
+        LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel)
         Spacer(modifier = Modifier.height(20.dp))
         LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
     }
@@ -184,8 +194,11 @@ fun LogButtons(
     navController: NavHostController,
     logName: String,
     movies: List<MovieData>,
+    isOwner: Boolean,
+    collaborators: List<UserData>,
     logDetailsViewModel: LogDetailsViewModel,
-    logViewModel: LogViewModel
+    logViewModel: LogViewModel,
+    friendsViewModel: FriendsViewModel
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
@@ -201,25 +214,37 @@ fun LogButtons(
 
         Row(modifier = Modifier.weight(1F)) {
             // Collaborators Icon
-            Column(modifier = Modifier
-                .weight(1F)
-                /*.width(60.dp)*/
-                .fillMaxHeight()
-                .padding(end = 10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.user_add),
-                    contentDescription = "Add Icon",
+            if (isOwner) {
+                Column(
                     modifier = Modifier
-                        .size(35.dp)
-                        .testTag("ADD_ICON")
-                        .clickable(onClick = {
-                            sheetContent = { CollaboratorsSheetContent(logName) }
-                            isSheetOpen = true
-                        })
-                )
+                        .weight(1F)
+                        /*.width(60.dp)*/
+                        .fillMaxHeight()
+                        .padding(end = 10.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.user_add),
+                        contentDescription = "Add Icon",
+                        modifier = Modifier
+                            .size(35.dp)
+                            .testTag("ADD_ICON")
+                            .clickable(onClick = {
+                                sheetContent = {
+                                    CollaboratorsSheetContent(
+                                        logName,
+                                        collaborators,
+                                        isSheetOpen,
+                                        onDismiss = { isSheetOpen = false },
+                                        logDetailsViewModel,
+                                        friendsViewModel
+                                    )
+                                }
+                                isSheetOpen = true
+                            })
+                    )
+                }
             }
 
             // Edit Log Icon
@@ -266,7 +291,11 @@ fun LogButtons(
                         .size(35.dp)
                         .fillMaxHeight()
                         .testTag("SHUFFLE_ICON")
-                        .clickable(onClick = { })
+                        .clickable{
+                            logDetailsViewModel.shuffleMovies()
+                            logViewModel.loadLogs()
+                            logViewModel.resetMovie()
+                        }
                 )
             }
 
@@ -471,7 +500,15 @@ fun MovieEntry(navController: NavHostController, movie: MovieData) {
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun CollaboratorsSheetContent(logName: String) {
+fun CollaboratorsSheetContent(
+    logName: String,
+    collaborators: List<UserData>,
+    isSheetOpen: Boolean,
+    onDismiss: () -> Unit,
+    logDetailsViewModel: LogDetailsViewModel,
+    friendsViewModel: FriendsViewModel
+) {
+    Log.d(TAG, "Collaborators at top function: $collaborators")
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -485,37 +522,65 @@ fun CollaboratorsSheetContent(logName: String) {
         )
     }
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(40.dp))
 
-    Spacer(modifier = Modifier.height(20.dp))
+    val userList = friendsViewModel.friendsData.collectAsState()
+
+    // All of the collaborators
+    val collaboratorsList = remember { mutableStateListOf<String?>().apply {
+        addAll(collaborators.map {it.userId })
+    }}
+
+    val existingUserIds = collaborators.map { it.userId }.toSet()
+
+    val addCollabs = collaboratorsList.filterNotNull().filter { userId ->
+        userId !in existingUserIds
+    }
+
+    val removeCollabs = collaborators.filter {
+        it.userId !in collaboratorsList.filterNotNull().toSet()
+    }.map {
+        it.userId ?: ""
+    }
+
+    Log.d(TAG, "Collabs to add: $addCollabs")
+    Log.d(TAG, "Collabs to remove: $removeCollabs")
+
+    val sortedUserList = userList.value.sortedByDescending { user ->
+        collaboratorsList.contains(user.userId.toString())
+    }
 
     // Collaborators Heading
     Row(modifier = Modifier.padding(start = 14.dp)) {
-        androidx.compose.material3.Text(
+        Text(
             "Collaborators",
             style = MaterialTheme.typography.headlineMedium
         )
     }
 
-    Spacer(modifier = Modifier.height(15.dp))
+    // Collaborators Heading
+    if (collaboratorsList.isEmpty()) {
+        Spacer(modifier = Modifier.height(75.dp))
+    } else {
+        Spacer(modifier = Modifier.height(15.dp))
+        // Current collaborators sections
+        LazyRow(modifier = Modifier.padding(start = 24.dp)) {
+            items(collaboratorsList.size) { index ->
+                val userId = collaboratorsList[index]
+                Log.d(TAG, "Current userId of collab: $userId")
+                val friend = userList.value.find { it.userId == userId }
 
-    val userList = listOf(
-        "Nick Abegg",
-        "Josh Altmeyer",
-        "Christian Totaro",
-        "Jake Buhite"
-    )
-
-    LazyRow(modifier = Modifier.padding(start = 24.dp)) {
-        items(userList) { index ->
-            Column() {
-                Image(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(60.dp),
-                    colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
-                )
+                Column() {
+                    Image(
+                        painter = painterResource(
+                            id = getAvatarResourceId(
+                                friend?.avatarPreset ?: 1
+                            ).second
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp),
+                    )
+                }
             }
         }
     }
@@ -524,7 +589,7 @@ fun CollaboratorsSheetContent(logName: String) {
 
     // Add Collaborators Heading
     Row(modifier = Modifier.padding(start = 14.dp)) {
-        androidx.compose.material3.Text(
+        Text(
             "Add Collaborators",
             style = MaterialTheme.typography.headlineMedium
         )
@@ -532,13 +597,19 @@ fun CollaboratorsSheetContent(logName: String) {
 
     Spacer(modifier = Modifier.height(15.dp))
 
-/*    Box(modifier = Modifier) {
+    // Add collaborators section
+    Box(modifier = Modifier.height(200.dp)) {
         LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-            items(userList) { displayName ->
-                NewLogCollaborator(displayName)
+            items(sortedUserList.size) { index ->
+                val friend = sortedUserList[index]
+                if (collaboratorsList.contains(friend.userId)) {
+                    NewLogCollaborator(friend, collaboratorsList, true)
+                } else {
+                    NewLogCollaborator(friend, collaboratorsList, false)
+                }
             }
         }
-    }*/
+    }
 
     Column(modifier = Modifier
         .fillMaxWidth()
@@ -563,9 +634,10 @@ fun CollaboratorsSheetContent(logName: String) {
             // Save Button
             Button(
                 onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                    CoroutineScope(Dispatchers.Main).launch {
+                        logDetailsViewModel.updateLogCollaborators(addCollabs, removeCollabs)
+                        onDismiss()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -593,9 +665,7 @@ fun CollaboratorsSheetContent(logName: String) {
             // Cancel Button
             Button(
                 onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                    onDismiss()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -615,7 +685,7 @@ fun CollaboratorsSheetContent(logName: String) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(50.dp))
     }
 }
 
@@ -684,9 +754,7 @@ fun EditSheetContent(
             // Save Button
             Button(
                 onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                    logDetailsViewModel.updateLog()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -740,7 +808,7 @@ fun EditSheetContent(
                 ),
             ) {
                 Text(
-                    "Delete",
+                    "Delete Log",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFDC3545)

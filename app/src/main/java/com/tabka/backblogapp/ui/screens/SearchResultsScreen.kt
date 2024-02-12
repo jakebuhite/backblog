@@ -263,6 +263,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                                 val log = allLogs!![checkedItem]
 
                                 logViewModel.addMovieToLog(log.logId, movie.id.toString())
+                                logViewModel.loadLogs()
                                 /*Log.d(TAG, allLogs)*/
                             }
                         },
