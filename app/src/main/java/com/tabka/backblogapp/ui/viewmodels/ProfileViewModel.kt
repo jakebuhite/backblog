@@ -18,22 +18,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ProfileViewModel : ViewModel() {
+open class ProfileViewModel : ViewModel() {
     private val tag = "ProfileViewModel"
     private val auth = Firebase.auth
 
     // User Info
     private val userRepository = UserRepository()
-    val userData: MutableLiveData<UserData> = MutableLiveData()
+    open val userData: MutableLiveData<UserData> = MutableLiveData()
 
     // Log Info
     private val logRepository = LogRepository()
-    val publicLogData: MutableLiveData<List<LogData>> = MutableLiveData()
+    open val publicLogData: MutableLiveData<List<LogData>> = MutableLiveData()
 
     // Friend Info
     private val friendRepository = FriendRepository()
     private val _friendsData = MutableStateFlow<List<UserData>>(emptyList())
-    val friendsData = _friendsData.asStateFlow()
+    open val friendsData = _friendsData.asStateFlow()
 
     private fun updateUserData(user: UserData) {
         userData.value = user
@@ -47,7 +47,7 @@ class ProfileViewModel : ViewModel() {
         _friendsData.value = newFriends
     }
 
-    suspend fun getUserData(friendId: String) {
+    open suspend fun getUserData(friendId: String) {
         viewModelScope.launch {
             try {
                 val user = auth.currentUser?.uid
@@ -66,7 +66,7 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    suspend fun getPublicLogs(friendId: String) {
+    open suspend fun getPublicLogs(friendId: String) {
         viewModelScope.launch {
             try {
                 val user = auth.currentUser?.uid
@@ -87,7 +87,7 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    suspend fun getFriends(friendId: String) {
+    open suspend fun getFriends(friendId: String) {
         viewModelScope.launch {
             try {
                 val user = auth.currentUser?.uid

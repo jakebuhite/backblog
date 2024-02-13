@@ -288,8 +288,9 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             collaborators.forEach { collaborator ->
                 // Remove collaborator from the updatedCollaborators object
                 updates["order.${collaborator}"] = FieldValue.delete()
-                updates["collaborators"] = FieldValue.arrayRemove(collaborator)
             }
+
+            updates["collaborators"] = FieldValue.arrayRemove(*collaborators.toTypedArray())
 
             // Remove collaborators from the log
             logRef.update(updates).await()

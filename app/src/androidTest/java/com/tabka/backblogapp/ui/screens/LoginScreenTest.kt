@@ -134,10 +134,10 @@ class LoginScreenTest {
 
         composeTestRule.onNodeWithTag("STATUS_MESSAGE").assertTextEquals("Login successful. Redirecting...")
 
-        /*composeTestRule.waitUntil(3000) {
-            //mockNavController.currentDestination?.route == "friends"
+        composeTestRule.waitUntil(3000) {
+            mockNavController.currentDestination?.route == "friends"
             //assertThat(mockNavController.currentBackStackEntry?.destination?.route).isEqualTo(BottomNavigationBar.Friends.route)
-        }*/
+        }
 
         // Assert user is logged in
         assert(Firebase.auth.currentUser != null)
