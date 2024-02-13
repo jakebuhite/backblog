@@ -3,6 +3,7 @@ package com.tabka.backblogapp.ui.screens
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,12 +25,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Delete
@@ -56,14 +61,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -71,9 +79,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.Accept
+import com.tabka.backblogapp.network.models.AlertDialog
+import com.tabka.backblogapp.network.models.Dismiss
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.shared.RequestHeader
+import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
@@ -81,6 +93,10 @@ import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
 
 private val TAG = "LogDetailsScreen"
 
@@ -123,6 +139,12 @@ fun LogDetailsScreen(
     val log = logState.value
     val pageTitle = log?.name ?: ""
 
+    // Alert Dialog
+    var alertDialogState by remember { mutableStateOf(AlertDialog()) }
+    val setAlertDialogState = { dialog: AlertDialog ->
+        alertDialogState = dialog
+    }
+
     // Get data
     composableScope.launch {
         logDetailsViewModel.getLogData(logId!!)
@@ -133,10 +155,13 @@ fun LogDetailsScreen(
     BaseScreen(navController, hasBackButton, pageTitle) {
         DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
-        LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel)
+        LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
         Spacer(modifier = Modifier.height(20.dp))
         LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
     }
+
+    Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")
+    ShowAlertDialog(alertDialogState, setAlertDialogState)
 }
 
 @Composable
@@ -199,7 +224,9 @@ fun LogButtons(
     collaborators: List<UserData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel,
-    friendsViewModel: FriendsViewModel
+    friendsViewModel: FriendsViewModel,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
@@ -236,7 +263,6 @@ fun LogButtons(
                                     CollaboratorsSheetContent(
                                         logName,
                                         collaborators,
-                                        isSheetOpen,
                                         onDismiss = { isSheetOpen = false },
                                         logDetailsViewModel,
                                         friendsViewModel
@@ -266,6 +292,9 @@ fun LogButtons(
                                     navController,
                                     isSheetOpen,
                                     onDismiss = { isSheetOpen = false },
+                                    alertDialogState,
+                                    setAlertDialogState,
+                                    isOwner,
                                     logName,
                                     movies,
                                     logDetailsViewModel,
@@ -292,10 +321,26 @@ fun LogButtons(
                         .size(35.dp)
                         .fillMaxHeight()
                         .testTag("SHUFFLE_ICON")
-                        .clickable{
-                            logDetailsViewModel.shuffleMovies()
-                            logViewModel.loadLogs()
-                            logViewModel.resetMovie()
+                        .clickable {
+                            setAlertDialogState(
+                                AlertDialog(
+                                    isVisible = true,
+                                    header = "Shuffle",
+                                    message = "Are you sure you want to shuffle the movies?",
+                                    dismiss = Dismiss(text = "Cancel"),
+                                    accept = Accept(
+                                        text = "Shuffle",
+                                        action = {
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                logDetailsViewModel.shuffleMovies()
+                                                logViewModel.loadLogs()
+                                                logViewModel.resetMovie()
+                                            }
+                                        }
+                                    )
+                                )
+                            )
+                            Log.d(TAG, "Is Visible? ${alertDialogState.isVisible}")
                         }
                 )
             }
@@ -504,7 +549,6 @@ fun MovieEntry(navController: NavHostController, movie: MovieData) {
 fun CollaboratorsSheetContent(
     logName: String,
     collaborators: List<UserData>,
-    isSheetOpen: Boolean,
     onDismiss: () -> Unit,
     logDetailsViewModel: LogDetailsViewModel,
     friendsViewModel: FriendsViewModel
@@ -695,40 +739,84 @@ fun EditSheetContent(
     navController: NavHostController,
     isSheetOpen: Boolean,
     onDismiss: () -> Unit,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit,
+    isOwner: Boolean,
     logName: String,
     movies: List<MovieData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel
 ) {
+
+    var editedLogName by remember { mutableStateOf(logName) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            // Log Name
-            logName,
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+        val focusManager = LocalFocusManager.current
+
+        TextField(
+            value = editedLogName,
+            onValueChange = { editedLogName = it },
+            singleLine = true,
+            modifier = Modifier.testTag("LOG_NAME_INPUT"),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    focusManager.clearFocus()
+                }
+            ),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color(0xFF373737),
+                focusedLabelColor = Color(0xFF979C9E),
+                unfocusedLabelColor = Color(0xFF979C9E),
+                unfocusedBorderColor = Color(0xFF373737),
+                backgroundColor = Color(0xFF373737)
+            ),
         )
     }
 
     Spacer(modifier = Modifier.height(20.dp))
 
-/*    Row(
-        modifier = Modifier.padding(horizontal = 50.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-    }*/
-
     Spacer(modifier = Modifier.height(40.dp))
 
-    Box(modifier = Modifier.height(450.dp)) {
+/*    Box(modifier = Modifier.height(450.dp)) {
         LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
             items(movies) { movie ->
                 EditLogEntry(movie)
+            }
+        }
+    }*/
+    val editedMovies = remember { mutableStateOf(movies) }
+
+    Box(modifier = Modifier.height(450.dp)) {
+        val state = rememberReorderableLazyListState(onMove = { from, to ->
+            Log.d(TAG, "Gotta move!")
+            editedMovies.value = editedMovies.value.toMutableList().apply {
+                add(to.index, removeAt(from.index))
+            }
+        })
+        LazyColumn(
+            state = state.listState,
+            modifier = Modifier
+                .reorderable(state)
+                .detectReorderAfterLongPress(state)
+        ) {
+            items(editedMovies.value, { it.id ?: 0 }) { movie ->
+                ReorderableItem(state, key = movie.id) { isDragging ->
+                    val elevation = animateDpAsState(if (isDragging) 16.dp else 0.dp)
+                    Column(
+                        modifier = Modifier
+                            .shadow(elevation.value)
+
+                            //.background(MaterialTheme.colors.surface).
+                    ) {
+                        EditLogEntry(movie) // Your custom item UI
+                    }
+                }
             }
         }
     }
@@ -755,7 +843,25 @@ fun EditSheetContent(
             // Save Button
             Button(
                 onClick = {
-                    logDetailsViewModel.updateLog()
+                    setAlertDialogState(
+                        AlertDialog(
+                            isVisible = true,
+                            header = "Save Changes to Log",
+                            message = "Are you sure you want to save changes to this log?",
+                            dismiss = Dismiss(text = "Cancel"),
+                            accept = Accept(
+                                text = "Save",
+                                action = {
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        logDetailsViewModel.updateLog(editedLogName, editedMovies.value)
+                                        logViewModel.loadLogs()
+                                        logViewModel.resetMovie()
+                                        onDismiss()
+                                    }
+                                }
+                            )
+                        )
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -763,10 +869,10 @@ fun EditSheetContent(
                     .padding(horizontal = 24.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.sky_blue),
-                    disabledContainerColor = colorResource(id = R.color.sky_blue)
+                    disabledContainerColor = Color.Gray
                 ),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     "Save",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
@@ -781,39 +887,55 @@ fun EditSheetContent(
             horizontalArrangement = Arrangement.Center
         ) {
             val context = LocalContext.current
-            // Delete Button
-            Button(
-                onClick = {
-                    CoroutineScope(Dispatchers.Main).launch {
-                        val asyncJob = logDetailsViewModel.deleteLog()
-                        asyncJob?.join()
 
-                        logViewModel.loadLogs()
-                        navController.navigate("home")
-                        Toast.makeText(
-                            context, "Successfully deleted $logName!",
-                            Toast.LENGTH_SHORT
+            if (isOwner) {
+                // Delete Button
+                Button(
+                    onClick = {
+                        setAlertDialogState(
+                            AlertDialog(
+                                isVisible = true,
+                                header = "Delete log",
+                                message = "Are you sure you want to permanently delete this log?",
+                                dismiss = Dismiss(text = "Cancel"),
+                                accept = Accept(
+                                    text = "Delete",
+                                    textColor = Color.Red,
+                                    action = {
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            val asyncJob = logDetailsViewModel.deleteLog()
+                                            asyncJob?.join()
+
+                                            logViewModel.loadLogs()
+                                            navController.navigate("home")
+                                            Toast.makeText(
+                                                context, "Successfully deleted $logName!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                )
+                            )
                         )
-                            .show()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp)
-                    .padding(horizontal = 24.dp)
-                    .background(color = Color.Transparent)
-                    .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ),
-            ) {
-                Text(
-                    "Delete Log",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFDC3545)
-                )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp)
+                        .padding(horizontal = 24.dp)
+                        .background(color = Color.Transparent)
+                        .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    ),
+                ) {
+                    Text(
+                        "Delete Log",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFDC3545)
+                    )
+                }
             }
         }
 
@@ -852,7 +974,8 @@ fun EditSheetContent(
 @Composable
 fun EditLogEntry(movie: MovieData) {
     Row(
-        modifier = Modifier.padding(bottom = 10.dp),
+        modifier = Modifier
+            .padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -897,6 +1020,7 @@ fun EditLogEntry(movie: MovieData) {
         }
     }
 }
+
 
 @Composable
 fun AddMovieMenu() {
