@@ -198,8 +198,31 @@ class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    fun updateLog() {
-        Log.d(tag, "Update log!")
+    fun updateLog(newLogName: String, editedMovies: List<MovieData>) {
+        Log.d(tag, "Update log! ${editedMovies.map { it.id }}")
+        val logId = logData.value?.logId!!
+
+
+        val newLogData = mapOf(
+            "name" to newLogName,
+            "movie_ids" to editedMovies.map { it.id.toString() },
+        )
+
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                val result = logRepository.updateLog(logId, newLogData)
+                when (result) {
+                    is DataResult.Success -> getLogData(logId)
+                    is DataResult.Failure -> result.throwable
+                }
+            }
+        } else {
+            localRepository.updateLog(logId, newLogData)
+            viewModelScope.launch {
+                getLogData(logId)
+            }
+        }
     }
 
     fun shuffleMovies() {
