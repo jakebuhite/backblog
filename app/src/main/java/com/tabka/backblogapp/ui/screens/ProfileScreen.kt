@@ -127,7 +127,7 @@ fun FriendsPageHeader(navController: NavController) {
             .height(35.dp)
             .width(35.dp)
             .clickable { navController.navigate("settings") } // TODO: Change this to add friend sheet
-            .testTag("USER_SETTINGS_ICON")
+            .testTag("USER_FRIEND_ICON")
     )
 }
 

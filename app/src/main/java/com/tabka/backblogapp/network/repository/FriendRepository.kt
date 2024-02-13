@@ -2,6 +2,7 @@ package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.FriendRequestData
@@ -21,6 +22,7 @@ import kotlinx.serialization.json.Json
 
 class FriendRepository {
     private val db = Firebase.firestore
+    private val auth = Firebase.auth
     private val tag = "FriendsRepo"
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
@@ -136,6 +138,7 @@ class FriendRepository {
             updates["is_complete"] = true
             reqRef.update(updates).await()
 
+            Log.d(tag, "isAccepted: $isAccepted")
             if (isAccepted) {
                 // Perform operations sequentially without async
                 val reqData = reqRef.get().await()
@@ -143,12 +146,29 @@ class FriendRepository {
                     return DataResult.Failure(FirebaseError(FirebaseExceptionType.DOES_NOT_EXIST))
                 }
 
-                when (addFriendToUser(reqData["sender_id"].toString(), reqData["target_id"].toString())) {
-                    is DataResult.Success -> {
-                        DataResult.Success(true)
+                if (reqData["sender_id"].toString() == auth.currentUser?.uid) {
+                    when (addFriendToUser(reqData["sender_id"].toString(), reqData["target_id"].toString())) {
+                        is DataResult.Success -> {
+                            when (addFriendToUser(reqData["target_id"].toString(), reqData["sender_id"].toString())) {
+                                is DataResult.Failure -> DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+                                is DataResult.Success -> DataResult.Success(true)
+                            }
+                        }
+                        is DataResult.Failure -> {
+                            DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+                        }
                     }
-                    is DataResult.Failure -> {
-                        DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+                } else {
+                    when (addFriendToUser(reqData["target_id"].toString(), reqData["sender_id"].toString())) {
+                        is DataResult.Success -> {
+                            when (addFriendToUser(reqData["sender_id"].toString(), reqData["target_id"].toString())) {
+                                is DataResult.Failure -> DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+                                is DataResult.Success -> DataResult.Success(true)
+                            }
+                        }
+                        is DataResult.Failure -> {
+                            DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+                        }
                     }
                 }
             }
