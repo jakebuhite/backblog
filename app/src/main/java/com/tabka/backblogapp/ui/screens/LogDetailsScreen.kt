@@ -139,6 +139,7 @@ fun LogDetailsScreen(
     val logState = logDetailsViewModel.logData.observeAsState()
     val log = logState.value
     val pageTitle = log?.name ?: ""
+    val isMovieDetails = false
 
     // Alert Dialog
     var alertDialogState by remember { mutableStateOf(AlertDialog()) }
@@ -153,7 +154,7 @@ fun LogDetailsScreen(
         Log.d(TAG, "Doing this launch now")
     }
 
-    BaseScreen(navController, hasBackButton, pageTitle) {
+    BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)

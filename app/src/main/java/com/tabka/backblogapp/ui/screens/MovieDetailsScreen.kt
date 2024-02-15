@@ -316,7 +316,8 @@ fun MovieInfo(movie: MovieData?) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text("Stars", style = MaterialTheme.typography.bodyMedium)
            /* Text()*/
-            /*Text(movie?.overview!!, style = MaterialTheme.typography.bodyMedium)*/
+            /*Text(, style = MaterialTheme.typography.bodyMedium)
+            movie?.credits?.cast!!*/
         }
     }
 }

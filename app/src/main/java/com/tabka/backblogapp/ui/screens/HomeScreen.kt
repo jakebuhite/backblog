@@ -5,9 +5,11 @@ import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -116,8 +118,10 @@ fun HomeScreen(
     Log.d(TAG, "Here are the logs: $allLogs")
 
     val hasBackButton = false
+    val isMovieDetails = false
     val pageTitle = "What's Next?"
-    BaseScreen(navController, hasBackButton, pageTitle) { scrollState ->
+
+    BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) { scrollState ->
 
         // If logs exist
         if (!allLogs.isNullOrEmpty()) {
@@ -253,6 +257,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?) {
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NextMovieInfo(
     movieId: Int?,
@@ -268,14 +273,19 @@ fun NextMovieInfo(
     ){
         // Movie information
         Column(modifier = Modifier
-            .weight(1f)
+            .weight(4f)
             .fillMaxHeight()
         )
         {
             // Title
             Row() {
                 Text(text = title ?: "", style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.testTag("MOVIE_TITLE"))
+                    maxLines = 1,
+                    modifier = Modifier
+                        .basicMarquee(
+                            iterations = Int.MAX_VALUE
+                        )
+                        .testTag("MOVIE_TITLE"))
             }
 
             Row() {
