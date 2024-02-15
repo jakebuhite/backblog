@@ -68,6 +68,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter.Companion.tint
@@ -100,6 +101,7 @@ import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -193,9 +195,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?) {
         painterResource(id = R.drawable.icon_empty_log) // Placeholder image
     }
 
-    var cardModifier = Modifier
-        .fillMaxWidth()
-/*        .height(200.dp)*/
+    var cardModifier = Modifier.fillMaxWidth()
     movieId?.let {
         cardModifier = cardModifier.clickable { navController.navigate("home_movie_details_$it") }
     }
@@ -313,11 +313,16 @@ fun NextMovieInfo(
             horizontalAlignment = Alignment.End
         ) {
             val context = LocalContext.current
+
+            var isClicked by remember { mutableStateOf(false) }
+            val scaleFactor = if (isClicked) 1.1f else 1f
+
             Image(
                 painter = painterResource(id = R.drawable.checkbutton2),
                 contentDescription = "Check icon",
                 modifier = Modifier
                     .size(40.dp)
+                    .scale(scaleFactor)
                     .testTag("CHECK_ICON")
                     .clickable {
                         Toast
@@ -371,13 +376,23 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                 .fillMaxHeight(),
             horizontalAlignment = Alignment.End
         ) {
+            var isClicked by remember { mutableStateOf(false) }
+            val scaleFactor = if (isClicked) 1.1f else 1f
             Image(
                 imageVector = Icons.Default.AddToPhotos,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
-                    .clickable { isSheetOpen = true }
+                    .scale(scaleFactor)
+                    .clickable {
+                        isClicked = true
+                        isSheetOpen = true
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(100) // Delay in milliseconds to simulate the click effect
+                            isClicked = false
+                        }
+                    }
                     .testTag("ADD_LOG_BUTTON"),
                 colorFilter = tint(color = colorResource(id = R.color.sky_blue))
             )
@@ -537,7 +552,6 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                     isSheetOpen = false
                     logName = ""
                     logViewModel.loadLogs()
-                    //logViewModel.resetMovie()
                 }
             }, onCloseClick = {
                 isSheetOpen = false
