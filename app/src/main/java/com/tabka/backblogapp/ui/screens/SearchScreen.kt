@@ -48,9 +48,10 @@ private val TAG = "SearchScreen"
 @Composable
 fun SearchScreen(navController: NavController) {
     val hasBackButton = false
+    val isMovieDetails = false
     val pageTitle = "Search"
 
-    BaseScreen(navController, hasBackButton, pageTitle) {
+    BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBarPlaceholder(navController)
         Spacer(modifier = Modifier.height(30.dp))
         /*Text("Click here to go to results page",

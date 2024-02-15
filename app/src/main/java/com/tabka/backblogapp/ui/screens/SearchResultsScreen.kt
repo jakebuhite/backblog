@@ -5,11 +5,13 @@ import com.tabka.backblogapp.ui.viewmodels.LogViewModel*/
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,7 +32,9 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -72,9 +76,10 @@ val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
 @Composable
 fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewModel) {
     val hasBackButton = true
+    val isMovieDetails = false
     val pageTitle = "Results"
 
-    BaseScreen(navController, hasBackButton, pageTitle) {
+    BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBar(navController, logViewModel)
         //DisplayMovieResults
     }
@@ -199,7 +204,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
             Text("${movie.originalTitle}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
         var isSheetOpen by rememberSaveable {
             mutableStateOf(false)
         }
@@ -232,29 +237,31 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                 if (allLogs != null) {
                     val checkedStates = remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
 
-                    LazyColumn(
-                        modifier = Modifier.padding(start = 20.dp)
-                    ) {
-                        items(allLogs!!.size) { index ->
-                            val log = allLogs!![index]
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    log.name!!,
-                                    color = Color.White
-                                )
-                                Checkbox(
-                                    checked = checkedStates[index],
-                                    onCheckedChange = { isChecked ->
-                                        checkedStates[index] = isChecked
-                                    },
-                                    modifier = Modifier.testTag("LOG_CHECKBOX")
-                                )
+                    Box(modifier = Modifier.height(150.dp)) {
+                        LazyColumn(
+                            modifier = Modifier.padding(start = 20.dp)
+                        ) {
+                            items(allLogs!!.size) { index ->
+                                val log = allLogs!![index]
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        log.name!!,
+                                        color = Color.White
+                                    )
+                                    Checkbox(
+                                        checked = checkedStates[index],
+                                        onCheckedChange = { isChecked ->
+                                            checkedStates[index] = isChecked
+                                        },
+                                        modifier = Modifier.testTag("LOG_CHECKBOX")
+                                    )
+                                }
                             }
                         }
                     }
-                    Button(
+                    /*Button(
                         onClick = {
                             // Use the checkedStates list to find out which checkboxes are checked
                             val checkedItems = allLogs!!.indices.filter { checkedStates[it] }
@@ -273,7 +280,87 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                             "Add to Log",
                             color = Color.White
                         )
+                    }*/
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Divider(thickness = 1.dp, color = Color(0xFF303437))
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        // Add Button
+                        androidx.compose.material3.Button(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .padding(horizontal = 24.dp)
+                                .testTag("ADD_TO_LOG_BUTTON"),
+                            onClick = {
+                                // Use the checkedStates list to find out which checkboxes are checked
+                                val checkedItems = allLogs!!.indices.filter { checkedStates[it] }
+                                Log.d(TAG, "Checked Items: $checkedItems")
+                                for (checkedItem in checkedItems) {
+                                    val log = allLogs!![checkedItem]
+
+                                    logViewModel.addMovieToLog(log.logId, movie.id.toString())
+                                    /*Log.d(TAG, allLogs)*/
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.sky_blue),
+                                disabledContainerColor = Color.LightGray
+                            )
+                        ) {
+                            Text(
+                                "Add",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        // Cancel Button
+                        androidx.compose.material3.Button(
+                            onClick = {
+                                //onCloseClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .padding(horizontal = 24.dp)
+                                .background(color = Color.Transparent)
+                                .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent
+                            ),
+                        ) {
+                            androidx.compose.material3.Text(
+                                "Cancel",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                 }
             }
         }
