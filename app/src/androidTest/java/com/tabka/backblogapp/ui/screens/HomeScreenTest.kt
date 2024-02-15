@@ -19,6 +19,7 @@ import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.Owner
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.screens.models.createFakeMovieData
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +81,7 @@ class HomeScreenTest {
 
         // Launch compose
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("PRIORITY_LOG_TITLE").assertDoesNotExist()
@@ -101,15 +102,16 @@ class HomeScreenTest {
             lastModifiedDate = "2024-02-01",
             isVisible = true,
             owner = Owner(userId = "user001", priority = 1),
-            collaborators = emptyMap(),
-            movieIds = mutableMapOf("531330" to true),
-            watchedIds = emptyMap()
+            collaborators = mutableListOf(),
+            order = emptyMap(),
+            movieIds = mutableListOf("531330"),
+            watchedIds = mutableListOf()
         ))
 
         // Launch compose
         composeTestRule.setContent {
             fakeLogViewModel.addLogs(initialLogs)
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("PRIORITY_LOG_TITLE").assertExists()
@@ -130,15 +132,16 @@ class HomeScreenTest {
                 lastModifiedDate = "2024-02-01",
                 isVisible = true,
                 owner = Owner(userId = "user001", priority = 1),
-                collaborators = emptyMap(),
-                movieIds = mutableMapOf(),
-                watchedIds = emptyMap()
+                collaborators = mutableListOf(),
+                order = emptyMap(),
+                movieIds = mutableListOf(),
+                watchedIds = mutableListOf()
             )
         )
 
         composeTestRule.setContent {
             fakeLogViewModel.addLogs(initialLogs)
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("MOVIE_IMAGE", useUnmergedTree = true).assertIsDisplayed()
@@ -147,7 +150,7 @@ class HomeScreenTest {
     @Test
     fun testAddLogPopupExists() {
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         // Verify My Logs Header
@@ -179,7 +182,7 @@ class HomeScreenTest {
     @Test
     fun testAddLogWithName() {
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
 
         composeTestRule.onNodeWithTag("ADD_LOG_BUTTON").performClick()
@@ -203,7 +206,7 @@ class HomeScreenTest {
     @Test
     fun testAddLogWithNoName() {
         composeTestRule.setContent {
-            HomeScreen(mockNavController, fakeLogViewModel)
+            HomeScreen(mockNavController, fakeLogViewModel, FriendsViewModel())
         }
         composeTestRule.onNodeWithTag("ADD_LOG_BUTTON").performClick()
         val inputText = ""

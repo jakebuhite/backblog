@@ -5,7 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.tmdb.MovieData
-import com.tabka.backblogapp.network.repository.LogLocalRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +23,7 @@ class MovieDetailsViewModel(savedStateHandle: SavedStateHandle): ViewModel() {
         movieRepository.getMovieById(movieId,
             onResponse = { movie ->
                 _movie.value = movie
-                Log.d(TAG, "GOT THE MOVIE: ${movie}")
+                Log.d(TAG, "GOT THE MOVIE: $movie")
             },
             onFailure = { error ->
                 Log.d(TAG, error)

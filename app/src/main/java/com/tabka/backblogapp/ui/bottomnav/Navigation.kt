@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
@@ -29,7 +30,8 @@ import com.tabka.backblogapp.R
 fun Navigation() {
     val navController = rememberNavController()
     Scaffold(
-        modifier = Modifier.background(color = colorResource(R.color.bottomnav)),
+        modifier = Modifier.background(color = colorResource(R.color.bottomnav))
+            .testTag("NAVIGATION_COMPONENT"),
         bottomBar = { BottomBar(navController = navController) }
     ) {
         BottomNavGraph(navController = navController)

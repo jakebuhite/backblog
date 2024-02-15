@@ -1,16 +1,16 @@
 package com.tabka.backblogapp.ui.screens
 
 import android.annotation.SuppressLint
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -27,110 +27,184 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.Accept
+import com.tabka.backblogapp.network.models.AlertDialog
+import com.tabka.backblogapp.network.models.Dismiss
+import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.shared.RequestHeader
+import com.tabka.backblogapp.ui.shared.ShowAlertDialog
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.util.getAvatarResourceId
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
 
 private val TAG = "LogDetailsScreen"
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LogDetailsScreen(
     navController: NavHostController,
-    logDetailsViewModel: LogDetailsViewModel,
-    logId: String?
+    logId: String?,
+    friendsViewModel: FriendsViewModel,
+    logViewModel: LogViewModel,
+    logDetailsViewModel: LogDetailsViewModel = viewModel()
 ) {
     val hasBackButton = true
+    val composableScope = rememberCoroutineScope()
 
     // Movies
     val movieState = logDetailsViewModel.movies.observeAsState()
     val movies = movieState.value ?: emptyList()
 
-    // Logs
+    // Watched Movies
+    val watchedMovieState = logDetailsViewModel.watchedMovies.observeAsState()
+    val watchedMovies = watchedMovieState.value ?: emptyList()
+
+    // Owner
+    val ownerState = logDetailsViewModel.owner.observeAsState()
+    val owner = ownerState.value ?: UserData()
+
+    // Is Current User Owner
+    val isOwnerState = logDetailsViewModel.isOwner.observeAsState()
+    val isOwner = isOwnerState.value ?: true
+
+    // Collaborators
+    val collaboratorsState = logDetailsViewModel.collaboratorsList.observeAsState()
+    val collaborators = collaboratorsState.value ?: emptyList()
+    Log.d(TAG, "List of collaborators: $collaborators")
+
+    // Log
     val logState = logDetailsViewModel.logData.observeAsState()
     val log = logState.value
     val pageTitle = log?.name ?: ""
 
+    // Alert Dialog
+    var alertDialogState by remember { mutableStateOf(AlertDialog()) }
+    val setAlertDialogState = { dialog: AlertDialog ->
+        alertDialogState = dialog
+    }
+
     // Get data
-    LaunchedEffect(key1 = logId) {
+    composableScope.launch {
         logDetailsViewModel.getLogData(logId!!)
+        //logDetailsViewModel.getCollaborators()
+        Log.d(TAG, "Doing this launch now")
     }
 
     BaseScreen(navController, hasBackButton, pageTitle) {
-        DetailBar(movies.size)
+        DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
-        LogButtons(pageTitle)
+        LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
         Spacer(modifier = Modifier.height(20.dp))
-        LogList(navController, movies)
+        LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
     }
+
+    Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")
+    ShowAlertDialog(alertDialogState, setAlertDialogState)
 }
 
 @Composable
-fun DetailBar(movieCount: Int) {
+fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically) {
+
         // Creator Picture
         Column(modifier = Modifier.padding(end = 5.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                imageVector = Icons.Default.AccountCircle,
+                painter = painterResource(id = getAvatarResourceId(owner.avatarPreset ?: 1).second),
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
+                    //.border(BorderStroke(2.dp, Color.Yellow))
                     .testTag("CREATOR_PICTURE"),
-                colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
 
         // Collaborator Pictures
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(35.dp)
-                    .testTag("COLLABS_PICTURE"),
-                colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
-            )
+            LazyRow {
+                val itemsToShow = if (collaborators.size > 4) 4 else collaborators.size
+                items(count = itemsToShow) { index ->
+                    val collaborator = collaborators[index]
+                    Image(
+                        painter = painterResource(id = getAvatarResourceId(collaborator.avatarPreset ?: 1).second),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(35.dp)
+                            .testTag("COLLABS_PICTURE"), // Unique tag for each image
+                    )
+                }
+                if (collaborators.size > 4) {
+                    item {
+                        Button(onClick = { /* TODO: Implement your click action here */ }) {
+                            Text("+${collaborators.size - 4} more")
+                        }
+                    }
+                }
+            }
         }
 
         // Number of Movies
@@ -143,25 +217,23 @@ fun DetailBar(movieCount: Int) {
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun LogButtons(logName: String) {
+fun LogButtons(
+    navController: NavHostController,
+    logName: String,
+    movies: List<MovieData>,
+    isOwner: Boolean,
+    collaborators: List<UserData>,
+    logDetailsViewModel: LogDetailsViewModel,
+    logViewModel: LogViewModel,
+    friendsViewModel: FriendsViewModel,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit
+) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
     }
-
-    var logs by remember { mutableStateOf(
-        listOf(
-            "Aquaman and the Lost Kingdom",
-            "NOPE",
-            "The Batman",
-            "Get Out",
-            "Interstellar",
-            "Joker",
-            "The Creator",
-            "Spider-Man"
-        )
-    )}
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -171,25 +243,36 @@ fun LogButtons(logName: String) {
 
         Row(modifier = Modifier.weight(1F)) {
             // Collaborators Icon
-            Column(modifier = Modifier
-                .weight(1F)
-                /*.width(60.dp)*/
-                .fillMaxHeight()
-                .padding(end = 10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.user_add),
-                    contentDescription = "Add Icon",
+            if (isOwner) {
+                Column(
                     modifier = Modifier
-                        .size(35.dp)
-                        .testTag("ADD_ICON")
-                        .clickable(onClick = {
-                            sheetContent = { CollaboratorsSheetContent(logName) }
-                            isSheetOpen = true
-                        })
-                )
+                        .weight(1F)
+                        /*.width(60.dp)*/
+                        .fillMaxHeight()
+                        .padding(end = 10.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.user_add),
+                        contentDescription = "Add Icon",
+                        modifier = Modifier
+                            .size(35.dp)
+                            .testTag("ADD_ICON")
+                            .clickable(onClick = {
+                                sheetContent = {
+                                    CollaboratorsSheetContent(
+                                        logName,
+                                        collaborators,
+                                        onDismiss = { isSheetOpen = false },
+                                        logDetailsViewModel,
+                                        friendsViewModel
+                                    )
+                                }
+                                isSheetOpen = true
+                            })
+                    )
+                }
             }
 
             // Edit Log Icon
@@ -203,9 +286,22 @@ fun LogButtons(logName: String) {
                     contentDescription = "Edit",
                     modifier = Modifier
                         .size(35.dp)
-                         .testTag("EDIT_ICON")
+                        .testTag("EDIT_ICON")
                         .clickable(onClick = {
-                            sheetContent = { EditSheetContent(logName) }
+                            sheetContent = {
+                                EditSheetContent(
+                                    navController,
+                                    isSheetOpen,
+                                    onDismiss = { isSheetOpen = false },
+                                    alertDialogState,
+                                    setAlertDialogState,
+                                    isOwner,
+                                    logName,
+                                    movies,
+                                    logDetailsViewModel,
+                                    logViewModel
+                                )
+                            }
                             isSheetOpen = true
                         })
                 )
@@ -226,7 +322,27 @@ fun LogButtons(logName: String) {
                         .size(35.dp)
                         .fillMaxHeight()
                         .testTag("SHUFFLE_ICON")
-                        .clickable(onClick = {  })
+                        .clickable {
+                            setAlertDialogState(
+                                AlertDialog(
+                                    isVisible = true,
+                                    header = "Shuffle",
+                                    message = "Are you sure you want to shuffle the movies?",
+                                    dismiss = Dismiss(text = "Cancel"),
+                                    accept = Accept(
+                                        text = "Shuffle",
+                                        action = {
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                logDetailsViewModel.shuffleMovies()
+                                                logViewModel.loadLogs()
+                                                logViewModel.resetMovie()
+                                            }
+                                        }
+                                    )
+                                )
+                            )
+                            Log.d(TAG, "Is Visible? ${alertDialogState.isVisible}")
+                        }
                 )
             }
 
@@ -263,34 +379,124 @@ fun LogButtons(logName: String) {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun LogList(navController: NavHostController, movies: List<MovieData>) {
+fun LogList(navController: NavHostController, logId: String, movies: List<MovieData>, watchedMovies: List<MovieData>,
+            logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
     Log.d(TAG, "Movies: $movies")
 
     if (movies.isNotEmpty()) {
         // Height of image and padding times number of movies
-        val height: Dp = (80 * movies.size).dp
+        val moviesHeight: Dp = (80 * movies.size).dp
 
-        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(height)) {
+        LazyColumn(userScrollEnabled = false,
+            modifier = Modifier
+                .height(moviesHeight)
+        ) {
             items(movies.size) { index ->
                 val movie = movies[index]
-                MovieEntry(movie)
+
+                val state = rememberDismissState(
+                    confirmStateChange = {
+                        if (it == DismissValue.DismissedToStart) {
+                            Log.d(TAG, "Remove movie!")
+                            logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                        }
+                        true
+                    }
+                )
+
+                LaunchedEffect(state.currentValue) {
+                    if (state.currentValue == DismissValue.DismissedToStart) {
+                        logDetailsViewModel.getLogData(logId)
+                    }
+                }
+
+                // Add to Watched
+                SwipeToDismiss(
+                    state = state,
+                    directions = setOf(DismissDirection.EndToStart),
+                    background = {
+                      val color = when(state.dismissDirection) {
+                          DismissDirection.EndToStart -> Color.Red
+                          else -> Color.Transparent
+                      }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(top = 5.dp, bottom = 5.dp),
+                        ) {
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = null,
+                                modifier = Modifier.align(Alignment.CenterEnd))
+                        }
+                    },
+                    dismissContent =  { MovieEntry(navController, movie) }
+                )
             }
         }
     }
+
+    if (watchedMovies.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(50.dp))
+
+        // Watched Movie Section
+        val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
+
+        RequestHeader(title = "Watched Movies")
+        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(watchedMoviesHeight)) {
+            items(watchedMovies.size) { index ->
+                val movie = watchedMovies[index]
+                val state = rememberDismissState(
+                    confirmStateChange = {
+                        if (it == DismissValue.DismissedToStart) {
+                            Log.d(TAG, "Unmark Movie as watched!")
+                            logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                        }
+                        true
+                    }
+                )
+
+                LaunchedEffect(state.currentValue) {
+                    if (state.currentValue == DismissValue.DismissedToStart) {
+                        logDetailsViewModel.getLogData(logId)
+                    }
+                }
+
+                // Add to Watched
+                SwipeToDismiss(
+                    state = state,
+                    directions = setOf(DismissDirection.EndToStart),
+                    background = {
+                        val color = when(state.dismissDirection) {
+                            DismissDirection.EndToStart -> Color.Red
+                            else -> Color.Transparent
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(top = 5.dp, bottom = 5.dp),
+                        ) {
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = null,
+                                modifier = Modifier.align(Alignment.CenterEnd))
+                        }
+                    },
+                    dismissContent =  { MovieEntry(navController, movie) }
+                )
+            }
+        }
+    }
+    Log.d(TAG, "Watched List: $watchedMovies")
 }
 
 @Composable
-fun MovieEntry(movie: MovieData) {
-    /*Row(modifier = swipeableModifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
+fun MovieEntry(navController: NavHostController, movie: MovieData) {
 
-    }*/
     Row(modifier = Modifier
         .fillMaxWidth()
-        .padding(bottom = 10.dp),
+        .padding(top = 5.dp, bottom = 5.dp)
+        .clickable { navController.navigate("home_movie_details_${movie.id}") },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
 
@@ -327,7 +533,8 @@ fun MovieEntry(movie: MovieData) {
         // Add Button
         Column(modifier = Modifier
             .weight(1F)
-            .height(70.dp),
+            .height(70.dp)
+            .width(48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
             Image(
@@ -343,7 +550,14 @@ fun MovieEntry(movie: MovieData) {
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun CollaboratorsSheetContent(logName: String) {
+fun CollaboratorsSheetContent(
+    logName: String,
+    collaborators: List<UserData>,
+    onDismiss: () -> Unit,
+    logDetailsViewModel: LogDetailsViewModel,
+    friendsViewModel: FriendsViewModel
+) {
+    Log.d(TAG, "Collaborators at top function: $collaborators")
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -357,37 +571,65 @@ fun CollaboratorsSheetContent(logName: String) {
         )
     }
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(40.dp))
 
-    Spacer(modifier = Modifier.height(20.dp))
+    val userList = friendsViewModel.friendsData.collectAsState()
+
+    // All of the collaborators
+    val collaboratorsList = remember { mutableStateListOf<String?>().apply {
+        addAll(collaborators.map {it.userId })
+    }}
+
+    val existingUserIds = collaborators.map { it.userId }.toSet()
+
+    val addCollabs = collaboratorsList.filterNotNull().filter { userId ->
+        userId !in existingUserIds
+    }
+
+    val removeCollabs = collaborators.filter {
+        it.userId !in collaboratorsList.filterNotNull().toSet()
+    }.map {
+        it.userId ?: ""
+    }
+
+    Log.d(TAG, "Collabs to add: $addCollabs")
+    Log.d(TAG, "Collabs to remove: $removeCollabs")
+
+    val sortedUserList = userList.value.sortedByDescending { user ->
+        collaboratorsList.contains(user.userId.toString())
+    }
 
     // Collaborators Heading
     Row(modifier = Modifier.padding(start = 14.dp)) {
-        androidx.compose.material3.Text(
+        Text(
             "Collaborators",
             style = MaterialTheme.typography.headlineMedium
         )
     }
 
-    Spacer(modifier = Modifier.height(15.dp))
+    // Collaborators Heading
+    if (collaboratorsList.isEmpty()) {
+        Spacer(modifier = Modifier.height(75.dp))
+    } else {
+        Spacer(modifier = Modifier.height(15.dp))
+        // Current collaborators sections
+        LazyRow(modifier = Modifier.padding(start = 24.dp)) {
+            items(collaboratorsList.size) { index ->
+                val userId = collaboratorsList[index]
+                Log.d(TAG, "Current userId of collab: $userId")
+                val friend = userList.value.find { it.userId == userId }
 
-    val userList = listOf(
-        "Nick Abegg",
-        "Josh Altmeyer",
-        "Christian Totaro",
-        "Jake Buhite"
-    )
-
-    LazyRow(modifier = Modifier.padding(start = 24.dp)) {
-        items(userList) { index ->
-            Column() {
-                Image(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(60.dp),
-                    colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
-                )
+                Column() {
+                    Image(
+                        painter = painterResource(
+                            id = getAvatarResourceId(
+                                friend?.avatarPreset ?: 1
+                            ).second
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp),
+                    )
+                }
             }
         }
     }
@@ -396,7 +638,7 @@ fun CollaboratorsSheetContent(logName: String) {
 
     // Add Collaborators Heading
     Row(modifier = Modifier.padding(start = 14.dp)) {
-        androidx.compose.material3.Text(
+        Text(
             "Add Collaborators",
             style = MaterialTheme.typography.headlineMedium
         )
@@ -404,10 +646,16 @@ fun CollaboratorsSheetContent(logName: String) {
 
     Spacer(modifier = Modifier.height(15.dp))
 
-    Box(modifier = Modifier) {
+    // Add collaborators section
+    Box(modifier = Modifier.height(200.dp)) {
         LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-            items(userList) { displayName ->
-                NewLogCollaborator(displayName)
+            items(sortedUserList.size) { index ->
+                val friend = sortedUserList[index]
+                if (collaboratorsList.contains(friend.userId)) {
+                    NewLogCollaborator(friend, collaboratorsList, true)
+                } else {
+                    NewLogCollaborator(friend, collaboratorsList, false)
+                }
             }
         }
     }
@@ -435,9 +683,10 @@ fun CollaboratorsSheetContent(logName: String) {
             // Save Button
             Button(
                 onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                    CoroutineScope(Dispatchers.Main).launch {
+                        logDetailsViewModel.updateLogCollaborators(addCollabs, removeCollabs)
+                        onDismiss()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -465,9 +714,7 @@ fun CollaboratorsSheetContent(logName: String) {
             // Cancel Button
             Button(
                 onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                    onDismiss()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -480,49 +727,52 @@ fun CollaboratorsSheetContent(logName: String) {
                     disabledContainerColor = Color.Transparent
                 ),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     "Cancel",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(50.dp))
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EditSheetContent(logName: String) {
+fun EditSheetContent(
+    navController: NavHostController,
+    isSheetOpen: Boolean,
+    onDismiss: () -> Unit,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit,
+    isOwner: Boolean,
+    logName: String,
+    movies: List<MovieData>,
+    logDetailsViewModel: LogDetailsViewModel,
+    logViewModel: LogViewModel
+) {
+
+    var editedLogName by remember { mutableStateOf(logName) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        androidx.compose.material3.Text(
-            logName,
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
-        )
-    }
+        val focusManager = LocalFocusManager.current
 
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Row(
-        modifier = Modifier.padding(horizontal = 50.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Log Name
-        /*TextField(
-            value = logName,
-            *//*onValueChange = { logName = it },*//*
-            label = { androidx.compose.material3.Text(logName) },
+        TextField(
+            value = editedLogName,
+            onValueChange = { editedLogName = it },
             singleLine = true,
-           *//* keyboardActions = KeyboardActions(
+            modifier = Modifier.testTag("LOG_NAME_INPUT"),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
                 onDone = {
                     focusManager.clearFocus()
-                }*//*
+                }
             ),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedBorderColor = Color(0xFF373737),
@@ -531,28 +781,45 @@ fun EditSheetContent(logName: String) {
                 unfocusedBorderColor = Color(0xFF373737),
                 backgroundColor = Color(0xFF373737)
             ),
-        )*/
+        )
     }
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(40.dp))
 
-    val userList = listOf(
-        "Aquaman and the Lost Kingdom",
-        "NOPE",
-        "The Batman",
-        "Get Out",
-        "Interstellar",
-        "Joker",
-        "The Creator",
-        "Spider-Man"
-    )
+/*    Box(modifier = Modifier.height(450.dp)) {
+        LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
+            items(movies) { movie ->
+                EditLogEntry(movie)
+            }
+        }
+    }*/
+    val editedMovies = remember { mutableStateOf(movies) }
 
     Box(modifier = Modifier.height(450.dp)) {
-        LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-            items(userList) { movieName ->
-                EditLogEntry(movieName)
+        val state = rememberReorderableLazyListState(onMove = { from, to ->
+            Log.d(TAG, "Gotta move!")
+            editedMovies.value = editedMovies.value.toMutableList().apply {
+                add(to.index, removeAt(from.index))
+            }
+        })
+        LazyColumn(
+            state = state.listState,
+            modifier = Modifier
+                .reorderable(state)
+                .detectReorderAfterLongPress(state)
+        ) {
+            items(editedMovies.value, { it.id ?: 0 }) { movie ->
+                ReorderableItem(state, key = movie.id) { isDragging ->
+                    val elevation = animateDpAsState(if (isDragging) 16.dp else 0.dp)
+                    Column(
+                        modifier = Modifier
+                            .shadow(elevation.value)
+                    ) {
+                        EditLogEntry(movie) // Your custom item UI
+                    }
+                }
             }
         }
     }
@@ -579,9 +846,25 @@ fun EditSheetContent(logName: String) {
             // Save Button
             Button(
                 onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
+                    setAlertDialogState(
+                        AlertDialog(
+                            isVisible = true,
+                            header = "Save Changes to Log",
+                            message = "Are you sure you want to save changes to this log?",
+                            dismiss = Dismiss(text = "Cancel"),
+                            accept = Accept(
+                                text = "Save",
+                                action = {
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        logDetailsViewModel.updateLog(editedLogName, editedMovies.value)
+                                        logViewModel.loadLogs()
+                                        logViewModel.resetMovie()
+                                        onDismiss()
+                                    }
+                                }
+                            )
+                        )
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -589,10 +872,10 @@ fun EditSheetContent(logName: String) {
                     .padding(horizontal = 24.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.sky_blue),
-                    disabledContainerColor = colorResource(id = R.color.sky_blue)
+                    disabledContainerColor = Color.Gray
                 ),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     "Save",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
@@ -606,30 +889,56 @@ fun EditSheetContent(logName: String) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            // Delete Button
-            Button(
-                onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp)
-                    .padding(horizontal = 24.dp)
-                    .background(color = Color.Transparent)
-                    .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ),
-            ) {
-                androidx.compose.material3.Text(
-                    "Delete",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFDC3545)
-                )
+            val context = LocalContext.current
+
+            if (isOwner) {
+                // Delete Button
+                Button(
+                    onClick = {
+                        setAlertDialogState(
+                            AlertDialog(
+                                isVisible = true,
+                                header = "Delete log",
+                                message = "Are you sure you want to permanently delete this log?",
+                                dismiss = Dismiss(text = "Cancel"),
+                                accept = Accept(
+                                    text = "Delete",
+                                    textColor = Color.Red,
+                                    action = {
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            val asyncJob = logDetailsViewModel.deleteLog()
+                                            asyncJob?.join()
+
+                                            logViewModel.loadLogs()
+                                            navController.navigate("home")
+                                            Toast.makeText(
+                                                context, "Successfully deleted $logName!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                )
+                            )
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp)
+                        .padding(horizontal = 24.dp)
+                        .background(color = Color.Transparent)
+                        .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    ),
+                ) {
+                    Text(
+                        "Delete Log",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFDC3545)
+                    )
+                }
             }
         }
 
@@ -641,11 +950,7 @@ fun EditSheetContent(logName: String) {
         ) {
             // Cancel Button
             Button(
-                onClick = {
-                    /*if (!logName.isNullOrEmpty()) {
-                    onCreateClick(logName)
-                }*/
-                },
+                onClick = { onDismiss() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp)
@@ -657,22 +962,23 @@ fun EditSheetContent(logName: String) {
                     disabledContainerColor = Color.Transparent
                 ),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     "Cancel",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(50.dp))
     }
 }
 
 
 @Composable
-fun EditLogEntry(movieName: String) {
+fun EditLogEntry(movie: MovieData) {
     Row(
-        modifier = Modifier.padding(bottom = 10.dp),
+        modifier = Modifier
+            .padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -695,7 +1001,7 @@ fun EditLogEntry(movieName: String) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(movieName, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+            Text(movie.title ?: "", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
         }
 
         // Drag Icon
@@ -717,6 +1023,7 @@ fun EditLogEntry(movieName: String) {
         }
     }
 }
+
 
 @Composable
 fun AddMovieMenu() {

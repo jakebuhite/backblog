@@ -6,7 +6,7 @@ import org.junit.Assert
 import org.junit.Test
 
 class LogTest {
-    private val testJson = """{"log_id":"123456","name":"Sample Log","creation_date":"1706751265551","last_modified_date":"1706751265551","is_visible":true,"owner":{"user_id":"user123","priority":1},"collaborators":{"collaborator1":{"priority":2},"collaborator2":{"priority":1}},"movie_ids":{"movie1":true,"movie2":false},"watched_ids":{"movie1":true,"movie2":true}}"""
+    private val testJson = """{"log_id":"123456","name":"Sample Log","creation_date":"1706751265551","last_modified_date":"1706751265551","is_visible":true,"owner":{"user_id":"user123","priority":1},"collaborators":["collaborator1","collaborator2"],"order":{"collaborator1":2,"collaborator2":1},"movie_ids":["movie1","movie2"],"watched_ids":["movie1","movie2"]}"""
     private val logData = LogData(
         logId = "123456",
         name = "Sample Log",
@@ -14,12 +14,16 @@ class LogTest {
         lastModifiedDate = "1706751265551",
         isVisible = true,
         owner = Owner(userId = "user123", priority = 1),
-        collaborators = mapOf(
-            "collaborator1" to mapOf("priority" to 2),
-            "collaborator2" to mapOf("priority" to 1)
+        collaborators = mutableListOf(
+            "collaborator1",
+            "collaborator2"
         ),
-        movieIds = mapOf("movie1" to true, "movie2" to false),
-        watchedIds = mapOf("movie1" to true, "movie2" to true)
+        order = mapOf(
+            "collaborator1" to 2,
+            "collaborator2" to 1
+        ),
+        movieIds = mutableListOf("movie1", "movie2"),
+        watchedIds = mutableListOf("movie1", "movie2")
     )
 
     @Test

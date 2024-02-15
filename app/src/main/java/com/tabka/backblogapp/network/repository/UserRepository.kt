@@ -21,10 +21,10 @@ class UserRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: F
     suspend fun addUser(userId: String, username: String, avatarPreset: Int): DataResult<Boolean> {
         try {
             val userData = mapOf(
-                "userId" to userId,
+                "user_id" to userId,
                 "username" to username,
-                "joinDate" to System.currentTimeMillis().toString(),
-                "avatarPreset" to avatarPreset,
+                "join_date" to System.currentTimeMillis().toString(),
+                "avatar_preset" to avatarPreset,
                 "friends" to emptyMap<String, Boolean>(),
                 "blocked" to emptyMap<String, Boolean>()
             )
@@ -45,6 +45,25 @@ class UserRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: F
 
             return if (result.exists()) {
                 val data = result.data
+
+                val userData = Json.decodeFromString<UserData>(Json.encodeToString(data.toJsonElement()))
+
+                DataResult.Success(userData)
+            } else {
+                DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
+            }
+        } catch (e: Exception) {
+            Log.w(tag, "Error receiving user document", e)
+            return DataResult.Failure(e)
+        }
+    }
+
+    suspend fun getUserByUsername(username: String): DataResult<UserData> {
+        try {
+            val result = db.collection("users").whereEqualTo("username", username).get().await()
+
+            return if (!result.isEmpty) {
+                val data = result.documents.first().data
 
                 val userData = Json.decodeFromString<UserData>(Json.encodeToString(data.toJsonElement()))
 

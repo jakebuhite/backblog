@@ -26,7 +26,7 @@ class MovieRepository(private val movieApiService: ApiService) {
     suspend fun addMovie(logId: String, movieId: String): DataResult<Boolean> {
         return try {
             val updates = mapOf(
-                "movie_ids.${movieId}" to true,
+                "movie_ids" to FieldValue.arrayUnion(movieId),
                 "last_modified_date" to System.currentTimeMillis().toString()
             )
 
@@ -45,15 +45,15 @@ class MovieRepository(private val movieApiService: ApiService) {
             val updates = if (watched) {
                 // Mark as watched
                 mapOf(
-                    "movie_ids.${movieId}" to FieldValue.delete(),
-                    "watched_ids.${movieId}" to true,
+                    "movie_ids" to FieldValue.arrayRemove(movieId),
+                    "watched_ids" to FieldValue.arrayUnion(movieId),
                     "last_modified_date" to System.currentTimeMillis().toString()
                 )
             } else {
                 // Unmark as watched
                 mapOf(
-                    "movie_ids.${movieId}" to true,
-                    "watched_ids.${movieId}" to FieldValue.delete(),
+                    "movie_ids" to FieldValue.arrayUnion(movieId),
+                    "watched_ids" to FieldValue.arrayRemove(movieId),
                     "last_modified_date" to System.currentTimeMillis().toString()
                 )
             }
@@ -85,9 +85,9 @@ class MovieRepository(private val movieApiService: ApiService) {
 
                     logs.forEach { log ->
                         val userPriority: Int = if (log.owner?.userId == userId) {
-                            log.owner.priority!!
+                            log.owner.priority ?: 0
                         } else {
-                            log.collaborators?.get(userId)?.toMap()?.get("priority") as Int
+                            log.order?.get(userId) ?: 0
                         }
 
                         if (userPriority < highestPriority && !log.movieIds.isNullOrEmpty()) {
@@ -97,14 +97,13 @@ class MovieRepository(private val movieApiService: ApiService) {
                     }
 
                     // No movies in any of the logs
-                    if (priorityLog == null) {
+                    if (priorityLog == null || priorityLog!!.movieIds.isNullOrEmpty()) {
                         return DataResult.Failure(FirebaseError(FirebaseExceptionType.DOES_NOT_EXIST))
                     }
 
-                    return DataResult.Success(priorityLog!!.movieIds!!.keys.first())
+                    return DataResult.Success(priorityLog!!.movieIds!!.first())
                 }
                 is DataResult.Failure -> {
-                    // Propagate the failure result
                     return logsResult
                 }
             }

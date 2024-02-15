@@ -18,6 +18,10 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -61,20 +65,28 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMov
 fun backButton(navController: NavController, visible: Boolean) {
     val icon = painterResource(R.drawable.button_back_arrow)
 
-    var alpha = 0f
-    if (visible) {
-        alpha = 1f
+    val alpha = if (visible) 1f else 0f
+
+    // State to track if the button is enabled or not
+    var isEnabled by remember { mutableStateOf(true) }
+
+    var modifier = Modifier
+        .size(36.dp)
+        .clip(CircleShape)
+        .alpha(alpha)
+        .testTag("BACK_BUTTON")
+
+    if (visible && isEnabled) {
+        modifier = modifier.clickable {
+            navController.popBackStack()
+            isEnabled = false
+        }
     }
 
     Image(
         painter = icon,
         contentDescription = "Back Button",
-        modifier = Modifier
-            .size(36.dp)
-            .clip(CircleShape)
-            .alpha(alpha)
-            .clickable { navController.popBackStack() }
-            .testTag("BACK_BUTTON")
+        modifier = modifier
     )
 }
 

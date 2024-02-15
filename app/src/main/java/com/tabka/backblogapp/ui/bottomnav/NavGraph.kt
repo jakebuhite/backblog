@@ -1,12 +1,11 @@
 package com.tabka.backblogapp.ui.bottomnav
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
@@ -23,32 +22,31 @@ import com.tabka.backblogapp.ui.screens.HomeScreen
 import com.tabka.backblogapp.ui.screens.LogDetailsScreen
 import com.tabka.backblogapp.ui.screens.LoginScreen
 import com.tabka.backblogapp.ui.screens.MovieDetailsScreen
+import com.tabka.backblogapp.ui.screens.ProfileScreen
 import com.tabka.backblogapp.ui.screens.SearchResultsScreen
 import com.tabka.backblogapp.ui.screens.SearchScreen
 import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
-import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.ProfileViewModel
 import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
     val friendsViewModel = FriendsViewModel()
-    val logDetailsViewModel = LogDetailsViewModel()
+    LaunchedEffect(true) {
+        friendsViewModel.getFriends()
+    }
+    //val logDetailsViewModel = LogDetailsViewModel()
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()
+    val profileViewModel = ProfileViewModel()
 
-    var friendsStartDest by remember { mutableStateOf("login") }
+    Log.d("Something", "PLEASE LOG SOMETHING")
     val auth = Firebase.auth
-    auth.addAuthStateListener {
-        friendsStartDest = if (auth.currentUser == null) {
-            "login"
-        } else {
-            "friends"
-        }
-    }
+    //auth.signOut()
 
     NavHost(
         navController = navController,
@@ -57,14 +55,14 @@ fun BottomNavGraph(navController: NavHostController) {
         navigation(startDestination = "home", route = BottomNavigationBar.Home.route) {
 
             composable(route = "home") {
-                HomeScreen(navController, logViewModel)
+                HomeScreen(navController, logViewModel, friendsViewModel)
             }
 
             composable(
                 route = "home_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, logDetailsViewModel, backStackEntry.arguments?.getString("logId"))
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel)
             }
 
             composable(
@@ -93,8 +91,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
         }
 
-        navigation(startDestination = friendsStartDest, route = BottomNavigationBar.Friends.route) {
-
+        navigation(startDestination = if (auth.currentUser == null) "login" else "friends", route = BottomNavigationBar.Friends.route) {
             composable(route = "friends") {
                 FriendsScreen(navController, friendsViewModel)
             }
@@ -115,7 +112,14 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "public_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, logDetailsViewModel, backStackEntry.arguments?.getString("logId"))
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel)
+            }
+
+            composable(
+                route = "friends_page_{friendId}",
+                arguments = listOf(navArgument("friendId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                ProfileScreen(navController, backStackEntry.arguments?.getString("friendId"), profileViewModel)
             }
         }
     }

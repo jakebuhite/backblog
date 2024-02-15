@@ -49,7 +49,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -85,7 +84,6 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
         //DisplayMovieResults
     }
 }
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
     var text by remember { mutableStateOf("") }
@@ -110,7 +108,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
                         text = it
                         // If there is something
                         if (text.isNotBlank()) {
-                            Log.d(TAG, "$text")
+                            Log.d(TAG, text)
                             searchResultsViewModel.getMovieResults(text)
                         }
                     },
@@ -272,7 +270,8 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                                 val log = allLogs!![checkedItem]
 
                                 logViewModel.addMovieToLog(log.logId, movie.id.toString())
-                                *//*Log.d(TAG, allLogs)*//*
+                                logViewModel.loadLogs()
+                                /*Log.d(TAG, allLogs)*/
                             }
                         },
                         modifier = Modifier.testTag("ADD_TO_LOG_BUTTON")

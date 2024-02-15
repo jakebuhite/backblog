@@ -1,4 +1,4 @@
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -110,7 +110,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
-    implementation("androidx.navigation:navigation-compose:2.4.0-alpha10")
+    implementation("androidx.navigation:navigation-compose:2.8.0-alpha02")
     implementation("androidx.compose.material:material:1.4.2")
     implementation("androidx.compose.material:material-icons-extended:1.4.2")
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
@@ -122,10 +122,11 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation(kotlin("reflect"))
-    implementation("androidx.compose.foundation:foundation:1.6.0-alpha04")
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.27.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
     implementation("androidx.navigation:navigation-testing:2.7.6")
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.test.ext:junit-ktx:1.1.5")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.10.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
