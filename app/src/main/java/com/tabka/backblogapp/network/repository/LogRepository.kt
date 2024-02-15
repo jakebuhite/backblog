@@ -2,6 +2,7 @@ package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
@@ -250,27 +251,21 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
 
     suspend fun addCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
         return try {
-            val logRef = db.collection("logs").document(logId)
-
-            val updates = mutableMapOf<String, Any>()
+            if (Firebase.auth.currentUser?.uid == null) {
+                return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
+            }
 
             // Iterate through each collaborator in the array
             collaborators.forEach { collaborator ->
                 // Add collaborator to the updatedCollaborators object
-                when (val result = getLogs(collaborator, true)) {
-                    is DataResult.Success ->  {
-                        updates["order.${collaborator}"] = result.item.size
-                    }
-                    is DataResult.Failure -> Log.d(tag, "Error getting logs ${result.throwable.message}")
+                val result = FriendRepository().addLogRequest(Firebase.auth.currentUser?.uid!!, collaborator, logId, System.currentTimeMillis().toString())
+                when (result) {
+                    is DataResult.Success -> Unit
+                    is DataResult.Failure -> Log.d(tag, "Error sending log request: ${result.throwable.message}")
                 }
             }
 
-            updates["collaborators"] = FieldValue.arrayUnion(*collaborators.toTypedArray())
-
-            // Add collaborators to the log
-            logRef.update(updates).await()
-
-            Log.d(tag, "Collaborators successfully updated!")
+            Log.d(tag, "Log requests sent!")
             DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error updating collaborators", e)

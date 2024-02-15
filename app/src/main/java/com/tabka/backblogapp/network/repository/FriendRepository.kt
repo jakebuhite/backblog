@@ -241,8 +241,22 @@ class FriendRepository {
         return try {
             val logRef = db.collection("logs").document(logId)
 
+            var priority = 0
+
+            when (val result = LogRepository().getLogs(userId, true)) {
+                is DataResult.Success -> {
+                    priority = result.item.size
+                }
+                is DataResult.Failure -> return DataResult.Failure(result.throwable)
+            }
+
+            val updates = mapOf(
+                "collaborators" to FieldValue.arrayUnion(userId),
+                "order.$userId" to priority
+            )
+
             // Add user as a collaborator
-            logRef.update("collaborators.$userId", mapOf("priority" to 0)).await()
+            logRef.update(updates).await()
 
             Log.d(tag, "User successfully added as a collaborator!")
             DataResult.Success(true)
