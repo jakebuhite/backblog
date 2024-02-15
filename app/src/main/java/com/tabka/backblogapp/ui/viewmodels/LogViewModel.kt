@@ -173,23 +173,23 @@ open class LogViewModel : ViewModel() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun createLog(logName: String, collaborators: List<String>) {
+    fun createLog(logName: String, collaborators: List<String>, isVisible: Boolean) {
         val currentUser = Firebase.auth.currentUser
 
         // If logged in
         if (currentUser != null) {
             Log.d(TAG, "User is logged in")
             viewModelScope.launch {
-                val result = logRepository.addLog(logName, isVisible = true, currentUser.uid)
+                val result = logRepository.addLog(logName, isVisible = isVisible, currentUser.uid)
                 when (result) {
                     is DataResult.Success -> {
                         val logId = result.item
                         logRepository.addCollaborators(logId, collaborators)
+                        loadLogs()
+                        //resetMovie()
                     }
                     is DataResult.Failure -> throw result.throwable
                 }
-                loadLogs()
-                resetMovie()
             }
         } else {
             Log.d(TAG, "User is not logged in")
