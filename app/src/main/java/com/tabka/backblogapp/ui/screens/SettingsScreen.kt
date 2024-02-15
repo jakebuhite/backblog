@@ -52,9 +52,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(navController: NavController, settingsViewModel: SettingsViewModel) {
     val hasBackButton = true
+    val isMovieDetails = false
     val pageTitle = "Settings"
 
-    BaseScreen(navController, hasBackButton, pageTitle) {
+    BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         var userData by remember { mutableStateOf<UserData?>(null) }
 
         LaunchedEffect(Unit) {

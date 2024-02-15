@@ -30,30 +30,31 @@ import androidx.navigation.NavController
 import com.tabka.backblogapp.R
 
 @Composable
-fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, title: String, content: @Composable (scrollState: ScrollState) -> Unit) {
+fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMovieDetails: Boolean, title: String, content: @Composable (scrollState: ScrollState) -> Unit) {
 
-    val scrollState = rememberScrollState()
+    if (!isMovieDetails) {
+        val scrollState = rememberScrollState()
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        BackgroundGradient()
-
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .verticalScroll(scrollState)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
-            backButton(navController, isBackButtonVisible)
-            Spacer(modifier = Modifier.height(20.dp))
-            pageTitle(title)
-            content(scrollState)
-            Spacer(modifier = Modifier.height(70.dp))
+            BackgroundGradient()
+
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(scrollState)
+            ) {
+                Spacer(modifier = Modifier.height(20.dp))
+                backButton(navController, isBackButtonVisible)
+                Spacer(modifier = Modifier.height(20.dp))
+                pageTitle(title)
+                content(scrollState)
+                Spacer(modifier = Modifier.height(70.dp))
+            }
         }
     }
-    
 }
 
 @Composable
