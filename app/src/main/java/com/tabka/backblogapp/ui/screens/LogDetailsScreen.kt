@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -388,7 +389,10 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
         // Height of image and padding times number of movies
         val moviesHeight: Dp = (80 * movies.size).dp
 
-        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(moviesHeight)) {
+        LazyColumn(userScrollEnabled = false,
+            modifier = Modifier
+                .height(moviesHeight)
+        ) {
             items(movies.size) { index ->
                 val movie = movies[index]
 
@@ -734,6 +738,7 @@ fun CollaboratorsSheetContent(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EditSheetContent(
     navController: NavHostController,
@@ -811,8 +816,6 @@ fun EditSheetContent(
                     Column(
                         modifier = Modifier
                             .shadow(elevation.value)
-
-                            //.background(MaterialTheme.colors.surface).
                     ) {
                         EditLogEntry(movie) // Your custom item UI
                     }

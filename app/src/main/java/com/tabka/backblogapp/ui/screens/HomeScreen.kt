@@ -32,11 +32,15 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.material.icons.filled.RemoveCircle
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -92,6 +96,9 @@ import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -310,7 +317,7 @@ fun NextMovieInfo(
                                 Toast.LENGTH_SHORT
                             )
                             .show()
-                         logViewModel.markMovieAsWatched(logId, movieId.toString())
+                        logViewModel.markMovieAsWatched(logId, movieId.toString())
                     }
             )
         }
@@ -380,6 +387,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                 .testTag("ADD_LOG_POPUP")
         ) {
             val focusManager = LocalFocusManager.current
+            var logIsVisible by remember { mutableStateOf(false) }
 
             Row(
                 modifier = Modifier
@@ -397,7 +405,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(
-                modifier = Modifier.padding(horizontal = 50.dp),
+                modifier = Modifier.padding(start = 50.dp, end = 15.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -410,7 +418,8 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                         modifier = Modifier.testTag("ADD_LOG_POPUP_LOG_NAME_LABEL")
                     ) },
                     singleLine = true,
-                    modifier = Modifier.testTag("LOG_NAME_INPUT"),
+                    modifier = Modifier
+                        .testTag("LOG_NAME_INPUT"),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
                         onDone = {
@@ -425,6 +434,21 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                         backgroundColor = Color(0xFF373737)
                     ),
                 )
+                val icon = if (logIsVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(
+                    onClick = {
+                        Log.d(TAG, "On click!")
+                        logIsVisible = !logIsVisible },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -498,9 +522,13 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
 
             // Create Button tab
             NewLogBottomSection(navController, logName, onCreateClick = { createdLogName ->
-                logViewModel.createLog(createdLogName, currentCollab)
-                isSheetOpen = false
-                logName = ""
+                CoroutineScope(Dispatchers.Main).launch {
+                    logViewModel.createLog(createdLogName, currentCollab, logIsVisible)
+                    isSheetOpen = false
+                    logName = ""
+                    logViewModel.loadLogs()
+                    //logViewModel.resetMovie()
+                }
             }, onCloseClick = {
                 isSheetOpen = false
             })
