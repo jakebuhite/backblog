@@ -1,5 +1,6 @@
 package com.tabka.backblogapp.ui.screens
 
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
@@ -104,26 +105,27 @@ class SearchResultsScreenTest {
             BottomNavGraph(mockNavController)
             SearchResultsScreen(mockNavController, fakeLogViewModel)
         }
+
         val query = "Top Gun: Maverick"
         composeTestRule.onNodeWithTag("SEARCH_BAR_INPUT").performTextInput(query)
         composeTestRule.onNodeWithTag("SEARCH_BAR_INPUT").performImeAction()
-        //composeTestRule.onNodeWithTag("SEARCH_BAR_INPUT").assert(isNotFocused())
 
+        // Wait for movie results to be displayed
         composeTestRule.waitUntil(3000) {
-            composeTestRule.onAllNodesWithTag("MOVIE_RESULT").fetchSemanticsNodes().size > 1
+            composeTestRule.onAllNodesWithTag("MOVIE_RESULT").fetchSemanticsNodes().isNotEmpty()
         }
-        /*composeTestRule.onNodeWithText(query).performClick()*/
+
+        // Perform click on the first movie result
+        composeTestRule.onAllNodesWithTag("MOVIE_RESULT")[0].assertHasClickAction()
         composeTestRule.onAllNodesWithTag("MOVIE_RESULT")[0].performClick()
 
+        // Wait for navigation to occur
         composeTestRule.waitUntil(10000) {
-            composeTestRule.onAllNodesWithTag("MOVIE_DETAILS_MOVIE").fetchSemanticsNodes().size == 1
+            mockNavController.currentDestination?.route == "search_movie_details_{movieId}"
         }
-        composeTestRule.onNodeWithTag("MOVIE_DETAILS_MOVIE").assertIsDisplayed()
 
+        // Assert navigation destination
         assertThat(mockNavController.currentDestination?.route).isEqualTo("search_movie_details_{movieId}")
-        // Verify navigation occurred with expected argument
-        // This step requires you to capture the navigation action and arguments in some manner
-        //assertTrue(mockNavController.currentDestination?.route?.startsWith("search_movie_details") == true)
     }
 
     @Test

@@ -12,13 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun RequestHeader(title: String) {
     Row(modifier = Modifier
         .fillMaxWidth()
-        .padding(vertical = 8.dp),
+        .padding(vertical = 8.dp)
+        .testTag("REQUEST_HEADER"),
         verticalAlignment = Alignment.CenterVertically) {
         Text(
             title,

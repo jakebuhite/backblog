@@ -24,7 +24,8 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     suspend fun addLog(name: String, isVisible: Boolean, ownerId: String): DataResult<String> {
         return try {
             // Get new log id
-            val logId = db.collection("logs").document().id
+            val logRef = db.collection("logs").document()
+            val logId = logRef.id
 
             when (val result = getLogs(ownerId, true)) {
                 is DataResult.Success ->  {
@@ -61,7 +62,8 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     suspend fun addLog(name: String, ownerId: String, priority: Int, creationDate: String, movieIds: MutableList<String>, watchedIds: MutableList<String>): DataResult<Boolean> {
         return try {
             // Get new log id
-            val logId = db.collection("logs").document().id
+            val logRef = db.collection("logs").document()
+            val logId = logRef.id
 
             // Get all log data
             val logData = mapOf(
@@ -92,7 +94,8 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
             val doc = db.collection("logs").document(logId).get().await()
             if (doc.exists()) {
                 Log.d(tag, "Log successfully written!")
-                DataResult.Success(Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())))
+                val docData = doc.data
+                DataResult.Success(Json.decodeFromString(Json.encodeToString(docData.toJsonElement())))
             } else {
                 Log.d(tag, "Log not found.")
                 DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))

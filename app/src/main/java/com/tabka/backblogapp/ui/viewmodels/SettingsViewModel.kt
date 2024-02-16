@@ -42,7 +42,7 @@ open class SettingsViewModel: ViewModel() {
         }
     }
 
-    suspend fun updateUserData(updates: Map<String, Any?>, password: String): DataResult<Boolean> {
+    open suspend fun updateUserData(updates: Map<String, Any?>, password: String): DataResult<Boolean> {
         return try {
             when (isCorrectPassword(password)) {
                 is DataResult.Success -> {

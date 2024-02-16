@@ -261,25 +261,25 @@ class FriendRepository {
         return try {
             val logRef = db.collection("logs").document(logId)
 
-            var priority = 0
+            val priority: Int
 
             when (val result = LogRepository().getLogs(userId, true)) {
                 is DataResult.Success -> {
                     priority = result.item.size
+
+                    val updates = mapOf(
+                        "collaborators" to FieldValue.arrayUnion(userId),
+                        "order.$userId" to priority
+                    )
+
+                    // Add user as a collaborator
+                    logRef.update(updates).await()
+
+                    Log.d(tag, "User successfully added as a collaborator!")
+                    DataResult.Success(true)
                 }
-                is DataResult.Failure -> return DataResult.Failure(result.throwable)
+                is DataResult.Failure -> DataResult.Failure(result.throwable)
             }
-
-            val updates = mapOf(
-                "collaborators" to FieldValue.arrayUnion(userId),
-                "order.$userId" to priority
-            )
-
-            // Add user as a collaborator
-            logRef.update(updates).await()
-
-            Log.d(tag, "User successfully added as a collaborator!")
-            DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error reading log document", e)
             DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
