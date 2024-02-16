@@ -40,7 +40,7 @@ open class LogViewModel : ViewModel() {
     private val logRepository = LogRepository()
 
     // Up Next Movie
-    private val _movie = MutableStateFlow<MovieData?>(null)
+    private val _movie = MutableStateFlow<Pair<MovieData?, String>>(null to "")
     open val movie = _movie.asStateFlow()
 
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
@@ -111,8 +111,14 @@ open class LogViewModel : ViewModel() {
         movieRepository.getMovieById(
             movieId = movieId,
             onResponse = { movieResponse ->
-                _movie.value = movieResponse
-                Log.d(TAG, "$movieResponse")
+                movieRepository.getMovieHalfSheet(movieId = movieId,
+                    onResponse = { halfSheet ->
+                        _movie.value = Pair(movieResponse, halfSheet)
+                    },
+                    onFailure = { e ->
+                        Log.e(TAG, "Failed to fetch half sheet for movie ID $movieId: $e")
+                    }
+                )
             },
             onFailure = { e ->
                 Log.e(TAG, "Failed to fetch details for movie ID $movieId: $e")
@@ -148,13 +154,19 @@ open class LogViewModel : ViewModel() {
         val data: T? = null,
         val error: String? = null
     )
-    fun fetchMovieDetails(movieId: String, onResponse: (MovieResult<MovieData>) -> Unit) {
+    fun fetchMovieDetails(movieId: String, onResponse: (MovieResult<Pair<MovieData, String>>) -> Unit) {
         viewModelScope.launch {
             try {
                 movieRepository.getMovieById(movieId, { movieData ->
                     // Success response
                     if (movieData != null) {
-                        onResponse(MovieResult(data = movieData))
+                        movieRepository.getMovieHalfSheet(movieId,
+                            onResponse = { halfSheet ->
+                                onResponse(MovieResult(movieData to halfSheet))
+                            },
+                            onFailure = {
+                                onResponse(MovieResult(movieData to ""))
+                            })
                     } else {
                         onResponse(MovieResult(error = "No data received"))
                     }
@@ -169,7 +181,7 @@ open class LogViewModel : ViewModel() {
     }
 
     fun resetMovie() {
-        _movie.value = null
+        _movie.value = (null to "")
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
