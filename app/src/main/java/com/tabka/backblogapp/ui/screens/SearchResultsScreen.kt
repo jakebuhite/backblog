@@ -21,11 +21,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -145,7 +143,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
         }
     }
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
-    if (!movieResults.isNullOrEmpty()) {
+    if (movieResults.first?.isNotEmpty() == true) {
         Box(modifier = Modifier.height(500.dp)) {
             LazyColumn(
                 modifier = Modifier
@@ -153,8 +151,12 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
                     .padding(top = 20.dp)
                     .testTag("MOVIE_RESULTS_LIST")
             ) {
-                items(movieResults) { movie ->
-                    MovieResult(navController, movie, logViewModel)
+                items(movieResults.first?.size ?: 0) { index ->
+                    val movie = movieResults.first?.get(index)
+                    if (movie != null) {
+                        val halfSheet = movieResults.second.getOrNull(index) ?: ""
+                        MovieResult(navController, movie, halfSheet, logViewModel)
+                    }
                 }
             }
         }
@@ -165,7 +167,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logViewModel: LogViewModel) {
+fun MovieResult(navController: NavHostController, movie: MovieSearchResult, halfSheet: String, logViewModel: LogViewModel) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val allLogs by logViewModel.allLogs.collectAsState()
 
@@ -184,8 +186,13 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                     .width(140.dp)
                     .height(70.dp)
             ) {
-                val imageBaseURL =
+
+                val imageBaseURL = if (halfSheet != "") {
+                    "https://image.tmdb.org/t/p/w500/${halfSheet}"
+                } else {
                     "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
+                }
+
                 Image(
                     painter = rememberAsyncImagePainter(imageBaseURL),
                     contentDescription = null,

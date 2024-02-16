@@ -182,16 +182,15 @@ class MovieRepository(private val movieApiService: ApiService) {
                     movieSearchData?.results?.forEach { movie ->
                         getMovieHalfSheet(movie.id.toString(),
                             onResponse = { sheet ->
-                                     result.second.add(sheet)
+                                result.second.add(sheet)
                         },
                             onFailure = {
                                 // Handle error
                                 Log.d("Movies", "Error: ${response.code()} - ${response.message()}")
                                 println("Error: ${response.code()} - ${response.message()}")
-                        })
+                            })
                     }
 
-                    onResponse(result)
                 } else {
                     // Handle error
                     Log.d("Movies", "Error: ${response.code()} - ${response.message()}")

@@ -20,10 +20,8 @@ class SearchResultsViewModel : ViewModel() {
     fun getMovieResults(query: String) {
         movieRepository.searchMovieWithHalfSheet(query, 1,
             onResponse = { searchData ->
-                searchData.first?.results?.forEach { searchResult ->
-                    Log.d(TAG, "$searchResult")
-                }
-                Log.d(TAG, searchData.toString())
+                searchData.first?.toString()?.let { Log.d(TAG, it) }
+                Log.d(TAG, searchData.second.toString())
                 _movieResults.value = Pair(searchData.first?.results, searchData.second)
             },
             onFailure = { error ->
