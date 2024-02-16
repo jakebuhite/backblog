@@ -261,4 +261,38 @@ class LogRepositoryTest {
         assert(result is DataResult.Failure)
         assert((result as DataResult.Failure).throwable == exception)
     }
+
+    @Test
+    fun testGetLogsShouldReturnException(): Unit = runBlocking {
+        // Arrange
+        val userId = "fakeUserId"
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("doc123")
+
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
+
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf())
+
+        whenever(mockQuerySnapshot.documents.map<DocumentSnapshot, LogData> { doc ->
+            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
+        }).thenReturn(emptyList())
+
+        val exception = Exception("Simulated exception")
+        val task: Task<Void> = Tasks.forException(exception)
+        whenever(mockDocument.set(anyMap<String, Any>())).thenReturn(task)
+
+        // Act
+        val result = logRepository.getLogs(userId, true)
+
+        // Assert
+        assert(result is DataResult.Failure)
+        assert((result as DataResult.Failure).throwable == exception)
+    }
 }
