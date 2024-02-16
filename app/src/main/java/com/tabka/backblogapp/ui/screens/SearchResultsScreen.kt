@@ -239,6 +239,14 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                 if (allLogs != null) {
                     val checkedStates = remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
 
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp)) {
+                        Text("Add to Log", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
                     Box(modifier = Modifier.height(150.dp)) {
                         LazyColumn(
                             modifier = Modifier.padding(start = 20.dp)
@@ -248,17 +256,22 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        log.name!!,
-                                        color = Color.White
-                                    )
-                                    Checkbox(
-                                        checked = checkedStates[index],
-                                        onCheckedChange = { isChecked ->
-                                            checkedStates[index] = isChecked
-                                        },
-                                        modifier = Modifier.testTag("LOG_CHECKBOX")
-                                    )
+                                    Column(modifier = Modifier.weight(3F)) {
+                                        Text(
+                                            log.name!!,
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    Column(modifier = Modifier.weight(1F), horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Checkbox(
+                                            checked = checkedStates[index],
+                                            onCheckedChange = { isChecked ->
+                                                checkedStates[index] = isChecked
+                                            },
+                                            modifier = Modifier.testTag("LOG_CHECKBOX")
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -316,6 +329,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                                     logViewModel.addMovieToLog(log.logId, movie.id.toString())
                                     /*Log.d(TAG, allLogs)*/
                                 }
+                                isSheetOpen = false
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = colorResource(id = R.color.sky_blue),
@@ -340,7 +354,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, logV
                         // Cancel Button
                         androidx.compose.material3.Button(
                             onClick = {
-                                //onCloseClick()
+                                isSheetOpen = false
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
