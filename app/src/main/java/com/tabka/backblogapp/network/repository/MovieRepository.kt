@@ -165,46 +165,6 @@ class MovieRepository(private val movieApiService: ApiService) {
         })
     }
 
-    fun searchMovieWithHalfSheet(query: String, page: Int, onResponse: (Pair<MovieSearchData?, MutableList<String>>) -> Unit, onFailure: (String) -> Unit) {
-        val includeAdult = false
-        val language = "en-US"
-
-        Log.d(tag, query)
-
-        val call = movieApiService.searchMovies(query, includeAdult, language, page, "Bearer " + BuildConfig.MOVIE_SECRET)
-
-        call.enqueue(object : Callback<MovieSearchData> {
-            override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
-                if (response.isSuccessful) {
-                    val movieSearchData = response.body()
-                    val result: Pair<MovieSearchData?, MutableList<String>> = Pair(movieSearchData, mutableListOf())
-
-                    movieSearchData?.results?.forEach { movie ->
-                        getMovieHalfSheet(movie.id.toString(),
-                            onResponse = { sheet ->
-                                result.second.add(sheet)
-                        },
-                            onFailure = {
-                                // Handle error
-                                Log.d("Movies", "Error: ${response.code()} - ${response.message()}")
-                                println("Error: ${response.code()} - ${response.message()}")
-                            })
-                    }
-
-                } else {
-                    // Handle error
-                    Log.d("Movies", "Error: ${response.code()} - ${response.message()}")
-                    println("Error: ${response.code()} - ${response.message()}")
-                }
-            }
-
-            override fun onFailure(call: Call<MovieSearchData>, t: Throwable) {
-                Log.d("Movies", "Failure: ${t.message}")
-                onFailure("Failure: ${t.message}")
-            }
-        })
-    }
-
     fun getMovieHalfSheet(
         movieId: String,
         onResponse: (String) -> Unit,
