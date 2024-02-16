@@ -200,7 +200,10 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
                 }
                 if (collaborators.size > 4) {
                     item {
-                        Button(onClick = { /* TODO: Implement your click action here */ }) {
+                        Button(
+                            onClick = { /* TODO: Implement your click action here */ },
+                            modifier = Modifier.testTag("VIEW_ALL_COLLABS_BUTTON")
+                        ) {
                             Text("+${collaborators.size - 4} more")
                         }
                     }
@@ -375,7 +378,9 @@ fun LogButtons(
             tonalElevation = 10.dp,
             onDismissRequest = { isSheetOpen = false },
             containerColor = colorResource(id = R.color.bottomnav),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("SHEET_CONTENT")
         )
     }
 }
@@ -393,6 +398,7 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
         LazyColumn(userScrollEnabled = false,
             modifier = Modifier
                 .height(moviesHeight)
+                .testTag("MOVIES_LIST")
         ) {
             items(movies.size) { index ->
                 val movie = movies[index]
@@ -445,7 +451,11 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
         val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
 
         RequestHeader(title = "Watched Movies")
-        LazyColumn(userScrollEnabled = false, modifier = Modifier.height(watchedMoviesHeight)) {
+        LazyColumn(userScrollEnabled = false,
+            modifier = Modifier
+                .height(watchedMoviesHeight)
+                .testTag("WATCHED_MOVIES_LIST")
+        ) {
             items(watchedMovies.size) { index ->
                 val movie = watchedMovies[index]
                 val state = rememberDismissState(
@@ -497,7 +507,8 @@ fun MovieEntry(navController: NavHostController, movie: MovieData) {
     Row(modifier = Modifier
         .fillMaxWidth()
         .padding(top = 5.dp, bottom = 5.dp)
-        .clickable { navController.navigate("home_movie_details_${movie.id}") },
+        .clickable { navController.navigate("home_movie_details_${movie.id}") }
+        .testTag("MOVIE_ENTRY"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
 
@@ -565,10 +576,11 @@ fun CollaboratorsSheetContent(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        androidx.compose.material3.Text(
+        Text(
             logName,
             style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.testTag("ADD_COLLAB_LOG_NAME")
         )
     }
 
@@ -614,7 +626,11 @@ fun CollaboratorsSheetContent(
     } else {
         Spacer(modifier = Modifier.height(15.dp))
         // Current collaborators sections
-        LazyRow(modifier = Modifier.padding(start = 24.dp)) {
+        LazyRow(
+            modifier = Modifier
+                .padding(start = 24.dp)
+                .testTag("COLLABS_LIST_ADD_SHEET")
+        ) {
             items(collaboratorsList.size) { index ->
                 val userId = collaboratorsList[index]
                 Log.d(TAG, "Current userId of collab: $userId")
@@ -758,7 +774,8 @@ fun EditSheetContent(
 
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .testTag("EDIT_SHEET_CONTENT"),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -785,9 +802,7 @@ fun EditSheetContent(
         )
     }
 
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Spacer(modifier = Modifier.height(40.dp))
+    Spacer(modifier = Modifier.height(60.dp))
 
 /*    Box(modifier = Modifier.height(450.dp)) {
         LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -870,7 +885,8 @@ fun EditSheetContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp)
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp)
+                    .testTag("EDIT_SAVE_BUTTON"),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.sky_blue),
                     disabledContainerColor = Color.Gray
@@ -927,7 +943,8 @@ fun EditSheetContent(
                         .height(55.dp)
                         .padding(horizontal = 24.dp)
                         .background(color = Color.Transparent)
-                        .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp)),
+                        .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp))
+                        .testTag("EDIT_DELETE_BUTTON"),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent
