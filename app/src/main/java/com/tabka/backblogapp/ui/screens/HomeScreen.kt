@@ -146,6 +146,7 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
         priorityLog.movieIds?.firstOrNull()?.let { movieId ->
             logViewModel.getMovieById(movieId)
         } ?: run {
+            logViewModel.loadLogs()
             logViewModel.resetMovie()
         }
     }
@@ -530,7 +531,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             Spacer(modifier = Modifier.height(15.dp))
 
             // Add collaborators section
-            Box(modifier = Modifier.height(200.dp)) {
+            Box(modifier = Modifier.weight(1f)) {
                 LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
                     items(sortedUserList.size) { index ->
                         val friend = sortedUserList[index]
@@ -542,8 +543,6 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                     }
                 }
             }
-            //Spacer(modifier = Modifier.height(10.dp))
-            Spacer(modifier = Modifier.weight(1f))
 
             // Create Button tab
             NewLogBottomSection(navController, logName, onCreateClick = { createdLogName ->

@@ -25,25 +25,25 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class LogDetailsViewModel: ViewModel() {
+open class LogDetailsViewModel: ViewModel() {
     private val tag = "LogDetailsViewModel"
     private val auth = Firebase.auth
 
     // Log data
     private val localRepository = LogLocalRepository()
     private val logRepository = LogRepository()
-    val logData: MutableLiveData<LogData> = MutableLiveData()
+    open val logData: MutableLiveData<LogData> = MutableLiveData()
 
     // Movie data
     private val apiService = ApiClient.movieApiService
     private val movieRepository = MovieRepository(apiService)
     private val userRepository = UserRepository()
 
-    val movies: MutableLiveData<List<MovieData>> = MutableLiveData()
-    val watchedMovies: MutableLiveData<List<MovieData>> = MutableLiveData()
+    open val movies: MutableLiveData<List<MovieData>> = MutableLiveData()
+    open val watchedMovies: MutableLiveData<List<MovieData>> = MutableLiveData()
     val owner: MutableLiveData<UserData> = MutableLiveData()
-    val isOwner: MutableLiveData<Boolean> = MutableLiveData()
-    val collaboratorsList: MutableLiveData<List<UserData>> = MutableLiveData()
+    open val isOwner: MutableLiveData<Boolean> = MutableLiveData()
+    open val collaboratorsList: MutableLiveData<List<UserData>> = MutableLiveData()
 
     private suspend fun updateLogData(newLog: LogData) {
         logData.value = newLog
@@ -120,7 +120,7 @@ class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    suspend fun getLogData(logId: String) {
+    open suspend fun getLogData(logId: String) {
         Log.d(tag, "Getting log data!")
         viewModelScope.launch {
             try {
@@ -285,7 +285,7 @@ class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    suspend fun deleteLog(): Job? {
+    open suspend fun deleteLog(): Job? {
         val logId = logData.value?.logId!!
         val currentUser = auth.currentUser
         return if (currentUser != null) {
