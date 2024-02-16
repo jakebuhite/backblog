@@ -47,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -83,7 +82,6 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
         //DisplayMovieResults
     }
 }
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
     var text by remember { mutableStateOf("") }
@@ -143,7 +141,8 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
         }
     }
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
-    if (movieResults.first?.isNotEmpty() == true) {
+    val halfSheets = searchResultsViewModel.halfSheet.collectAsState().value
+    if (movieResults?.isNotEmpty() == true) {
         Box(modifier = Modifier.height(500.dp)) {
             LazyColumn(
                 modifier = Modifier
@@ -151,12 +150,10 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
                     .padding(top = 20.dp)
                     .testTag("MOVIE_RESULTS_LIST")
             ) {
-                items(movieResults.first?.size ?: 0) { index ->
-                    val movie = movieResults.first?.get(index)
-                    if (movie != null) {
-                        val halfSheet = movieResults.second.getOrNull(index) ?: ""
-                        MovieResult(navController, movie, halfSheet, logViewModel)
-                    }
+                items(movieResults.size) { index ->
+                    val movie = movieResults[index]
+                    val halfSheet = halfSheets[movie.id.toString()] ?: ""
+                    MovieResult(navController, movie, halfSheet, logViewModel)
                 }
             }
         }
@@ -239,7 +236,9 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                 sheetState = sheetState,
                 onDismissRequest = {isSheetOpen = false },
                 containerColor = colorResource(id = R.color.bottomnav),
-                modifier = Modifier.fillMaxSize().testTag("ADD_MOVIE_TO_LOG_POPUP")
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("ADD_MOVIE_TO_LOG_POPUP")
             ){
 
                 //val allLogs = logViewModel.allLogs.collectAsState().value
