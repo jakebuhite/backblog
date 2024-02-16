@@ -144,6 +144,7 @@ fun RequestActions(requestData: LogRequestData, updateRequest: (String, String, 
             modifier = Modifier
                 .size(30.dp)
                 .clickable { updateRequest(requestData.requestId ?: "", "log", true) }
+                .testTag("ACCEPT_LOG_REQUEST_ICON")
         )
         Image(
             painter = painterResource(id = R.drawable.delete_icon),
@@ -151,6 +152,7 @@ fun RequestActions(requestData: LogRequestData, updateRequest: (String, String, 
             modifier = Modifier
                 .size(30.dp)
                 .clickable { updateRequest(requestData.requestId ?: "", "log", false) }
+                .testTag("DELETE_LOG_REQUEST_ICON")
         )
     }
 }
@@ -167,6 +169,7 @@ fun RequestActions(requestData: FriendRequestData, updateRequest: (String, Strin
             modifier = Modifier
                 .size(30.dp)
                 .clickable { updateRequest(requestData.requestId ?: "", "friend", true) }
+                .testTag("ACCEPT_FRIEND_REQUEST_ICON")
         )
         Image(
             painter = painterResource(id = R.drawable.delete_icon),
@@ -174,6 +177,7 @@ fun RequestActions(requestData: FriendRequestData, updateRequest: (String, Strin
             modifier = Modifier
                 .size(30.dp)
                 .clickable { updateRequest(requestData.requestId ?: "", "friend", false)  }
+                .testTag("DELETE_FRIEND_REQUEST_ICON")
         )
     }
 }
@@ -201,7 +205,8 @@ fun AddLogModalBottomSheet(
 
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .testTag("ADD_FRIEND_HEADER"),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -254,7 +259,8 @@ fun AddLogModalBottomSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                    .padding(horizontal = 14.dp, vertical = 14.dp)
+                    .testTag("BUTTON_DIVIDER"),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Divider(thickness = 1.dp, color = Color(0xFF303437))
@@ -310,7 +316,8 @@ fun AddLogModalBottomSheet(
                         .height(60.dp)
                         .padding(horizontal = 24.dp)
                         .background(color = Color.Transparent)
-                        .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
+                        .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp))
+                        .testTag("CANCEL_BUTTON"),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent

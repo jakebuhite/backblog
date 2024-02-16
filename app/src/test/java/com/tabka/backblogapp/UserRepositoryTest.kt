@@ -7,6 +7,8 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
@@ -22,6 +24,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 
 class UserRepositoryTest {
@@ -37,6 +40,12 @@ class UserRepositoryTest {
 
     @Mock
     private lateinit var mockDocument: DocumentReference
+
+    @Mock
+    private lateinit var mockDocumentSnapshot: DocumentSnapshot
+
+    @Mock
+    private lateinit var mockQuery: Query
 
     private lateinit var userRepository: UserRepository
 
@@ -167,6 +176,86 @@ class UserRepositoryTest {
         // Assert
         assert(result is DataResult.Failure)
         assert((result as DataResult.Failure).throwable == exception)
+    }
+
+    @Test
+    fun testGetUserByUsernameShouldReturnSuccess() = runBlocking {
+        // Arrange
+        val username = "FakeUser"
+        val joinDate = System.currentTimeMillis().toString()
+        val userData = UserData("fakeUserId", username, joinDate, 1, emptyMap(), emptyMap())
+        val userDataMap = mapOf(
+            "user_id" to "fakeUserId",
+            "username" to username,
+            "join_date" to joinDate,
+            "avatar_preset" to 1,
+            "friends" to emptyMap<String, Boolean>(),
+            "blocked" to emptyMap<String, Boolean>()
+        )
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+
+        val querySnapshot: QuerySnapshot = mock(QuerySnapshot::class.java)
+        val task: Task<QuerySnapshot> = Tasks.forResult(querySnapshot)
+        whenever(mockQuery.get()).thenReturn(task)
+
+        whenever(task.result.isEmpty).thenReturn(false)
+
+        val expectedDocumentSnapshots = listOf(
+            mockDocumentSnapshot, mockDocumentSnapshot, mockDocumentSnapshot
+        )
+        whenever(task.result.documents).thenReturn(expectedDocumentSnapshots)
+        whenever(mockDocumentSnapshot.data).thenReturn(userDataMap)
+
+        // Act
+        val result = userRepository.getUserByUsername(username)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assert((result as DataResult.Success).item == userData)
+    }
+
+    @Test
+    fun testGetUserByUsernameShouldReturnException() = runBlocking {
+        // Arrange
+        val username = "fakeUser"
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+
+        val exception = Exception("Simulated exception")
+        val task: Task<QuerySnapshot> = Tasks.forException(exception)
+        whenever(mockQuery.get()).thenReturn(task)
+
+        // Act
+        val result = userRepository.getUserByUsername(username)
+
+        // Assert
+        assert(result is DataResult.Failure)
+        assert((result as DataResult.Failure).throwable == exception)
+    }
+
+    @Test
+    fun testGetUserByUsernameShouldReturnNotFound() = runBlocking {
+        // Arrange
+        val username = "FakeUser"
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+
+        val querySnapshot: QuerySnapshot = mock(QuerySnapshot::class.java)
+        val task: Task<QuerySnapshot> = Tasks.forResult(querySnapshot)
+        whenever(mockQuery.get()).thenReturn(task)
+
+        whenever(task.result.isEmpty).thenReturn(true)
+
+        // Act
+        val result = userRepository.getUserByUsername(username)
+
+        // Assert
+        assert(result is DataResult.Failure)
+        assert((result as DataResult.Failure).throwable.toString() == FirebaseError(FirebaseExceptionType.NOT_FOUND).toString())
     }
 
     @Test
