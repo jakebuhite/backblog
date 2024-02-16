@@ -31,7 +31,6 @@ class MainActivity : ComponentActivity() {
                 val swipeViewModel = viewModel<SwipeViewModel>()
                 val isLoading by swipeViewModel.isLoading.collectAsState()
                 val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isLoading)
-
                 
                 SwipeRefresh(
                     state = swipeRefreshState,

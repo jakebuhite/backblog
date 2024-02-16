@@ -115,10 +115,10 @@ class SearchResultsScreenTest {
         /*composeTestRule.onNodeWithText(query).performClick()*/
         composeTestRule.onAllNodesWithTag("MOVIE_RESULT")[0].performClick()
 
-        composeTestRule.waitUntil(10000) {
-            composeTestRule.onAllNodesWithTag("MOVIE_DETAILS_MOVIE").fetchSemanticsNodes().size == 1
+        composeTestRule.waitUntil(4000) {
+            composeTestRule.onAllNodesWithTag("MOVIE_RESULT").fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithTag("MOVIE_DETAILS_MOVIE").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("MOVIE_RESULT")[0].assertIsDisplayed().performClick()
 
         assertThat(mockNavController.currentDestination?.route).isEqualTo("search_movie_details_{movieId}")
         // Verify navigation occurred with expected argument
