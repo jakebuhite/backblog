@@ -1,12 +1,15 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -38,9 +41,11 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -97,60 +102,66 @@ fun Foundation(navController: NavController, isBackButtonVisible: Boolean, movie
 
     var scrollState = rememberScrollState()
 
-    if (movie != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp) // Adjust the height as needed
-        ) {
-            /*  Image(
+    Box(
+        modifier = Modifier
+            .fillMaxWidth() // Ensure the Box takes up the full width
+            .fillMaxHeight()
+    ) {
+        if (movie != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            ) {
+                /*  Image(
         painter = painterResource(id = R.drawable.tenetdefault),
         contentDescription = null,
         modifier = Modifier.fillMaxSize(),
         contentScale = ContentScale.FillWidth
     )*/
-            val imageBaseURL =
-                "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
-            Image(
-                painter = rememberAsyncImagePainter(imageBaseURL),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(
-                        radius = (scrollState.value / 80).dp,
-                    ),
-                contentScale = ContentScale.FillWidth,
-
-                )
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(900.dp)
-                    .offset(y = 195.dp),
-                shape = RoundedCornerShape(5.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
-            ) {
-                Box(
+                val imageBaseURL =
+                    "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
+                Image(
+                    painter = rememberAsyncImagePainter(imageBaseURL),
+                    contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Brush.verticalGradient(gradientColors)),
+                        .blur(
+                            radius = (scrollState.value / 80).dp,
+                        ),
+                    contentScale = ContentScale.FillWidth,
+
+                    )
+            }
+
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1000.dp)
+                        .offset(y = 195.dp),
+                    shape = RoundedCornerShape(5.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                 ) {
-                    MovieInfo(movie)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Brush.verticalGradient(gradientColors)),
+                    ) {
+                        MovieInfo(movie)
+                    }
                 }
             }
         }
+        Box(modifier = Modifier.offset(x = 20.dp, y = 20.dp)) {
+            backButton(navController, isBackButtonVisible)
+        }
+        /*backButton(navController, isBackButtonVisible)*/
     }
-    Box(modifier = Modifier.offset(x = 20.dp, y = 20.dp)) {
-        backButton(navController, isBackButtonVisible)
-    }
-    /*backButton(navController, isBackButtonVisible)*/
 }
 
 
@@ -208,9 +219,17 @@ fun MovieInfo(movie: MovieData?) {
                     Row() {
                         // Rating
                         Column() {
-                            androidx.compose.material3.Text(
-                                text = "PG-13", style = MaterialTheme.typography.bodySmall,
-                            )
+                            /* androidx.compose.material3.Text(
+                                }, style = MaterialTheme.typography.bodySmall,
+                            )*/
+                            val usRelease =
+                                movie.releaseDates?.results?.find { it.iso31661 == "US" }
+                            /*val usRating =
+                                usRelease?.releaseDates?.find { it.iso6391 == "US" }?.certification.orEmpty()*/
+                            val usRating =
+                                usRelease?.releaseDates?.get(0)?.certification.orEmpty()
+
+                            Text(usRating, style = MaterialTheme.typography.bodySmall)
                         }
 
                         Spacer(modifier = Modifier.width(5.dp))
@@ -218,31 +237,48 @@ fun MovieInfo(movie: MovieData?) {
                         // Release Date
                         Column(
                         ) {
-                            movie.releaseDate?.let { it1 ->
+                            movie.releaseDate?.let { releaseDate ->
+                                val year = releaseDate.substring(0, 4)
                                 Text(
-                                    it1,
+                                    year,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
                         }
                     }
 
+                    Row() {
+                        val runtime = movie.runtime
+
+                        Text("$runtime minutes", style = MaterialTheme.typography.bodySmall)
+                    }
+
                     // Genres
-                   /* Row() {
-                        movie.genres?.forEach { genre ->
-                            genre.name?.let { GenreContainer(it) }
-                        }
-                    }*/
+                    /* Row() {
+                         movie.genres?.forEach { genre ->
+                             genre.name?.let { GenreContainer(it) }
+                         }
+                     }*/
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    LazyRow {
+                    /*LazyRow {
                         movie.genres?.let { genres ->
                             items(genres.size) { index ->
                                 genres[index].name?.let { GenreContainer(it) }
                             }
                         }
-                    }
+                    }*/
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        LazyRow {
+            movie?.genres?.let { genres ->
+                items(genres.size) { index ->
+                    genres[index].name?.let { GenreContainer(it) }
                 }
             }
         }
@@ -277,19 +313,75 @@ fun MovieInfo(movie: MovieData?) {
         Spacer(modifier = Modifier.height(20.dp))
 
         // Streaming Providers
-        Row(modifier = Modifier.fillMaxWidth()) {
-            /*if ((movie?.watchProviders != null) && (movie.watchProviders.results != null)) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    movie.watchProviders.results.forEach { provider ->
-                        Text(
-                            "${provider.key}"
-                        )
+        /*Row(modifier = Modifier.fillMaxWidth()) {
+            *//*val flatrateProviders = movie?.watchProviders?.results?.values?.firstOrNull()?.flatrate.orEmpty()*//**//*.filter { it.providerName == "US" }*//*
+
+            *//*val flatrateProviders = movie?.watchProviders?.results?.filter { it.key == "US"}*//*
+            val flatrateProviders = movie?.watchProviders?.results?.filter { it.key == "US" }
+                ?.flatMap { it.value.flatrate ?: emptyList() }
+                ?.map { it.logoPath.orEmpty() }
+                .orEmpty()
+            *//*    ?.flatMap { it.flatrate?: emptyList() }.orEmpty().filter*//*
+            val uniqueLogoPaths = HashSet<String>()
+
+            Log.d("TAG", flatrateProviders.toString())
+            flatrateProviders.forEach { logoPath ->
+                if (logoPath !in uniqueLogoPaths) {
+                    uniqueLogoPaths.add(logoPath)
+                    Card(modifier = Modifier.padding(end = 5.dp)) {
+                        Box(modifier = Modifier
+                            .width(40.dp)
+                            .height(40.dp)) {
+                            Image(
+                                painter = rememberAsyncImagePainter("https://image.tmdb.org/t/p/original/$logoPath"),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                 }
-            }*/
+            }
+        }*/
+        LazyRow(modifier = Modifier.fillMaxWidth()) {
+            val flatrateProviders = movie?.watchProviders?.results?.filter { it.key == "US" }
+                ?.flatMap { it.value.flatrate ?: emptyList() }
+                ?.map { it.logoPath.orEmpty() }
+                .orEmpty()
+
+            val uniqueLogoPaths = HashSet<String>()
+
+            flatrateProviders.forEach { logoPath ->
+                if (logoPath !in uniqueLogoPaths) {
+                    uniqueLogoPaths.add(logoPath)
+                    item {
+                        Card(modifier = Modifier.padding(end = 5.dp)) {
+                            Box(modifier = Modifier
+                                .width(40.dp)
+                                .height(40.dp)) {
+                                Image(
+                                    painter = rememberAsyncImagePainter("https://image.tmdb.org/t/p/original/$logoPath"),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
+        /*if ((movie?.watchProviders != null) && (movie.watchProviders.results != null)) {
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                movie.watchProviders.results.forEach { provider ->
+                    Text(
+                        "${}"
+                    )
+                }
+            }
+        }*/
 
         Spacer(modifier = Modifier.height(30.dp))
 
@@ -308,16 +400,41 @@ fun MovieInfo(movie: MovieData?) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text("Directors", style = MaterialTheme.typography.bodyMedium)
         }
-        /*Text(movie?.!!, style = MaterialTheme.typography.bodyMedium)*/
+        Row {
+            movie?.credits?.crew?.let { crew ->
+                val directors = crew.filter { it.job == "Director" }
+                Text(
+                    directors.joinToString { it.name.orEmpty() },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // Stars
         Row(modifier = Modifier.fillMaxWidth()) {
             Text("Stars", style = MaterialTheme.typography.bodyMedium)
-           /* Text()*/
-            /*Text(, style = MaterialTheme.typography.bodyMedium)
-            movie?.credits?.cast!!*/
+            /* Text()*/
+            /*     Text(, style = MaterialTheme.typography.bodyMedium)
+                 movie?.credits?.cast!!*/
+        }
+        /* LazyRow {
+             movie?.credits?.cast?.let { cast ->
+                 items(3) { index ->
+                     cast[index].name?.let { Text(cast.joinToString { it.name.orEmpty() }, style = MaterialTheme.typography.bodyMedium) }
+                 }
+             }
+         }*/
+        Row {
+            movie?.credits?.cast?.let { cast ->
+                Text(
+                    cast.take(3).joinToString { it.name.orEmpty() },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -355,6 +472,4 @@ fun GenreContainer(genre: String) {
             )
         }
     }
-
-
 }
