@@ -84,7 +84,7 @@ import com.tabka.backblogapp.network.models.Accept
 import com.tabka.backblogapp.network.models.AlertDialog
 import com.tabka.backblogapp.network.models.Dismiss
 import com.tabka.backblogapp.network.models.UserData
-import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.network.models.tmdb.MinimalMovieData
 import com.tabka.backblogapp.ui.shared.RequestHeader
 import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
@@ -116,11 +116,11 @@ fun LogDetailsScreen(
 
     // Movies
     val movieState = logDetailsViewModel.movies.observeAsState()
-    val movies = movieState.value ?: emptyList()
+    val movies = movieState.value ?: mutableMapOf()
 
     // Watched Movies
     val watchedMovieState = logDetailsViewModel.watchedMovies.observeAsState()
-    val watchedMovies = watchedMovieState.value ?: emptyList()
+    val watchedMovies = watchedMovieState.value ?: mutableMapOf()
 
     // Owner
     val ownerState = logDetailsViewModel.owner.observeAsState()
@@ -224,7 +224,7 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
 fun LogButtons(
     navController: NavHostController,
     logName: String,
-    movies: List<MovieData>,
+    movies: MutableMap<String, MinimalMovieData>,
     isOwner: Boolean,
     collaborators: List<UserData>,
     logDetailsViewModel: LogDetailsViewModel,
@@ -387,8 +387,9 @@ fun LogButtons(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun LogList(navController: NavHostController, logId: String, movies: List<MovieData>, watchedMovies: List<MovieData>,
-            logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
+fun LogList(
+    navController: NavHostController, logId: String, movies: MutableMap<String, MinimalMovieData>, watchedMovies: MutableMap<String, MinimalMovieData>,
+    logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
     Log.d(TAG, "Movies: $movies")
 
     if (movies.isNotEmpty()) {
@@ -400,8 +401,11 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
                 .height(moviesHeight)
                 .testTag("MOVIES_LIST")
         ) {
-            items(movies.size) { index ->
-                val movie = movies[index]
+
+            val moviesList = movies.values.toList()
+
+            items(moviesList.size) { index ->
+                val movie = moviesList[index]
 
                 val state = rememberDismissState(
                     confirmStateChange = {
@@ -456,8 +460,11 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
                 .height(watchedMoviesHeight)
                 .testTag("WATCHED_MOVIES_LIST")
         ) {
-            items(watchedMovies.size) { index ->
-                val movie = watchedMovies[index]
+
+            val watchedMoviesList = watchedMovies.values.toList()
+
+            items(watchedMoviesList.size) { index ->
+                val movie = watchedMoviesList[index]
                 val state = rememberDismissState(
                     confirmStateChange = {
                         if (it == DismissValue.DismissedToStart) {
@@ -502,7 +509,7 @@ fun LogList(navController: NavHostController, logId: String, movies: List<MovieD
 }
 
 @Composable
-fun MovieEntry(navController: NavHostController, movie: MovieData) {
+fun MovieEntry(navController: NavHostController, movie: MinimalMovieData) {
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -523,7 +530,7 @@ fun MovieEntry(navController: NavHostController, movie: MovieData) {
                     .clip(RoundedCornerShape(5.dp))
             ) {
                 val imageBaseURL =
-                    "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
+                    "https://image.tmdb.org/t/p/w500/${movie.image}"
                 Image(
                     painter = rememberAsyncImagePainter(imageBaseURL),
                     contentDescription = null,
@@ -765,7 +772,7 @@ fun EditSheetContent(
     setAlertDialogState: (AlertDialog) -> Unit,
     isOwner: Boolean,
     logName: String,
-    movies: List<MovieData>,
+    movies: MutableMap<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel
 ) {
@@ -811,7 +818,7 @@ fun EditSheetContent(
             }
         }
     }*/
-    val editedMovies = remember { mutableStateOf(movies) }
+    val editedMovies = remember { mutableStateOf(movies.values.toList()) }
 
     Box(modifier = Modifier.height(450.dp)) {
         val state = rememberReorderableLazyListState(onMove = { from, to ->
@@ -993,7 +1000,7 @@ fun EditSheetContent(
 
 
 @Composable
-fun EditLogEntry(movie: MovieData) {
+fun EditLogEntry(movie: MinimalMovieData) {
     Row(
         modifier = Modifier
             .padding(bottom = 10.dp),

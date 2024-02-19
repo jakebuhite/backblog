@@ -198,7 +198,6 @@ open class LogViewModel : ViewModel() {
                         val logId = result.item
                         logRepository.addCollaborators(logId, collaborators)
                         loadLogs()
-                        //resetMovie()
                     }
                     is DataResult.Failure -> throw result.throwable
                 }
@@ -237,7 +236,6 @@ open class LogViewModel : ViewModel() {
             Log.d(TAG, "Creating Log: $log")
             localLogRepository.createLog(log)
             loadLogs()
-            resetMovie()
         }
     }
 

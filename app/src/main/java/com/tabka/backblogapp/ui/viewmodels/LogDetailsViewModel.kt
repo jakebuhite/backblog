@@ -9,21 +9,16 @@ import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
-import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.network.models.tmdb.MinimalMovieData
 import com.tabka.backblogapp.network.repository.LogLocalRepository
 import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 open class LogDetailsViewModel: ViewModel() {
     private val tag = "LogDetailsViewModel"
@@ -39,8 +34,11 @@ open class LogDetailsViewModel: ViewModel() {
     private val movieRepository = MovieRepository(apiService)
     private val userRepository = UserRepository()
 
-    open val movies: MutableLiveData<List<MovieData>> = MutableLiveData()
-    open val watchedMovies: MutableLiveData<List<MovieData>> = MutableLiveData()
+    val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
+    val watchedMovies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
+
+
+    //open val watchedMovies: MutableLiveData<List<MinimalMovieData>> = MutableLiveData()
     val owner: MutableLiveData<UserData> = MutableLiveData()
     open val isOwner: MutableLiveData<Boolean> = MutableLiveData()
     open val collaboratorsList: MutableLiveData<List<UserData>> = MutableLiveData()
@@ -53,21 +51,10 @@ open class LogDetailsViewModel: ViewModel() {
         getUserData(isOwner = true)
         // Get the collaborators
         getUserData(isOwner = false)
-        Log.d(tag, "New Log get: ${logData.value}")
-    }
-
-    private fun updateMovieList(newList: List<MovieData>) {
-        movies.value = newList
-        Log.d(tag, "Here are my updated movies: $newList")
-
     }
 
     private fun updateIsOwner(userIsOwner: Boolean) {
         isOwner.value = userIsOwner
-    }
-
-    private fun updateWatchedMovieList(newList: List<MovieData>) {
-        watchedMovies.value = newList
     }
 
     private fun updateOwner(user: UserData) {
@@ -121,10 +108,8 @@ open class LogDetailsViewModel: ViewModel() {
     }
 
     open suspend fun getLogData(logId: String) {
-        Log.d(tag, "Getting log data!")
         viewModelScope.launch {
             try {
-                Log.d(tag, "Trying now!")
                 //val user = auth.currentUser?.uid
                 val currentUser = auth.currentUser
                 if (currentUser != null) {
@@ -144,9 +129,7 @@ open class LogDetailsViewModel: ViewModel() {
                     }
                 } else {
                     val result = localRepository.getLogById(logId)
-                    Log.d(tag, "Here is the log: $result")
                     if (result != null) {
-                        Log.d(tag, "The log result: $result")
                         updateLogData(result)
                     } else {
                         throw Throwable("Failed to get log from local log repository")
@@ -158,47 +141,59 @@ open class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    private suspend fun getMovies() {
+    private fun getMovies() {
         val movieIds = logData.value?.movieIds ?: listOf()
 
-        viewModelScope.launch {
-            try {
-                val movieDataList = mutableListOf<MovieData>()
+        for (movieId in movieIds) {
+            // Set movieId to empty val to maintain order
+            var movieData = MinimalMovieData()
+            movies.value?.set(movieId, movieData)
 
-                // Launch all fetch operations in parallel
-                val fetchJobs = movieIds.map { movieId ->
-                    async {
-                        val deferredMovie = CompletableDeferred<MovieData?>()
-                        movieRepository.getMovieById(
-                            movieId = movieId,
-                            onResponse = { movieResponse ->
-                                deferredMovie.complete(movieResponse)
-                            },
-                            onFailure = { e ->
-                                Log.e(tag, "Failed to fetch details for movie ID $movieId: $e")
-                                deferredMovie.complete(null) // Complete with null on failure
-                            }
-                        )
-                        deferredMovie.await() // Wait for the callback to complete
+            try {
+                // Assume getMinimalMovieDetailsById is a suspend function
+                viewModelScope.launch {
+                    movieData = movieRepository.getMinimalMovieDetailsById(movieId)
+                    withContext(Dispatchers.Main) {
+                        /*val tempMap = movies.value ?: mutableMapOf()
+                        tempMap[movieId] = movieData
+                        movies.value = tempMap*/
+                        movies.value?.set(movieId, movieData)
+                        Log.d(tag, "Movies: ${movies.value}")
                     }
                 }
-
-                // Await all the operations to complete and filter out nulls
-                fetchJobs.awaitAll().filterNotNull().also { fetchedMovies ->
-                    movieDataList.addAll(fetchedMovies)
-                }
-
-                withContext(Dispatchers.Main) {
-                    Log.d(tag, "Here are my movies: $movieDataList")
-                    updateMovieList(movieDataList)
-                }
+                //}
             } catch (e: Exception) {
-                Log.e(tag, "Failed to fetch details for movies: $e")
+                Log.e(tag, "Failed to fetch details for movie ID $movieId: $e")
             }
         }
     }
 
-    fun updateLog(newLogName: String, editedMovies: List<MovieData>) {
+    private fun getWatchedMovies() {
+        val movieIds = logData.value?.watchedIds ?: listOf()
+
+        for (movieId in movieIds) {
+            // Set movieId to empty val to maintain order
+            var movieData = MinimalMovieData()
+            watchedMovies.value?.set(movieId, movieData)
+
+            try {
+                // Assume getMinimalMovieDetailsById is a suspend function
+                viewModelScope.launch {
+                    movieData = movieRepository.getMinimalMovieDetailsById(movieId)
+                    withContext(Dispatchers.Main) {
+                        watchedMovies.value?.set(movieId, movieData)
+                        Log.d(tag, "Movies: ${movies.value}")
+                    }
+                }
+                //}
+            } catch (e: Exception) {
+                Log.e(tag, "Failed to fetch details for movie ID $movieId: $e")
+            }
+        }
+    }
+
+
+    fun updateLog(newLogName: String, editedMovies: List<MinimalMovieData>) {
         Log.d(tag, "Update log! ${editedMovies.map { it.id }}")
         val logId = logData.value?.logId!!
 
@@ -246,41 +241,6 @@ open class LogDetailsViewModel: ViewModel() {
             localRepository.updateLog(logId, newMovies)
             viewModelScope.launch {
                 getLogData(logId)
-            }
-        }
-    }
-
-    private suspend fun getWatchedMovies() {
-        val movieDataList = mutableListOf<MovieData>()
-        val watchedMovieIds = logData.value?.watchedIds ?: mutableListOf()
-
-        viewModelScope.launch {
-            try {
-                watchedMovieIds.forEach { movieId ->
-                    try {
-                        val movieData = suspendCoroutine { cont ->
-                            movieRepository.getMovieById(
-                                movieId = movieId,
-                                onResponse = { movieResponse ->
-                                    cont.resume(movieResponse)
-                                },
-                                onFailure = { e ->
-                                    Log.e("Movies", "Failed to fetch details for movie ID $movieId: $e")
-                                    cont.resume(null) // Resume with null or consider signaling an error
-                                }
-                            )
-                        }
-
-                        movieData?.let { movieDataList.add(it) }
-                    } catch (e: Exception) {
-                        Log.e("Movies", "Error fetching movie ID $movieId: $e")
-                    }
-                }
-                withContext(Dispatchers.Main) {
-                    updateWatchedMovieList(movieDataList)
-                }
-            } catch (e: Exception) {
-                Log.e("Movies", "Failed to fetch details for movies: $e")
             }
         }
     }

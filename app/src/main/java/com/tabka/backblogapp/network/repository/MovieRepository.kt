@@ -7,16 +7,22 @@ import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.tmdb.MinimalMovieData
+import com.tabka.backblogapp.network.models.tmdb.MinimalMovieDataResult
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.util.DataResult
 import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class MovieRepository(private val movieApiService: ApiService) {
 
@@ -135,6 +141,71 @@ class MovieRepository(private val movieApiService: ApiService) {
                 onFailure("Failure: ${t.message}")
             }
         })
+    }
+
+/*    suspend fun getMinimalMovieDetailsById(movieId: String, onResponse: (MinimalMovieData) -> Unit, onFailure: (String) -> Unit) {
+        val call = movieApiService.getMinimalMovieDetails(
+            movieId = movieId,
+            appendToResponse = "images",
+            authorization = "Bearer " + BuildConfig.MOVIE_SECRET
+        )
+
+        call.enqueue(object : Callback<MinimalMovieDataResult> {
+            override fun onResponse(call: Call<MinimalMovieDataResult>, response: Response<MinimalMovieDataResult>) {
+
+                if (response.isSuccessful) {
+                    val minimalMovieDataResult = response.body()
+                    val result = MinimalMovieData (
+                        id = minimalMovieDataResult?.id.toString(),
+                        image = minimalMovieDataResult?.images?.backdrops?.get(0)?.filePath ?: "",
+                        title = minimalMovieDataResult?.title
+                    )
+                    onResponse(result)
+                } else {
+                    onFailure("Error: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MinimalMovieDataResult>, t: Throwable) {
+                onFailure("Failure: ${t.message}")
+            }
+        })
+    }*/
+    @OptIn(ExperimentalCoroutinesApi::class)
+    suspend fun getMinimalMovieDetailsById(movieId: String): MinimalMovieData = suspendCancellableCoroutine { continuation ->
+        val call = movieApiService.getMinimalMovieDetails(
+            movieId = movieId,
+            appendToResponse = "images",
+            authorization = "Bearer " + BuildConfig.MOVIE_SECRET
+        )
+
+        call.enqueue(object : Callback<MinimalMovieDataResult> {
+            override fun onResponse(call: Call<MinimalMovieDataResult>, response: Response<MinimalMovieDataResult>) {
+                if (response.isSuccessful) {
+                    val minimalMovieDataResult = response.body()
+                    val result = MinimalMovieData(
+                        id = minimalMovieDataResult?.id.toString(),
+                        image = minimalMovieDataResult?.images?.backdrops?.get(0)?.filePath ?: "",
+                        title = minimalMovieDataResult?.title ?: ""
+                    )
+                    Log.d(tag, "good")
+                    continuation.resume(result)
+                } else {
+                    Log.d(tag, "Not good")
+                    continuation.resumeWithException(RuntimeException("API error: ${response.message()}"))
+                }
+            }
+
+            override fun onFailure(call: Call<MinimalMovieDataResult>, t: Throwable) {
+                Log.d(tag, "Not good")
+                continuation.resumeWithException(t)
+            }
+        })
+
+        // Handle coroutine cancellation
+        continuation.invokeOnCancellation {
+            call.cancel()
+        }
     }
 
     fun searchMovie(query: String, page: Int, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {

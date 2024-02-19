@@ -207,7 +207,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
             .clickable { navController.navigate("search_movie_details_${movie.id}") }
             .testTag("MOVIE_RESULT"),
             verticalArrangement = Arrangement.Center){
-            Text("${movie.originalTitle}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("${movie.title}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
