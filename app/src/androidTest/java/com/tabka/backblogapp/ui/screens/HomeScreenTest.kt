@@ -37,7 +37,7 @@ class FakeLogViewModel(initialLogs: List<LogData>? = null) : LogViewModel() {
     override var allLogs: StateFlow<List<LogData>?> = _allLogs.asStateFlow()
 
     private var _movie = MutableStateFlow<MovieData?>(null)
-    override var movie: StateFlow<MovieData?> = _movie.asStateFlow()
+    override var movie: StateFlow<Pair<MovieData?, String>> = _movie.asStateFlow()
 
     override fun getMovieById(movieId: String) {
         val fakeMovieData = createFakeMovieData(id=531330, title="Fake Top Gun")
