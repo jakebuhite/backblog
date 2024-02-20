@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 data class MinimalMovieData(
     val id: String? = "",
-    val image: String? = null,
+    var image: String? = null,
     val title: String? = "",
 )
 
