@@ -1,6 +1,5 @@
 package com.tabka.backblogapp.network
 
-import com.tabka.backblogapp.network.models.tmdb.MinimalMovieDataResult
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
@@ -17,13 +16,6 @@ interface ApiService {
         @Query("append_to_response") appendToResponse: String,
         @Header("Authorization") authorization: String
     ): Call<MovieData>
-
-    @GET("movie/{movieId}")
-    fun getMinimalMovieDetails(
-        @Path("movieId") movieId: String,
-        @Query("append_to_response") appendToResponse: String,
-        @Header("Authorization") authorization: String
-    ): Call<MinimalMovieDataResult>
 
     @GET("movie/{movieId}/images")
     fun getMovieHalfSheet(

@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
@@ -85,6 +86,7 @@ import com.tabka.backblogapp.network.models.AlertDialog
 import com.tabka.backblogapp.network.models.Dismiss
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MinimalMovieData
+import com.tabka.backblogapp.ui.shared.LoadingSpinner
 import com.tabka.backblogapp.ui.shared.RequestHeader
 import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
@@ -130,6 +132,9 @@ fun LogDetailsScreen(
     val isOwnerState = logDetailsViewModel.isOwner.observeAsState()
     val isOwner = isOwnerState.value ?: true
 
+    val isLoadingState = logDetailsViewModel.isLoading.observeAsState()
+    val isLoading = isLoadingState.value ?: true
+
     // Collaborators
     val collaboratorsState = logDetailsViewModel.collaboratorsList.observeAsState()
     val collaborators = collaboratorsState.value ?: emptyList()
@@ -159,7 +164,14 @@ fun LogDetailsScreen(
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
         Spacer(modifier = Modifier.height(20.dp))
-        LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.width(64.dp),
+                color = Color(0xFF3891E1)
+            )
+        } else {
+            LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
+        }
     }
 
     Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")

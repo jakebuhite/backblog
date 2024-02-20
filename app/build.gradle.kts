@@ -100,6 +100,7 @@ tasks.create("jacocoTestReport", JacocoReport::class) {
 }
 
 dependencies {
+    implementation("io.coil-kt:coil-gif:2.0.0-rc01")
     implementation("io.coil-kt:coil-compose:2.0.0-rc01")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
