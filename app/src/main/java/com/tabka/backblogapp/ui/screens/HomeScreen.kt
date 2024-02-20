@@ -204,7 +204,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?) {
     }
 
     Card(
-        shape = RoundedCornerShape(5.dp),
+        shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
         modifier = cardModifier,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
@@ -1033,7 +1033,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                                 }
                             )
                         },
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color.Transparent
                     )

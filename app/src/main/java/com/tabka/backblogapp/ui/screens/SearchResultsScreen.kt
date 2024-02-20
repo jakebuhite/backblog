@@ -141,6 +141,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
         }
     }
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
+
     val halfSheets = searchResultsViewModel.halfSheet.collectAsState().value
     if (movieResults?.isNotEmpty() == true) {
         Box(modifier = Modifier.height(500.dp)) {
@@ -408,3 +409,4 @@ fun NoResults() {
         )
     }
 }
+

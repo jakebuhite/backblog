@@ -69,7 +69,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "home_movie_details_{movieId}",
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType })
             ) { backStackEntry ->
-                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"))
+                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), logViewModel)
             }
         }
 
@@ -87,7 +87,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "search_movie_details_{movieId}",
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType })
             ) { backStackEntry ->
-                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"))
+                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), logViewModel)
             }
         }
 
