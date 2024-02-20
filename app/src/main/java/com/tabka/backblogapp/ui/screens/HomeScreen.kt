@@ -168,9 +168,13 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
             } else if (it.backdropPath != null) {
                 image = it.backdropPath
             }
+
+            val usRelease = it.releaseDates?.results?.find { result -> result.iso31661 == "US" }
+            val usRating = usRelease?.releaseDates?.get(0)?.certification.orEmpty()
+
             NextMovie(navController, image, it.id)
             Spacer(modifier = Modifier.height(5.dp))
-            NextMovieInfo(it.id, it.title, it.releaseDate, it.posterPath, priorityLog.logId ?: "", logViewModel)
+            NextMovieInfo(it.id, it.title, it.releaseDate, usRating, it.posterPath, priorityLog.logId ?: "", logViewModel)
         } ?: run {
             NextMovie(navController, null, null)
             Spacer(modifier = Modifier.height(5.dp))
@@ -266,6 +270,7 @@ fun NextMovieInfo(
     movieId: Int?,
     title: String?,
     releaseDate: String?,
+    usRating: String?,
     image: String?,
     logId: String,
     logViewModel: LogViewModel
@@ -292,10 +297,13 @@ fun NextMovieInfo(
             }
 
             Row() {
-                // Rating
                 Column() {
-                    Text(text = "PG-13", style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.testTag("MOVIE_RATING"))
+                    usRating?.ifEmpty { "Not Rated" }?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(5.dp))
