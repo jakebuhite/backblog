@@ -40,6 +40,7 @@ import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddToPhotos
+import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -390,12 +391,12 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             var isClicked by remember { mutableStateOf(false) }
             val scaleFactor = if (isClicked) 1.1f else 1f
             Image(
-                imageVector = Icons.Default.AddToPhotos,
+                imageVector = Icons.Default.LibraryAdd,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
-                    .scale(scaleFactor)
+                    .scale(scaleX = -1f, scaleY = 1f)
                     .clickable {
                         isClicked = true
                         isSheetOpen = true
