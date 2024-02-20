@@ -1,21 +1,31 @@
-/*
 package com.tabka.backblogapp
 
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
+import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.Owner
 import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.util.DataResult
+import com.tabka.backblogapp.util.FirebaseError
+import com.tabka.backblogapp.util.FirebaseExceptionType
+import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
-import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 
 class LogRepositoryTest {
@@ -28,6 +38,15 @@ class LogRepositoryTest {
 
     @Mock
     private lateinit var mockDocument: DocumentReference
+
+    @Mock
+    private lateinit var mockQuery: Query
+
+    @Mock
+    private lateinit var mockDocumentSnapshot: DocumentSnapshot
+
+    @Mock
+    private lateinit var mockQuerySnapshot: QuerySnapshot
 
     private lateinit var logRepository: LogRepository
 
@@ -44,7 +63,22 @@ class LogRepositoryTest {
         val ownerId = "Bob123"
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
         whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("doc123")
+
+        // Get Logs mock
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf())
+
+        whenever(mockQuerySnapshot.documents.map<DocumentSnapshot, LogData> { doc ->
+            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
+        }).thenReturn(emptyList())
+
+        // Back to Add Logs
         val task: Task<Void> = Tasks.forResult(null)
         whenever(mockDocument.set(anyMap<String, Any>())).thenReturn(task)
 
@@ -53,7 +87,6 @@ class LogRepositoryTest {
 
         // Assert
         assert(result is DataResult.Success)
-        verify(mockDocument).set(anyMap<String, Any>())
     }
 
     @Test
@@ -63,9 +96,21 @@ class LogRepositoryTest {
         val ownerId = "Bob123"
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
         whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("doc123")
 
-        // Simulate exception
+        // Get Logs mock
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf())
+
+        whenever(mockQuerySnapshot.documents.map<DocumentSnapshot, LogData> { doc ->
+            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
+        }).thenReturn(emptyList())
+
         val exception = Exception("Simulated exception")
         val task: Task<Void> = Tasks.forException(exception)
         whenever(mockDocument.set(anyMap<String, Any>())).thenReturn(task)
@@ -76,83 +121,48 @@ class LogRepositoryTest {
         // Assert
         assert(result is DataResult.Failure)
         assert((result as DataResult.Failure).throwable == exception)
-        verify(mockDocument).set(anyMap<String, Any>())
     }
-*/
-/*
+
     @Test
-    fun testGetUserShouldReturnSuccess() = runBlocking {
+    fun testAddLogSyncShouldReturnSuccess(): Unit = runBlocking {
         // Arrange
-        val userId = "fakeUserId"
-        val joinDate = System.currentTimeMillis().toString()
-        val userData = UserData(userId, "FakeUser", joinDate, 1, emptyMap(), emptyMap())
-        val userDataMap = mapOf(
-            "user_id" to userId,
-            "username" to "FakeUser",
-            "join_date" to joinDate,
-            "avatar_preset" to 1,
-            "friends" to emptyMap<String, Boolean>(),
-            "blocked" to emptyMap<String, Boolean>()
-        )
+        val name = "My Log 123"
+        val ownerId = "Bob123"
+        val creationDate = System.currentTimeMillis().toString()
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
         whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("doc123")
 
-        val mockDocumentSnapshot: DocumentSnapshot = mock(DocumentSnapshot::class.java)
-
-        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
-        whenever(mockDocumentSnapshot.data).thenReturn(userDataMap)
-
-        val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
-        whenever(mockDocument.get()).thenReturn(task)
+        val task: Task<Void> = Tasks.forResult(null)
+        whenever(mockDocument.set(anyMap<String, Any>())).thenReturn(task)
 
         // Act
-        val result = userRepository.getUser(userId)
+        val result = logRepository.addLog(name, ownerId, 0, creationDate, mutableListOf(), mutableListOf())
 
         // Assert
         assert(result is DataResult.Success)
-        assert((result as DataResult.Success).item == userData)
     }
 
     @Test
-    fun testGetUserShouldReturnNotFound() = runBlocking {
+    fun testAddLogSyncShouldReturnException(): Unit = runBlocking {
         // Arrange
-        val userId = "nonExistentUserId"
+        val name = "My Log 123"
+        val ownerId = "Bob123"
+        val creationDate = System.currentTimeMillis().toString()
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
         whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("doc123")
 
-        val mockDocumentSnapshot: DocumentSnapshot = mock(DocumentSnapshot::class.java)
-
-        // Simulate the scenario where the document does not exist
-        whenever(mockDocumentSnapshot.exists()).thenReturn(false)
-
-        val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
-        whenever(mockDocument.get()).thenReturn(task)
-
-        // Act
-        val result = userRepository.getUser(userId)
-
-        // Assert
-        assert(result is DataResult.Failure)
-        assert((result as DataResult.Failure).throwable.toString() == FirebaseError(FirebaseExceptionType.NOT_FOUND).toString())
-    }
-
-    @Test
-    fun testGetUserShouldReturnException() = runBlocking {
-        // Arrange
-        val userId = "fakeUserId"
-
-        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
-        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
-
-        // Simulate exception
         val exception = Exception("Simulated exception")
-        val task: Task<DocumentSnapshot> = Tasks.forException(exception)
-        whenever(mockDocument.get()).thenReturn(task)
+        val task: Task<Void> = Tasks.forException(exception)
+        whenever(mockDocument.set(anyMap<String, Any>())).thenReturn(task)
 
         // Act
-        val result = userRepository.getUser(userId)
+        val result = logRepository.addLog(name, ownerId, 0, creationDate, mutableListOf(), mutableListOf())
 
         // Assert
         assert(result is DataResult.Failure)
@@ -160,75 +170,129 @@ class LogRepositoryTest {
     }
 
     @Test
-    fun testUpdateUserShouldReturnSuccess(): Unit = runBlocking {
+    fun testGetLogExistShouldReturnSuccess(): Unit = runBlocking {
         // Arrange
-        val userId = "fakeUserId"
-        val updateData = mapOf(
-            "username" to "NewUsername",
-            "avatar_preset" to 2,
-            "friends" to mapOf("friendId" to true),
-            "blocked" to mapOf("blockedId" to true),
-            "password" to "newPassword"
+        val owner = Owner(
+            userId = "user123",
+            priority = 0
+        )
+
+        val logData = LogData(
+            logId = "log123",
+            name = "My log",
+            creationDate = "34345564654",
+            lastModifiedDate = "3244365690",
+            isVisible = true,
+            owner = owner,
+            collaborators = mutableListOf(),
+            order = emptyMap(),
+            movieIds = mutableListOf(),
+            watchedIds = mutableListOf()
+        )
+
+        val logDataMap = mapOf(
+            "log_id" to "log123",
+            "name" to "My log",
+            "creation_date" to "34345564654",
+            "last_modified_date" to "3244365690",
+            "is_visible" to true,
+            "owner" to null,
+            "collaborators" to mutableListOf<String>(),
+            "order" to emptyMap<String, Int>(),
+            "movie_ids" to mutableListOf<String>(),
+            "watched_ids" to mutableListOf<String>()
         )
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
         whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
 
-        val updateDataTask: Task<Void> = Tasks.forResult(null)
-        whenever(mockDocument.update(anyMap())).thenReturn(updateDataTask)
+        val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
+        whenever(mockDocument.get()).thenReturn(task)
 
-        val updateUserTask: Task<Void> = Tasks.forResult(null)
-        whenever(mockAuth.currentUser).thenReturn(mock())
-        whenever(mockAuth.currentUser!!.updatePassword(anyString())).thenReturn(updateUserTask)
+        whenever(task.result.exists()).thenReturn(true)
+
+        whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
 
         // Act
-        val result = userRepository.updateUser(userId, updateData)
+        val result = logRepository.getLog(logData.logId!!)
 
         // Assert
         assert(result is DataResult.Success)
-        verify(mockDocument).update(anyMap())
-        verify(mockAuth.currentUser!!).updatePassword("newPassword")
+        assertEquals((result as DataResult.Success).item.logId, logData.logId)
     }
 
     @Test
-    fun testUpdateUserWithoutUpdateShouldReturnSuccess(): Unit = runBlocking {
+    fun testGetLogNotExistShouldReturnException(): Unit = runBlocking {
         // Arrange
-        val userId = "fakeUserId"
-        val updateData = mapOf("password" to "newPassword")
-
-        val updateUserTask: Task<Void> = Tasks.forResult(null)
-        whenever(mockAuth.currentUser).thenReturn(mock())
-        whenever(mockAuth.currentUser!!.updatePassword(anyString())).thenReturn(updateUserTask)
-
-        // Act
-        val result = userRepository.updateUser(userId, updateData)
-
-        // Assert
-        assert(result is DataResult.Success)
-        verifyNoInteractions(mockDocument)
-    }
-
-    @Test
-    fun testUpdateUserShouldReturnException(): Unit = runBlocking {
-        // Arrange
-        val userId = "fakeUserId"
-        val updateData = mapOf("username" to "NewUsername")
+        val logId = "log123"
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
         whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
 
-        // Simulate exception
-        val exception = Exception("Simulated exception")
-        val task: Task<Void> = Tasks.forException(exception)
-        whenever(mockDocument.update(anyMap())).thenReturn(task)
+        val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
+        whenever(mockDocument.get()).thenReturn(task)
+
+        whenever(task.result.exists()).thenReturn(false)
 
         // Act
-        val result = userRepository.updateUser(userId, updateData)
+        val result = logRepository.getLog(logId)
 
         // Assert
         assert(result is DataResult.Failure)
-        assert((result as DataResult.Failure).throwable.toString() == FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION).toString())
-        verify(mockDocument).update(anyMap())
-    }*//*
+        assert((result as DataResult.Failure).throwable.toString() == FirebaseError(FirebaseExceptionType.NOT_FOUND).toString())
+    }
 
-}*/
+    @Test
+    fun testGetLogShouldReturnException(): Unit = runBlocking {
+        // Arrange
+        val logId = "log123"
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+
+        val exception = Exception("Simulated exception")
+        val task: Task<DocumentSnapshot> = Tasks.forException(exception)
+        whenever(mockDocument.get()).thenReturn(task)
+
+        // Act
+        val result = logRepository.getLog(logId)
+
+        // Assert
+        assert(result is DataResult.Failure)
+        assert((result as DataResult.Failure).throwable == exception)
+    }
+
+    @Test
+    fun testGetLogsShouldReturnException(): Unit = runBlocking {
+        // Arrange
+        val userId = "fakeUserId"
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("doc123")
+
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
+
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf())
+
+        whenever(mockQuerySnapshot.documents.map<DocumentSnapshot, LogData> { doc ->
+            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
+        }).thenReturn(emptyList())
+
+        val exception = Exception("Simulated exception")
+        val task: Task<Void> = Tasks.forException(exception)
+        whenever(mockDocument.set(anyMap<String, Any>())).thenReturn(task)
+
+        // Act
+        val result = logRepository.getLogs(userId, true)
+
+        // Assert
+        assert(result is DataResult.Failure)
+        assert((result as DataResult.Failure).throwable == exception)
+    }
+}

@@ -26,6 +26,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,14 +41,18 @@ private val TAG = "AlertDialog"
 fun CustomAlertDialog(header: String?, message: String?, dismissText: String?, dismissTextColor: Color?,
                       acceptText: String?, acceptTextColor: Color?, onDismiss: () -> Unit, onExit: () -> Unit) {
     Dialog(
-        onDismissRequest = { onDismiss() }, properties = DialogProperties(
+        onDismissRequest = { onDismiss() },
+        properties = DialogProperties(
             dismissOnBackPress = false, dismissOnClickOutside = false
         )
     ) {
         Card(
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
-                .fillMaxWidth().padding(0.dp).height(IntrinsicSize.Min),
+                .fillMaxWidth()
+                .padding(0.dp)
+                .height(IntrinsicSize.Min)
+                .testTag("ALERT_DIALOG"),
             elevation = 0.dp
         ) {
             Column(
@@ -102,7 +107,8 @@ fun CustomAlertDialog(header: String?, message: String?, dismissText: String?, d
                                 .padding(0.dp)
                                 .weight(1F)
                                 .border(0.dp, color = Color.Transparent)
-                                .height(48.dp),
+                                .height(48.dp)
+                                .testTag("ALERT_DIALOG_ACCEPT_BUTTON"),
                             elevation = ButtonDefaults.elevation(0.dp, 0.dp),
                             shape = RoundedCornerShape(0.dp),
                             contentPadding = PaddingValues()

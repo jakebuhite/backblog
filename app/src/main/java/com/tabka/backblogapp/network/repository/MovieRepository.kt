@@ -7,6 +7,7 @@ import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.tmdb.MinimalMovieDataResult
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
@@ -127,7 +128,7 @@ class MovieRepository(private val movieApiService: ApiService) {
                     Log.d("Movies", movieResponse.toString())
                     onResponse(movieResponse)
                 } else {
-                    onFailure("Error: ${response.message()}")
+                    onFailure("Error: $response")
                 }
             }
 

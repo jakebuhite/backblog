@@ -14,14 +14,24 @@ class SearchResultsViewModel : ViewModel() {
 
     private val movieRepository = MovieRepository(apiService)
 
-    private val _movieResults = MutableStateFlow<List<MovieSearchResult>?>(emptyList())
+    private val _movieResults: MutableStateFlow<List<MovieSearchResult>?> = MutableStateFlow(mutableListOf())
     val movieResults = _movieResults.asStateFlow()
+
+    private val _halfSheets: MutableStateFlow<MutableMap<String, String>> = MutableStateFlow(mutableMapOf())
+    val halfSheet = _halfSheets.asStateFlow()
 
     fun getMovieResults(query: String) {
         movieRepository.searchMovie(query, 1,
             onResponse = { searchData ->
-                searchData?.results?.forEach { searchResult ->
-                    Log.d(TAG, "$searchResult")
+                searchData?.results?.forEach {
+                    val movieId = it.id?.toString() ?: ""
+                    movieRepository.getMovieHalfSheet(movieId,
+                        onResponse = {backdropPath ->
+                            _halfSheets.value[movieId] = backdropPath
+                        },
+                        onFailure = { error ->
+                            Log.d(TAG, error)
+                        })
                 }
                 Log.d(TAG, searchData.toString())
                 _movieResults.value = searchData?.results

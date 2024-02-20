@@ -146,6 +146,7 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
         priorityLog.movieIds?.firstOrNull()?.let { movieId ->
             logViewModel.getMovieById(movieId)
         } ?: run {
+            logViewModel.loadLogs()
             logViewModel.resetMovie()
         }
     }
@@ -159,10 +160,12 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
         Spacer(modifier = Modifier.height(5.dp))
 
         //val movieId = priorityLog.movieIds?.keys?.firstOrNull()
-        movie?.let {
+        movie.first?.let {
             Log.d(TAG, "This is the movie if it exists: $it")
             var image: String? = null
-            if (it.backdropPath != null) {
+            if (movie.second != "") {
+                image = movie.second
+            } else if (it.backdropPath != null) {
                 image = it.backdropPath
             }
             NextMovie(navController, image, it.id)
@@ -530,7 +533,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             Spacer(modifier = Modifier.height(15.dp))
 
             // Add collaborators section
-            Box(modifier = Modifier.height(200.dp)) {
+            Box(modifier = Modifier.weight(1f)) {
                 LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
                     items(sortedUserList.size) { index ->
                         val friend = sortedUserList[index]
@@ -542,8 +545,6 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                     }
                 }
             }
-            //Spacer(modifier = Modifier.height(10.dp))
-            Spacer(modifier = Modifier.weight(1f))
 
             // Create Button tab
             NewLogBottomSection(navController, logName, onCreateClick = { createdLogName ->
@@ -900,7 +901,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                 var alpha by remember { mutableStateOf(1f) }
 
                 val log = allLogs[index]
-                var movieData by remember(log.movieIds?.firstOrNull()) { mutableStateOf<MovieData?>(null) }
+                var movieData by remember(log.movieIds?.firstOrNull()) { mutableStateOf<Pair<MovieData?, String>>(null to "") }
 
                 val movieId = log.movieIds?.firstOrNull()
                 Log.d(TAG, "First Movie ID: $movieId")
@@ -912,7 +913,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                             result.data?.let { data ->
                                 movieData = data
                                 // Find the corresponding LogPosition and update its imageUrl
-                                logPositions.find { position -> position.logId == log.logId }?.imageUrl?.value = "https://image.tmdb.org/t/p/w500/${data.backdropPath}"
+                                logPositions.find { position -> position.logId == log.logId }?.imageUrl?.value = "https://image.tmdb.org/t/p/w500/${movieData.second}"
                             }
                         }
                     } ?: run {
@@ -920,8 +921,11 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                     }
                 }
 
-                movieData?.let {
-                    if (it.backdropPath != null) {
+                movieData.first?.let {
+                    if (movieData.second != "") {
+                        val imageUrl = "https://image.tmdb.org/t/p/w500/${movieData.second}"
+                        painter = rememberAsyncImagePainter(model = imageUrl)
+                    } else if (it.backdropPath != null) {
                         val imageUrl = "https://image.tmdb.org/t/p/w500/${it.backdropPath}"
                         painter = rememberAsyncImagePainter(model = imageUrl)
                     }
