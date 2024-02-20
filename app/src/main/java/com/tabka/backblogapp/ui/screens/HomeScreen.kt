@@ -178,7 +178,7 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
             NextMovieInfo(it.id, it.title, it.releaseDate, usRating, it.posterPath, priorityLog.logId ?: "", logViewModel)
         } ?: run {
             NextMovie(navController, null, null)
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(63.dp))
         }
     }
 }
