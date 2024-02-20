@@ -86,7 +86,6 @@ import com.tabka.backblogapp.network.models.AlertDialog
 import com.tabka.backblogapp.network.models.Dismiss
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MinimalMovieData
-import com.tabka.backblogapp.ui.shared.LoadingSpinner
 import com.tabka.backblogapp.ui.shared.RequestHeader
 import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
@@ -153,7 +152,7 @@ fun LogDetailsScreen(
     }
 
     // Get data
-    composableScope.launch {
+    LaunchedEffect(Unit) {
         logDetailsViewModel.getLogData(logId!!)
         //logDetailsViewModel.getCollaborators()
         Log.d(TAG, "Doing this launch now")
@@ -166,7 +165,7 @@ fun LogDetailsScreen(
         Spacer(modifier = Modifier.height(20.dp))
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.width(64.dp),
+                modifier = Modifier.width(48.dp),
                 color = Color(0xFF3891E1)
             )
         } else {
