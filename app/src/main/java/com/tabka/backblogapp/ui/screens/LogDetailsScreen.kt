@@ -3,7 +3,13 @@ package com.tabka.backblogapp.ui.screens
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -57,7 +63,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -77,6 +82,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -102,7 +108,7 @@ import org.burnoutcrew.reorderable.reorderable
 
 private val TAG = "LogDetailsScreen"
 
-
+@OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LogDetailsScreen(
@@ -113,11 +119,11 @@ fun LogDetailsScreen(
     logDetailsViewModel: LogDetailsViewModel = viewModel()
 ) {
     val hasBackButton = true
-    val composableScope = rememberCoroutineScope()
 
     // Movies
-    val movieState = logDetailsViewModel.movies.observeAsState()
-    val movies = movieState.value ?: mutableMapOf()
+    //val movieState = logDetailsViewModel.movies.observeAsState()
+    //val movies = movieState.value ?: mutableMapOf()
+    val movies by logDetailsViewModel.movies.collectAsState()
 
     // Watched Movies
     val watchedMovieState = logDetailsViewModel.watchedMovies.observeAsState()
@@ -151,26 +157,116 @@ fun LogDetailsScreen(
         alertDialogState = dialog
     }
 
+
     // Get data
     LaunchedEffect(Unit) {
         logDetailsViewModel.getLogData(logId!!)
-        //logDetailsViewModel.getCollaborators()
+
         Log.d(TAG, "Doing this launch now")
     }
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
-        DetailBar(movies.size, owner, collaborators)
+/*        DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
         LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
-        Spacer(modifier = Modifier.height(20.dp))
-        if (isLoading) {
+        Spacer(modifier = Modifier.height(20.dp))*/
+
+        AnimatedContent(
+            targetState = isLoading,
+            label = "",
+            transitionSpec = {
+                fadeIn(animationSpec = tween(1000, delayMillis = 1000)) togetherWith fadeOut(animationSpec = tween(1000, delayMillis = 1000))            },
+        ) { targetState ->
+            when (targetState) {
+                true -> {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .align(Alignment.Center)
+                                .zIndex(10f),
+                            color = Color(0xFF3891E1)
+                        )
+                    }
+                }
+                false -> {
+                    Column {
+                    DetailBar(movies.size, owner, collaborators)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
+                    }
+                }
+            }
+        }
+
+/*        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(10000f)
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .width(48.dp)
+                    .align(Alignment.Center)
+                    .zIndex(10f),
+                color = Color(0xFF3891E1)
+            )
+        }*/
+        /*AnimatedContent(
+            targetState = isLoading,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(1000, delayMillis = 500)) togetherWith fadeOut(animationSpec = tween(1000, delayMillis = 500))
+            },
+            label = "Animated Content"
+        ) { targetIsLoading ->
+            if (targetIsLoading) {
+                Log.d(TAG, recomposeNumber.toString())
+                if (recomposeNumber == 1) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .zIndex(10000f)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .align(Alignment.Center)
+                                .zIndex(10f),
+                            color = Color(0xFF3891E1)
+                        )
+                    }
+                }
+            } else {
+                val testList = (1..10).map { it.toString() }
+                val testHeight: Dp = (80 * testList.size).dp
+
+                Box(modifier = Modifier.fillMaxSize()) { // Fill the max size of the parent
+                    LazyColumn(modifier = Modifier.height(testHeight)) { // Give equal weight
+                        items(testList.size) { index ->
+                            Log.d(TAG, "First one")
+                            Text(testList[index])
+                        }
+                    }
+                    LazyColumn(modifier = Modifier.height(testHeight)) { // Give equal weight
+                        items(testList.size) { index ->
+                            Log.d(TAG, "Second one")
+                            Text(testList[index])
+                        }
+                    }
+                }
+
+                //LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
+            }*/
+/*        if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.width(48.dp),
                 color = Color(0xFF3891E1)
             )
         } else {
             LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
-        }
+        }*/
     }
 
     Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")
@@ -402,12 +498,13 @@ fun LogList(
     navController: NavHostController, logId: String, movies: MutableMap<String, MinimalMovieData>, watchedMovies: MutableMap<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
     Log.d(TAG, "Movies: $movies")
-
+Column{
     if (movies.isNotEmpty()) {
         // Height of image and padding times number of movies
         val moviesHeight: Dp = (80 * movies.size).dp
 
-        LazyColumn(userScrollEnabled = false,
+        LazyColumn(
+            userScrollEnabled = false,
             modifier = Modifier
                 .height(moviesHeight)
                 .testTag("MOVIES_LIST")
@@ -439,21 +536,23 @@ fun LogList(
                     state = state,
                     directions = setOf(DismissDirection.EndToStart),
                     background = {
-                      val color = when(state.dismissDirection) {
-                          DismissDirection.EndToStart -> Color.Red
-                          else -> Color.Transparent
-                      }
+                        val color = when (state.dismissDirection) {
+                            DismissDirection.EndToStart -> Color.Red
+                            else -> Color.Transparent
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(color)
                                 .padding(top = 5.dp, bottom = 5.dp),
                         ) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = null,
-                                modifier = Modifier.align(Alignment.CenterEnd))
+                            Icon(
+                                imageVector = Icons.Default.Delete, contentDescription = null,
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                            )
                         }
                     },
-                    dismissContent =  { MovieEntry(navController, movie) }
+                    dismissContent = { MovieEntry(navController, movie) }
                 )
             }
         }
@@ -466,7 +565,8 @@ fun LogList(
         val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
 
         RequestHeader(title = "Watched Movies")
-        LazyColumn(userScrollEnabled = false,
+        LazyColumn(
+            userScrollEnabled = false,
             modifier = Modifier
                 .height(watchedMoviesHeight)
                 .testTag("WATCHED_MOVIES_LIST")
@@ -497,7 +597,7 @@ fun LogList(
                     state = state,
                     directions = setOf(DismissDirection.EndToStart),
                     background = {
-                        val color = when(state.dismissDirection) {
+                        val color = when (state.dismissDirection) {
                             DismissDirection.EndToStart -> Color.Red
                             else -> Color.Transparent
                         }
@@ -507,15 +607,18 @@ fun LogList(
                                 .background(color)
                                 .padding(top = 5.dp, bottom = 5.dp),
                         ) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = null,
-                                modifier = Modifier.align(Alignment.CenterEnd))
+                            Icon(
+                                imageVector = Icons.Default.Delete, contentDescription = null,
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                            )
                         }
                     },
-                    dismissContent =  { MovieEntry(navController, movie) }
+                    dismissContent = { MovieEntry(navController, movie) }
                 )
             }
         }
     }
+}
     Log.d(TAG, "Watched List: $watchedMovies")
 }
 

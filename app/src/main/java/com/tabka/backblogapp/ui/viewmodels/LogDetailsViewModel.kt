@@ -22,6 +22,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -39,7 +41,10 @@ open class LogDetailsViewModel: ViewModel() {
     private val movieRepository = MovieRepository(apiService)
     private val userRepository = UserRepository()
 
-    val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
+    //val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
+    val _movies: MutableStateFlow<MutableMap<String, MinimalMovieData>> = MutableStateFlow(mutableMapOf())
+    val movies = _movies.asStateFlow()
+
     val watchedMovies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
 
 
@@ -51,25 +56,35 @@ open class LogDetailsViewModel: ViewModel() {
     val isLoading: MutableLiveData<Boolean> = MutableLiveData()
 
     private suspend fun updateLogData(newLog: LogData) {
-        logData.postValue(newLog)
+        withContext(Dispatchers.Main) {
+            // Directly set value if called from a coroutine to ensure immediate update
+            logData.value = newLog
+        }
+        coroutineScope {
 
-        viewModelScope.launch {
-            getUserData(isOwner = true)
-            getUserData(isOwner = false)
+            Log.d(tag, "Updated logData: ${logData.value}")
+
+            //getUserData(isOwner = true)
+            //getUserData(isOwner = false)
 
             val moviesDeferred = getMovies()
-            val watchedMoviesDeferred = getWatchedMovies()
+            //val watchedMoviesDeferred = getWatchedMovies()
 
             moviesDeferred.await()
-            watchedMoviesDeferred.await()
+            //watchedMoviesDeferred.await()
 
-            isLoading.postValue(false)
-
+        }
+        withContext(Dispatchers.Main) {
+            // Directly set value if called from a coroutine to ensure immediate update
+            isLoading.value = false
         }
     }
 
     private fun updateMovies(newList: MutableMap<String, MinimalMovieData>) {
-        movies.postValue(newList)
+        Log.d(tag, "Updating movies! $newList")
+        //movies.postValue(newList)
+        //_movies.value = newList
+        Log.d(tag, "Updated movies: ${movies.value}")
     }
 
     private fun updateWatchedMovies(newList: MutableMap<String, MinimalMovieData>) {
@@ -90,7 +105,7 @@ open class LogDetailsViewModel: ViewModel() {
 
     suspend fun updateLogCollaborators(collaboratorsToAdd: List<String>, collaboratorsToRemove: List<String>) {
         val logId = logData.value?.logId!!
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             Log.d(tag, "Add: ${collaboratorsToAdd.toList()}\nRemove: ${collaboratorsToRemove.toList()}")
             logRepository.addCollaborators(logId, collaboratorsToAdd)
             logRepository.removeCollaborators(logId, collaboratorsToRemove)
@@ -130,27 +145,27 @@ open class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    open suspend fun getLogData(logId: String) {
-        viewModelScope.launch {
+    open fun getLogData(logId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 //val user = auth.currentUser?.uid
                 val currentUser = auth.currentUser
                 if (currentUser != null) {
                     val result: DataResult<LogData> = logRepository.getLog(logId)
-                    withContext(Dispatchers.IO) {
                         Log.d(tag, "In dispatchers")
-                        when (result) {
-                            is DataResult.Success -> {
-                                updateLogData(result.item)
-                                if (result.item.owner?.userId == currentUser.uid) {
-                                    updateIsOwner(true)
-                                } else {
-                                    updateIsOwner(false)
+                            Log.d(tag, "We have the result $result")
+                            when (result) {
+                                is DataResult.Success -> {
+                                    updateLogData(result.item)
+                                    if (result.item.owner?.userId == currentUser.uid) {
+                                        updateIsOwner(true)
+                                    } else {
+                                        updateIsOwner(false)
+                                    }
                                 }
+
+                                is DataResult.Failure -> throw result.throwable
                             }
-                            is DataResult.Failure -> throw result.throwable
-                        }
-                    }
                 } else {
                     val result = localRepository.getLogById(logId)
                     if (result != null) {
@@ -160,20 +175,24 @@ open class LogDetailsViewModel: ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                Log.d(tag, "Error: $e")
+                withContext(Dispatchers.Main) {
+                    Log.d(tag, "Error: $e")
+                }
             }
         }
     }
 
     private suspend fun getMovies(): Deferred<Unit> = coroutineScope {
-        async {
+        val movieIds = logData.value?.movieIds ?: listOf()
+        Log.d(tag, "Movie IDS: $movieIds")
+        async(Dispatchers.IO) {
             try {
-                val movieIds = logData.value?.movieIds ?: listOf()
                 val movieDataList = mutableMapOf<String, MinimalMovieData>()
 
                 // Launch all fetch operations in parallel
                 val fetchJobs = movieIds.map { movieId ->
-                    async {
+                    Log.d(tag, movieId)
+                    async(Dispatchers.IO) {
                         try {
                             val result = CompletableDeferred<MinimalMovieData?>()
                             movieRepository.getMovieById(
@@ -204,12 +223,15 @@ open class LogDetailsViewModel: ViewModel() {
                 fetchedMovies.forEach { movie ->
                     movie.id?.let { movieDataList[it] = movie }
                 }
+                Log.d(tag, "Movie List: $movieDataList")
 
-                withContext(Dispatchers.IO) {
+                withContext(Dispatchers.Main) {
                     updateMovies(movieDataList)
                 }
             } catch (e: Exception) {
-                Log.e(tag, "Failed to fetch movie details: $e")
+                withContext(Dispatchers.Main) {
+                    Log.e(tag, "Failed to fetch movie details: $e")
+                }
             }
             Unit
         }
@@ -255,7 +277,7 @@ open class LogDetailsViewModel: ViewModel() {
                     movie.id?.let { movieDataList[it] = movie }
                 }
 
-                withContext(Dispatchers.IO) {
+                withContext(Dispatchers.Main) {
                     updateWatchedMovies(movieDataList)
                 }
             } catch (e: Exception) {
@@ -278,11 +300,13 @@ open class LogDetailsViewModel: ViewModel() {
 
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 val result = logRepository.updateLog(logId, newLogData)
-                when (result) {
-                    is DataResult.Success -> getLogData(logId)
-                    is DataResult.Failure -> result.throwable
+                withContext(Dispatchers.Main) {
+                    when (result) {
+                        is DataResult.Success -> getLogData(logId)
+                        is DataResult.Failure -> result.throwable
+                    }
                 }
             }
         } else {
