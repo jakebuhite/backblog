@@ -146,7 +146,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
     }
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
     if (!movieResults.isNullOrEmpty()) {
-        Box(modifier = Modifier.height(500.dp)) {
+        Box(modifier = Modifier.height(600.dp)) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -402,3 +402,4 @@ fun NoResults() {
         )
     }
 }
+
