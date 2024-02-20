@@ -266,7 +266,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel) {
                             val usRating =
                                 usRelease?.releaseDates?.get(0)?.certification.orEmpty()
 
-                            Text(usRating, style = MaterialTheme.typography.bodySmall)
+                            Text(text = usRating.ifEmpty { "Not Rated" }, style = MaterialTheme.typography.bodySmall)
                         }
 
                         Spacer(modifier = Modifier.width(5.dp))
