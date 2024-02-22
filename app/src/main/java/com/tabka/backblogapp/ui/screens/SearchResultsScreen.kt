@@ -47,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -82,6 +83,7 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
         //DisplayMovieResults
     }
 }
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
     var text by remember { mutableStateOf("") }
