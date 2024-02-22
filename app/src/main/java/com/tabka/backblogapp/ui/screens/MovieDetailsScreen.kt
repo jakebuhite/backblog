@@ -1,6 +1,7 @@
 package com.tabka.backblogapp.ui.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -57,6 +58,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
@@ -78,12 +80,13 @@ import com.tabka.backblogapp.network.models.tmdb.Credits
 import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 private val TAG = "MovieDetailsScreen"
 
 
 @Composable
-fun MovieDetailsScreen(navController: NavController, logId: String?, logViewModel: LogViewModel) {
+fun MovieDetailsScreen(navController: NavController, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean) {
     val movieDetailsViewModel: MovieDetailsViewModel = viewModel()
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
@@ -111,7 +114,7 @@ fun MovieDetailsScreen(navController: NavController, logId: String?, logViewMode
            }
        }*/
 
-    Foundation(navController, hasBackButton, movie, logViewModel)
+    Foundation(navController, hasBackButton, movie, logViewModel, isFromLog, logId)
 }
 
 @Composable
@@ -119,7 +122,9 @@ fun Foundation(
     navController: NavController,
     isBackButtonVisible: Boolean,
     movie: MovieData?,
-    logViewModel: LogViewModel
+    logViewModel: LogViewModel,
+    isFromLog: Boolean,
+    logId: String?
 ) {
     val lightGrey = Color(0xFF37414A)
     val darkGrey = Color(0xFF191919)
@@ -180,7 +185,7 @@ fun Foundation(
                             .fillMaxHeight()
                             .background(Brush.verticalGradient(gradientColors)),
                     ) {
-                        MovieInfo(movie, logViewModel)
+                        MovieInfo(movie, logViewModel, isFromLog, logId)
                     }
                 }
             }
@@ -195,7 +200,7 @@ fun Foundation(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel) {
+fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean, logId: String?) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -333,23 +338,56 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Button(
-                    onClick = {
-                        isSheetOpen = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(55.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.sky_blue),
-                        disabledContainerColor = Color.LightGray
-                    )
-                ) {
-                    androidx.compose.material3.Text(
-                        "Add to Log",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (isFromLog) {
+                    val context = LocalContext.current
+                    Button(
+                        onClick = {
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Successfully marked movie as watched!",
+                                    Toast.LENGTH_SHORT
+                                )
+                                .show()
+                            if (logId != null) {
+                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                                Log.d(TAG, movie.id.toString())
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(id = R.color.sky_blue),
+                            disabledContainerColor = Color.LightGray
+                        )
+                    ) {
+                        androidx.compose.material3.Text(
+                            "Complete",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                else {
+                    Button(
+                        onClick = {
+                            isSheetOpen = true
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(id = R.color.sky_blue),
+                            disabledContainerColor = Color.LightGray
+                        )
+                    ) {
+                        androidx.compose.material3.Text(
+                            "Add to Log",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 

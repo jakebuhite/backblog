@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -99,6 +100,7 @@ import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -185,22 +187,30 @@ fun LogDetailsScreen(
             targetState = isLoading,
             label = "",
             transitionSpec = {
-                fadeIn(animationSpec = tween(1000, delayMillis = 1000)) togetherWith fadeOut(animationSpec = tween(1000, delayMillis = 1000))            },
+                fadeIn(animationSpec = tween(1000, delayMillis = 1000)) togetherWith fadeOut(
+                    animationSpec = tween(1000, delayMillis = 1000)
+                )
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                /*.border(width = 2.dp, color = Color.Black)*/
         ) { targetState ->
             when (targetState) {
                 true -> {
-                    Box(modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(align = Alignment.Center))
-                    {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         LinearProgressIndicator(
-                            Modifier
-                                .fillMaxSize()
-                                .wrapContentSize(Alignment.Center),
+                            modifier = Modifier
+                                .zIndex(10f)
+                                .offset(y = 250.dp)
+                                .width(50.dp),
                             color = Color(0xFF3891E1)
                         )
                     }
                 }
+
                 false -> {
                     Column {
                         LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
@@ -220,10 +230,11 @@ fun LogDetailsScreen(
 /*fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically) {
-
         // Creator Picture
-        Column(modifier = Modifier.padding(end = 5.dp),
-            horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.padding(end = 5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Image(
                 painter = painterResource(id = getAvatarResourceId(owner.avatarPreset ?: 1).second),
                 contentDescription = null,
@@ -276,9 +287,15 @@ fun LogDetailsScreen(
         }
 
         // Number of Movies
-        Column(modifier = Modifier.padding(start = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+        Column(
+            modifier = Modifier.padding(start = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "$movieCount Movies",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }*/
@@ -388,11 +405,13 @@ fun LogButtons(
         mutableStateOf(false)
     }
 
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .height(50.dp)
-        .padding(horizontal = 7.dp),
-        verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .padding(horizontal = 7.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
 
         Row(modifier = Modifier.weight(1F)) {
             // Collaborators Icon
@@ -429,11 +448,13 @@ fun LogButtons(
             }
 
             // Edit Log Icon
-            Column(modifier = Modifier
-                .weight(3F)
-                .fillMaxHeight(),
+            Column(
+                modifier = Modifier
+                    .weight(3F)
+                    .fillMaxHeight(),
                 horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = Arrangement.Center
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.edit),
                     contentDescription = "Edit",
@@ -463,11 +484,13 @@ fun LogButtons(
 
         Row(modifier = Modifier.weight(1F)) {
             // Shuffle Icon
-            Column(modifier = Modifier
-                .weight(2F)
-                .fillMaxHeight(),
+            Column(
+                modifier = Modifier
+                    .weight(2F)
+                    .fillMaxHeight(),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = Arrangement.Center
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.shuffle_arrow),
                     contentDescription = "Shuffle",
@@ -500,11 +523,13 @@ fun LogButtons(
             }
 
             // Add Movie Icon
-            Column(modifier = Modifier
-                .weight(1F)
-                .padding(start = 10.dp)
-                .fillMaxHeight(),
-                horizontalAlignment = Alignment.End) {
+            Column(
+                modifier = Modifier
+                    .weight(1F)
+                    .padding(start = 10.dp)
+                    .fillMaxHeight(),
+                horizontalAlignment = Alignment.End
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
@@ -540,127 +565,127 @@ fun LogList(
     navController: NavHostController, logId: String, movies: Map<String, MinimalMovieData>, watchedMovies: MutableMap<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
     Log.d(TAG, "Movies: $movies")
-Column{
-    if (movies.isNotEmpty()) {
-        // Height of image and padding times number of movies
-        val moviesHeight: Dp = (80 * movies.size).dp
+    Column {
+        if (movies.isNotEmpty()) {
+            // Height of image and padding times number of movies
+            val moviesHeight: Dp = (80 * movies.size).dp
 
-        LazyColumn(
-            userScrollEnabled = false,
-            modifier = Modifier
-                .height(moviesHeight)
-                .testTag("MOVIES_LIST")
-        ) {
+            LazyColumn(
+                userScrollEnabled = false,
+                modifier = Modifier
+                    .height(moviesHeight)
+                    .testTag("MOVIES_LIST")
+            ) {
 
-            val moviesList = movies.values.toList()
+                val moviesList = movies.values.toList()
 
-            items(moviesList.size) { index ->
-                val movie = moviesList[index]
+                items(moviesList.size) { index ->
+                    val movie = moviesList[index]
 
-                val state = rememberDismissState(
-                    confirmStateChange = {
-                        if (it == DismissValue.DismissedToStart) {
-                            Log.d(TAG, "Remove movie!")
-                            logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                    val state = rememberDismissState(
+                        confirmStateChange = {
+                            if (it == DismissValue.DismissedToStart) {
+                                Log.d(TAG, "Remove movie!")
+                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                            }
+                            true
                         }
-                        true
-                    }
-                )
+                    )
 
-                LaunchedEffect(state.currentValue) {
-                    if (state.currentValue == DismissValue.DismissedToStart) {
-                        logDetailsViewModel.getLogData(logId)
+                    LaunchedEffect(state.currentValue) {
+                        if (state.currentValue == DismissValue.DismissedToStart) {
+                            logDetailsViewModel.getLogData(logId)
+                        }
                     }
+
+                    // Add to Watched
+                    SwipeToDismiss(
+                        state = state,
+                        directions = setOf(DismissDirection.EndToStart),
+                        background = {
+                            val color = when (state.dismissDirection) {
+                                DismissDirection.EndToStart -> Color.Red
+                                else -> Color.Transparent
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(top = 5.dp, bottom = 5.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete, contentDescription = null,
+                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                )
+                            }
+                        },
+                        dismissContent = { MovieEntry(navController, movie) }
+                    )
                 }
+            }
+        }
 
-                // Add to Watched
-                SwipeToDismiss(
-                    state = state,
-                    directions = setOf(DismissDirection.EndToStart),
-                    background = {
-                        val color = when (state.dismissDirection) {
-                            DismissDirection.EndToStart -> Color.Red
-                            else -> Color.Transparent
+        if (watchedMovies.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(50.dp))
+
+            // Watched Movie Section
+            val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
+
+            RequestHeader(title = "Watched Movies")
+            LazyColumn(
+                userScrollEnabled = false,
+                modifier = Modifier
+                    .height(watchedMoviesHeight)
+                    .testTag("WATCHED_MOVIES_LIST")
+            ) {
+
+                val watchedMoviesList = watchedMovies.values.toList()
+
+                items(watchedMoviesList.size) { index ->
+                    val movie = watchedMoviesList[index]
+                    val state = rememberDismissState(
+                        confirmStateChange = {
+                            if (it == DismissValue.DismissedToStart) {
+                                Log.d(TAG, "Unmark Movie as watched!")
+                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                            }
+                            true
                         }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(color)
-                                .padding(top = 5.dp, bottom = 5.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete, contentDescription = null,
-                                modifier = Modifier.align(Alignment.CenterEnd)
-                            )
+                    )
+
+                    LaunchedEffect(state.currentValue) {
+                        if (state.currentValue == DismissValue.DismissedToStart) {
+                            logDetailsViewModel.getLogData(logId)
                         }
-                    },
-                    dismissContent = { MovieEntry(navController, movie) }
-                )
+                    }
+
+                    // Add to Watched
+                    SwipeToDismiss(
+                        state = state,
+                        directions = setOf(DismissDirection.EndToStart),
+                        background = {
+                            val color = when (state.dismissDirection) {
+                                DismissDirection.EndToStart -> Color.Red
+                                else -> Color.Transparent
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(top = 5.dp, bottom = 5.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete, contentDescription = null,
+                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                )
+                            }
+                        },
+                        dismissContent = { MovieEntry(navController, movie) }
+                    )
+                }
             }
         }
     }
-
-    if (watchedMovies.isNotEmpty()) {
-        Spacer(modifier = Modifier.height(50.dp))
-
-        // Watched Movie Section
-        val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
-
-        RequestHeader(title = "Watched Movies")
-        LazyColumn(
-            userScrollEnabled = false,
-            modifier = Modifier
-                .height(watchedMoviesHeight)
-                .testTag("WATCHED_MOVIES_LIST")
-        ) {
-
-            val watchedMoviesList = watchedMovies.values.toList()
-
-            items(watchedMoviesList.size) { index ->
-                val movie = watchedMoviesList[index]
-                val state = rememberDismissState(
-                    confirmStateChange = {
-                        if (it == DismissValue.DismissedToStart) {
-                            Log.d(TAG, "Unmark Movie as watched!")
-                            logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
-                        }
-                        true
-                    }
-                )
-
-                LaunchedEffect(state.currentValue) {
-                    if (state.currentValue == DismissValue.DismissedToStart) {
-                        logDetailsViewModel.getLogData(logId)
-                    }
-                }
-
-                // Add to Watched
-                SwipeToDismiss(
-                    state = state,
-                    directions = setOf(DismissDirection.EndToStart),
-                    background = {
-                        val color = when (state.dismissDirection) {
-                            DismissDirection.EndToStart -> Color.Red
-                            else -> Color.Transparent
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(color)
-                                .padding(top = 5.dp, bottom = 5.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete, contentDescription = null,
-                                modifier = Modifier.align(Alignment.CenterEnd)
-                            )
-                        }
-                    },
-                    dismissContent = { MovieEntry(navController, movie) }
-                )
-            }
-        }
-    }
-}
     Log.d(TAG, "Watched List: $watchedMovies")
 }
 
@@ -676,9 +701,11 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData) {
         horizontalArrangement = Arrangement.Center) {
 
         // Movie Image
-        Column(modifier = Modifier
-            .weight(2F)
-            .fillMaxHeight()) {
+        Column(
+            modifier = Modifier
+                .weight(2F)
+                .fillMaxHeight()
+        ) {
             Box(
                 modifier = Modifier
                     .width(130.dp)
@@ -696,22 +723,31 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData) {
         }
 
         // Movie Title
-        Column(modifier = Modifier
-            .weight(3F)
-            .fillMaxHeight()
-            .height(70.dp)
-            .padding(start = 8.dp),
-            verticalArrangement = Arrangement.Center){
-            Text(text = movie.title!!, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
+        Column(
+            modifier = Modifier
+                .weight(3F)
+                .fillMaxHeight()
+                .height(70.dp)
+                .padding(start = 8.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = movie.title!!,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
 
         // Add Button
-        Column(modifier = Modifier
-            .weight(1F)
-            .height(70.dp)
-            .width(48.dp),
+        Column(
+            modifier = Modifier
+                .weight(1F)
+                .height(70.dp)
+                .width(48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
+            verticalArrangement = Arrangement.Center
+        ) {
             Image(
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
@@ -752,9 +788,11 @@ fun CollaboratorsSheetContent(
     val userList = friendsViewModel.friendsData.collectAsState()
 
     // All of the collaborators
-    val collaboratorsList = remember { mutableStateListOf<String?>().apply {
-        addAll(collaborators.map {it.userId })
-    }}
+    val collaboratorsList = remember {
+        mutableStateListOf<String?>().apply {
+            addAll(collaborators.map { it.userId })
+        }
+    }
 
     val existingUserIds = collaborators.map { it.userId }.toSet()
 
@@ -840,10 +878,12 @@ fun CollaboratorsSheetContent(
         }
     }
 
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .fillMaxHeight(),
-        verticalArrangement = Arrangement.Bottom) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(),
+        verticalArrangement = Arrangement.Bottom
+    ) {
 
         Row(
             modifier = Modifier
@@ -967,13 +1007,13 @@ fun EditSheetContent(
 
     Spacer(modifier = Modifier.height(60.dp))
 
-/*    Box(modifier = Modifier.height(450.dp)) {
-        LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-            items(movies) { movie ->
-                EditLogEntry(movie)
+    /*    Box(modifier = Modifier.height(450.dp)) {
+            LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
+                items(movies) { movie ->
+                    EditLogEntry(movie)
+                }
             }
-        }
-    }*/
+        }*/
     val editedMovies = remember { mutableStateOf(movies.values.toList()) }
 
     Box(modifier = Modifier.height(450.dp)) {
@@ -1003,10 +1043,12 @@ fun EditSheetContent(
         }
     }
 
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .fillMaxHeight(),
-        verticalArrangement = Arrangement.Bottom) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(),
+        verticalArrangement = Arrangement.Bottom
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1035,7 +1077,10 @@ fun EditSheetContent(
                                 text = "Save",
                                 action = {
                                     CoroutineScope(Dispatchers.Main).launch {
-                                        logDetailsViewModel.updateLog(editedLogName, editedMovies.value)
+                                        logDetailsViewModel.updateLog(
+                                            editedLogName,
+                                            editedMovies.value
+                                        )
                                         logViewModel.loadLogs()
                                         logViewModel.resetMovie()
                                         onDismiss()
@@ -1182,7 +1227,11 @@ fun EditLogEntry(movie: MinimalMovieData) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(movie.title ?: "", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+            Text(
+                movie.title ?: "",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
         }
 
         // Drag Icon
@@ -1205,9 +1254,9 @@ fun EditLogEntry(movie: MinimalMovieData) {
     }
 }
 
-
 @Composable
 fun AddMovieMenu() {
+    val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
     Text("Add Movie Menu")
-    /*SearchBar(navController, backStackEntry)*/
+    /*SearchResultsScreen(navController = , logViewModel = )*/
 }
