@@ -22,8 +22,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -42,9 +40,7 @@ open class LogDetailsViewModel: ViewModel() {
     private val userRepository = UserRepository()
 
     //val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
-    val _movies: MutableStateFlow<MutableMap<String, MinimalMovieData>> = MutableStateFlow(mutableMapOf())
-    val movies = _movies.asStateFlow()
-
+    var movies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
     val watchedMovies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
 
 
@@ -59,19 +55,20 @@ open class LogDetailsViewModel: ViewModel() {
         withContext(Dispatchers.Main) {
             // Directly set value if called from a coroutine to ensure immediate update
             logData.value = newLog
+            Log.d(tag, "New Log: ${logData.value} - $newLog")
         }
         coroutineScope {
 
             Log.d(tag, "Updated logData: ${logData.value}")
 
-            //getUserData(isOwner = true)
-            //getUserData(isOwner = false)
+            getUserData(isOwner = true)
+            getUserData(isOwner = false)
 
             val moviesDeferred = getMovies()
-            //val watchedMoviesDeferred = getWatchedMovies()
+            val watchedMoviesDeferred = getWatchedMovies()
 
             moviesDeferred.await()
-            //watchedMoviesDeferred.await()
+            watchedMoviesDeferred.await()
 
         }
         withContext(Dispatchers.Main) {
@@ -80,10 +77,9 @@ open class LogDetailsViewModel: ViewModel() {
         }
     }
 
-    private fun updateMovies(newList: MutableMap<String, MinimalMovieData>) {
-        Log.d(tag, "Updating movies! $newList")
-        //movies.postValue(newList)
-        //_movies.value = newList
+    private fun updateMovies(newList: Map<String, MinimalMovieData>) {
+        Log.d(tag, "Old movies: ${movies.value}")
+        movies.value = newList
         Log.d(tag, "Updated movies: ${movies.value}")
     }
 
@@ -152,20 +148,22 @@ open class LogDetailsViewModel: ViewModel() {
                 val currentUser = auth.currentUser
                 if (currentUser != null) {
                     val result: DataResult<LogData> = logRepository.getLog(logId)
-                        Log.d(tag, "In dispatchers")
-                            Log.d(tag, "We have the result $result")
-                            when (result) {
-                                is DataResult.Success -> {
-                                    updateLogData(result.item)
-                                    if (result.item.owner?.userId == currentUser.uid) {
-                                        updateIsOwner(true)
-                                    } else {
-                                        updateIsOwner(false)
-                                    }
+                    Log.d(tag, "In dispatchers")
+                    Log.d(tag, "We have the result $result")
+                    withContext(Dispatchers.Main) {
+                        when (result) {
+                            is DataResult.Success -> {
+                                updateLogData(result.item)
+                                if (result.item.owner?.userId == currentUser.uid) {
+                                    updateIsOwner(true)
+                                } else {
+                                    updateIsOwner(false)
                                 }
-
-                                is DataResult.Failure -> throw result.throwable
                             }
+
+                            is DataResult.Failure -> throw result.throwable
+                        }
+                    }
                 } else {
                     val result = localRepository.getLogById(logId)
                     if (result != null) {
@@ -302,12 +300,12 @@ open class LogDetailsViewModel: ViewModel() {
         if (currentUser != null) {
             viewModelScope.launch(Dispatchers.IO) {
                 val result = logRepository.updateLog(logId, newLogData)
-                withContext(Dispatchers.Main) {
+
                     when (result) {
                         is DataResult.Success -> getLogData(logId)
                         is DataResult.Failure -> result.throwable
                     }
-                }
+
             }
         } else {
             localRepository.updateLog(logId, newLogData)
@@ -321,18 +319,28 @@ open class LogDetailsViewModel: ViewModel() {
         Log.d(tag, "Shuffle now!")
         val logId = logData.value?.logId!!
 
-        val movies = logData.value?.movieIds ?: emptyList()
-        val shuffledMovies = movies.shuffled()
-        val newMovies = mapOf("movie_ids" to shuffledMovies)
+        val moviesIds = logData.value?.movieIds ?: emptyList()
+        Log.d(tag, "Old Movie order: $movies")
 
+        val currentMoviesMap = movies.value ?: mutableMapOf()
+
+        val shuffledList = currentMoviesMap.toList().shuffled()
+        //val shuffledMap = shuffledList.toMap().toMutableMap()
+        val shuffledMap = currentMoviesMap.toList().shuffled().toMap().toMutableMap()
+
+        //val shuffledMovies = moviesIds.shuffled()
+        val newMovies = mapOf("movie_ids" to shuffledList.map{ it.first})
+
+        Log.d(tag, "New Movie order: $newMovies")
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 val result = logRepository.updateLog(logId, newMovies)
-                when (result) {
-                    is DataResult.Success -> getLogData(logId)
-                    is DataResult.Failure -> result.throwable
-                }
+                    when (result) {
+                        is DataResult.Success -> getLogData(logId)
+                        is DataResult.Failure -> result.throwable
+                    }
+
             }
         } else {
             localRepository.updateLog(logId, newMovies)
