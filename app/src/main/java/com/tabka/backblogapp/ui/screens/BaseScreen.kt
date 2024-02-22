@@ -47,6 +47,7 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMov
 
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(horizontal = 16.dp)
                     .verticalScroll(scrollState)
             ) {
@@ -57,6 +58,7 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMov
                 content(scrollState)
                 Spacer(modifier = Modifier.height(70.dp))
             }
+
         }
     }
 }
@@ -105,5 +107,7 @@ fun BackgroundGradient() {
     val gradientColors = listOf(lightGrey, darkGrey)
 
     // Create a vertical gradient brush
-    Box(modifier = Modifier.background(Brush.verticalGradient(gradientColors)).testTag("GRADIENT"))
+    Box(modifier = Modifier
+        .background(Brush.verticalGradient(gradientColors))
+        .testTag("GRADIENT"))
 }

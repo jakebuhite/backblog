@@ -165,6 +165,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
     }
 
     suspend fun updateLog(logId: String, updateData: Map<String, Any?>): DataResult<Boolean> {
+        Log.d(tag, "Update Log: $updateData")
         try {
             val logRef = db.collection("logs").document(logId)
             val updatedLogObj = mutableMapOf<String, Any>()

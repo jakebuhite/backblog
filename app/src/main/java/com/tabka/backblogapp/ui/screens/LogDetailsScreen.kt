@@ -4,11 +4,13 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -28,17 +30,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -82,7 +85,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -121,11 +123,12 @@ fun LogDetailsScreen(
     val hasBackButton = true
 
     // Movies
-    //val movieState = logDetailsViewModel.movies.observeAsState()
-    //val movies = movieState.value ?: mutableMapOf()
-    val movies by logDetailsViewModel.movies.collectAsState()
+    val movieState = logDetailsViewModel.movies.observeAsState()
+    val movies = movieState.value ?: emptyMap()
 
-    // Watched Movies
+    Log.d(TAG, "Movies: $movies")
+
+    // Watched Moviess
     val watchedMovieState = logDetailsViewModel.watchedMovies.observeAsState()
     val watchedMovies = watchedMovieState.value ?: mutableMapOf()
 
@@ -165,12 +168,19 @@ fun LogDetailsScreen(
         Log.d(TAG, "Doing this launch now")
     }
 
-    BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
-/*        DetailBar(movies.size, owner, collaborators)
-        Spacer(modifier = Modifier.height(20.dp))
-        LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
-        Spacer(modifier = Modifier.height(20.dp))*/
 
+    BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
+
+        DetailBar(movies.size, owner, collaborators)
+        Spacer(modifier = Modifier.height(20.dp))
+        Box(modifier = Modifier
+            .height(1000.dp)
+            .background(Color.Green)
+            .fillMaxWidth()
+
+        ) {
+            Text(text = "HIIIIIIIIIIIIIIIIIIIIII")
+        }
         AnimatedContent(
             targetState = isLoading,
             label = "",
@@ -179,102 +189,35 @@ fun LogDetailsScreen(
         ) { targetState ->
             when (targetState) {
                 true -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .width(48.dp)
-                                .align(Alignment.Center)
-                                .zIndex(10f),
+                    Box(modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(align = Alignment.Center))
+                    {
+                        LinearProgressIndicator(
+                            Modifier
+                                .fillMaxSize()
+                                .wrapContentSize(Alignment.Center),
                             color = Color(0xFF3891E1)
                         )
                     }
                 }
                 false -> {
                     Column {
-                    DetailBar(movies.size, owner, collaborators)
-                    Spacer(modifier = Modifier.height(20.dp))
-                    LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
-                    Spacer(modifier = Modifier.height(20.dp))
-                    LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
+                        LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
+                        Spacer(modifier = Modifier.height(20.dp))
+                        LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
                     }
                 }
             }
         }
-
-/*        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(10000f)
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .width(48.dp)
-                    .align(Alignment.Center)
-                    .zIndex(10f),
-                color = Color(0xFF3891E1)
-            )
-        }*/
-        /*AnimatedContent(
-            targetState = isLoading,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(1000, delayMillis = 500)) togetherWith fadeOut(animationSpec = tween(1000, delayMillis = 500))
-            },
-            label = "Animated Content"
-        ) { targetIsLoading ->
-            if (targetIsLoading) {
-                Log.d(TAG, recomposeNumber.toString())
-                if (recomposeNumber == 1) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .zIndex(10000f)
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .width(48.dp)
-                                .align(Alignment.Center)
-                                .zIndex(10f),
-                            color = Color(0xFF3891E1)
-                        )
-                    }
-                }
-            } else {
-                val testList = (1..10).map { it.toString() }
-                val testHeight: Dp = (80 * testList.size).dp
-
-                Box(modifier = Modifier.fillMaxSize()) { // Fill the max size of the parent
-                    LazyColumn(modifier = Modifier.height(testHeight)) { // Give equal weight
-                        items(testList.size) { index ->
-                            Log.d(TAG, "First one")
-                            Text(testList[index])
-                        }
-                    }
-                    LazyColumn(modifier = Modifier.height(testHeight)) { // Give equal weight
-                        items(testList.size) { index ->
-                            Log.d(TAG, "Second one")
-                            Text(testList[index])
-                        }
-                    }
-                }
-
-                //LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
-            }*/
-/*        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.width(48.dp),
-                color = Color(0xFF3891E1)
-            )
-        } else {
-            LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
-        }*/
     }
 
     Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")
     ShowAlertDialog(alertDialogState, setAlertDialogState)
 }
 
-@Composable
-fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
+//@Composable
+/*fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
     Row(modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically) {
 
@@ -286,32 +229,46 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
                 contentDescription = null,
                 modifier = Modifier
                     .size(35.dp)
-                    //.border(BorderStroke(2.dp, Color.Yellow))
                     .testTag("CREATOR_PICTURE"),
             )
         }
 
+        var isVisible by remember { mutableStateOf(false) }
+        if (collaborators.size > 0) {
+            isVisible = true
+        }
         // Collaborator Pictures
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            LazyRow {
-                val itemsToShow = if (collaborators.size > 4) 4 else collaborators.size
-                items(count = itemsToShow) { index ->
-                    val collaborator = collaborators[index]
-                    Image(
-                        painter = painterResource(id = getAvatarResourceId(collaborator.avatarPreset ?: 1).second),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(35.dp)
-                            .testTag("COLLABS_PICTURE"), // Unique tag for each image
-                    )
-                }
-                if (collaborators.size > 4) {
-                    item {
-                        Button(
-                            onClick = { /* TODO: Implement your click action here */ },
-                            modifier = Modifier.testTag("VIEW_ALL_COLLABS_BUTTON")
-                        ) {
-                            Text("+${collaborators.size - 4} more")
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = fadeIn(animationSpec = tween(1000)) + slideInVertically(animationSpec = tween(1000)),
+            exit = fadeOut(animationSpec = tween(1000)) + slideOutVertically(animationSpec = tween(1000))
+        ){
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                LazyRow {
+                    val itemsToShow = if (collaborators.size > 4) 4 else collaborators.size
+                    items(count = itemsToShow) { index ->
+                        val collaborator = collaborators[index]
+                        Image(
+                            painter = painterResource(
+                                id = getAvatarResourceId(
+                                    collaborator.avatarPreset ?: 1
+                                ).second
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(35.dp)
+                                .testTag("COLLABS_PICTURE"), // Unique tag for each image
+                        )
+
+                    }
+                    if (collaborators.size > 4) {
+                        item {
+                            Button(
+                                onClick = { *//* TODO: Implement your click action here *//* },
+                                modifier = Modifier.testTag("VIEW_ALL_COLLABS_BUTTON")
+                            ) {
+                                Text("+${collaborators.size - 4} more")
+                            }
                         }
                     }
                 }
@@ -324,14 +281,99 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
             Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         }
     }
+}*/
+@Composable
+fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
+    Row(modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically) {
+
+        val isOwnerVisible = owner.userId?.isNotEmpty() ?: false
+
+        // Owner Picture with Slide Animations
+        AnimatedVisibility(
+            visible = isOwnerVisible,
+            enter = fadeIn(animationSpec = tween(300)),
+            exit = fadeOut(animationSpec = tween(1000))
+        ) {
+            Column(modifier = Modifier.padding(end = 5.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(id = getAvatarResourceId(owner.avatarPreset ?: 1).second),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(35.dp)
+                        .testTag("OWNER_PICTURE"),
+                )
+            }
+        }
+
+        // Collaborator Pictures with Conditional Visibility and Slide Animations
+        val isVisible = collaborators.isNotEmpty()
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = //slideInVertically(initialOffsetY = { -it })
+                    slideInHorizontally(initialOffsetX = { -it })
+                    + fadeIn(animationSpec = tween(1000)),
+            exit = fadeOut(animationSpec = tween(1000))
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                LazyRow {
+                    val itemsToShow = if (collaborators.size > 4) 4 else collaborators.size
+                    items(count = itemsToShow) { index ->
+                        val collaborator = collaborators[index]
+                        Image(
+                            painter = painterResource(
+                                id = getAvatarResourceId(collaborator.avatarPreset ?: 1).second
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(35.dp)
+                                .testTag("COLLAB_PICTURE_$index"),
+                        )
+                    }
+                    if (collaborators.size > 4) {
+                        item {
+                            Button(
+                                onClick = { /* Implement click action */ },
+                                modifier = Modifier.testTag("VIEW_ALL_COLLABS_BUTTON")
+                            ) {
+                                Text("+${collaborators.size - 4} more")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Number of Movies with Slide Animation
+        AnimatedVisibility(
+            visible = isOwnerVisible,
+            enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
+            fadeIn(animationSpec = tween(1000)),
+            exit = fadeOut(animationSpec = tween(
+                durationMillis = 3000,
+                //easing = LinearOutSlowInEasing
+                )
+            )
+        ) {
+            Column(modifier = Modifier.padding(start = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
 }
+
+
+
+
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LogButtons(
     navController: NavHostController,
     logName: String,
-    movies: MutableMap<String, MinimalMovieData>,
+    movies: Map<String, MinimalMovieData>,
     isOwner: Boolean,
     collaborators: List<UserData>,
     logDetailsViewModel: LogDetailsViewModel,
@@ -495,7 +537,7 @@ fun LogButtons(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun LogList(
-    navController: NavHostController, logId: String, movies: MutableMap<String, MinimalMovieData>, watchedMovies: MutableMap<String, MinimalMovieData>,
+    navController: NavHostController, logId: String, movies: Map<String, MinimalMovieData>, watchedMovies: MutableMap<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
     Log.d(TAG, "Movies: $movies")
 Column{
@@ -886,7 +928,7 @@ fun EditSheetContent(
     setAlertDialogState: (AlertDialog) -> Unit,
     isOwner: Boolean,
     logName: String,
-    movies: MutableMap<String, MinimalMovieData>,
+    movies: Map<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel
 ) {
