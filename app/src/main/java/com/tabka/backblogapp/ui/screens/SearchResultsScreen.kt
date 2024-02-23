@@ -53,8 +53,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
@@ -224,6 +226,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
 
         val context = LocalContext.current
         var isClicked by remember { mutableStateOf(false) }
+        val haptic = LocalHapticFeedback.current
 
         // Add Button
         Column(modifier = Modifier
@@ -232,10 +235,11 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
             .clickable {
                 if (isLogMenu && !isClicked) {
                     logViewModel.addMovieToLog(logId, movie.id.toString())
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     Toast
                         .makeText(
                             context,
-                            "Added movie to log!",
+                            "Movie added to log!",
                             Toast.LENGTH_SHORT
                         )
                         .show()
@@ -369,6 +373,14 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                                     logViewModel.addMovieToLog(log.logId, movie.id.toString())
                                     /*Log.d(TAG, allLogs)*/
                                 }
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Movie added to log!",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show()
                                 isSheetOpen = false
                             },
                             colors = ButtonDefaults.buttonColors(
