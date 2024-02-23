@@ -79,6 +79,7 @@ open class LogDetailsViewModel: ViewModel() {
 
     private fun updateMovies(newList: Map<String, MinimalMovieData>) {
         Log.d(tag, "Old movies: ${movies.value}")
+        movies.value = emptyMap()
         movies.value = newList
         Log.d(tag, "Updated movies: ${movies.value}")
     }

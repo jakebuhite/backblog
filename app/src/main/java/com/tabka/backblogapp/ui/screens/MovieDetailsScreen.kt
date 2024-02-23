@@ -191,7 +191,7 @@ fun Foundation(
             }
         }
         Box(modifier = Modifier.offset(x = 20.dp, y = 20.dp)) {
-            backButton(navController, isBackButtonVisible)
+            BackButton(navController, isBackButtonVisible)
         }
         /*backButton(navController, isBackButtonVisible)*/
     }

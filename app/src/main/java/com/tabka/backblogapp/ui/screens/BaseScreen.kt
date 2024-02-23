@@ -1,5 +1,9 @@
 package com.tabka.backblogapp.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -22,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -52,9 +57,9 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMov
                     .verticalScroll(scrollState)
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
-                backButton(navController, isBackButtonVisible)
+                BackButton(navController, isBackButtonVisible)
                 Spacer(modifier = Modifier.height(20.dp))
-                pageTitle(title)
+                PageTitle(title)
                 content(scrollState)
                 Spacer(modifier = Modifier.height(70.dp))
             }
@@ -64,7 +69,7 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMov
 }
 
 @Composable
-fun backButton(navController: NavController, visible: Boolean) {
+fun BackButton(navController: NavController, visible: Boolean) {
     val icon = painterResource(R.drawable.button_back_arrow)
 
     val alpha = if (visible) 1f else 0f
@@ -72,11 +77,7 @@ fun backButton(navController: NavController, visible: Boolean) {
     // State to track if the button is enabled or not
     var isEnabled by remember { mutableStateOf(true) }
 
-    var modifier = Modifier
-        .size(36.dp)
-        .clip(CircleShape)
-        .alpha(alpha)
-        .testTag("BACK_BUTTON")
+    var modifier = Modifier.size(48.dp)
 
     if (visible && isEnabled) {
         modifier = modifier.clickable {
@@ -85,17 +86,42 @@ fun backButton(navController: NavController, visible: Boolean) {
         }
     }
 
-    Image(
-        painter = icon,
-        contentDescription = "Back Button",
-        modifier = modifier
-    )
+    val isVisible = visible
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(animationSpec = tween(1000)),
+        exit = fadeOut(animationSpec = tween(1000))
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+        ) {
+            Image(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .alpha(alpha)
+                    .testTag("BACK_BUTTON"),
+                painter = icon,
+                contentDescription = "Back Button",
+            )
+        }
+    }
 }
 
 @Composable
-fun pageTitle(title: String) {
-    Text(title, style = MaterialTheme.typography.headlineLarge,
-        modifier = Modifier.testTag("PAGE_TITLE"))
+fun PageTitle(title: String) {
+    val isVisible = title.isNotEmpty()
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(animationSpec = tween(1000)),
+        exit = fadeOut(animationSpec = tween(1000))
+    ) {
+        Text(
+            title, style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.testTag("PAGE_TITLE")
+        )
+    }
 }
 
 @Composable

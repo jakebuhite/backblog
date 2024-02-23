@@ -144,7 +144,7 @@ fun FriendsContent(
                     modifier = Modifier
                         .size(50.dp)
                 )
-                pageTitle(pageTitle)
+                PageTitle(pageTitle)
             }
             TabScreen(navController, publicLogs, friendRequests, logRequests, friends, addFriend, updateRequest)
             Spacer(modifier = Modifier.height(70.dp))

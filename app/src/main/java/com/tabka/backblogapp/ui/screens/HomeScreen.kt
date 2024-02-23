@@ -39,7 +39,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.Visibility
@@ -73,6 +72,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter.Companion.tint
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -80,6 +80,7 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -390,6 +391,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             horizontalAlignment = Alignment.End
         ) {
             var isClicked by remember { mutableStateOf(false) }
+            val haptic = LocalHapticFeedback.current
             val scaleFactor = if (isClicked) 1.1f else 1f
             Image(
                 imageVector = Icons.Default.LibraryAdd,
@@ -399,6 +401,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                     .size(35.dp)
                     .scale(scaleX = -1f, scaleY = 1f)
                     .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         isClicked = true
                         isSheetOpen = true
                         CoroutineScope(Dispatchers.Main).launch {
@@ -799,7 +802,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                 }
 
                 Card(
-                    shape = RoundedCornerShape(20.dp),
+                    //shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
                         .offset { IntOffset(boxOverlayX.roundToInt(), boxOverlayY.roundToInt()) }
                         .onGloballyPositioned { coordinates ->
@@ -807,7 +810,10 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                             boxBottomInViewPort = coordinates.positionInRoot().y + height
                         }
                         .size(175.dp)
-                        .alpha(boxOverlayAlpha)
+                        .alpha(boxOverlayAlpha),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Transparent
+                    )
                 ) {
                     Box(
                         modifier = Modifier
