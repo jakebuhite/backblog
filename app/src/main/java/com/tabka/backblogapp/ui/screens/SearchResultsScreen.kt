@@ -3,6 +3,7 @@ package com.tabka.backblogapp.ui.screens
 /*import com.tabka.backblogapp.ui.bottomnav.logViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel*/
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,6 +54,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
@@ -77,15 +79,17 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
     val hasBackButton = true
     val isMovieDetails = false
     val pageTitle = "Results"
+    val isLogMenu = false
+    val logId = null
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
-        SearchBar(navController, logViewModel)
+        SearchBar(navController, logViewModel, isLogMenu, logId)
         //DisplayMovieResults
     }
 }
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
+fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?) {
     var text by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -146,7 +150,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
 
     val halfSheets = searchResultsViewModel.halfSheet.collectAsState().value
     if (movieResults?.isNotEmpty() == true) {
-        Box(modifier = Modifier.height(500.dp)) {
+        Box(modifier = Modifier.height(if (isLogMenu) 700.dp else 600.dp)) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -156,7 +160,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
                 items(movieResults.size) { index ->
                     val movie = movieResults[index]
                     val halfSheet = halfSheets[movie.id.toString()] ?: ""
-                    MovieResult(navController, movie, halfSheet, logViewModel)
+                    MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId)
                 }
             }
         }
@@ -167,7 +171,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieResult(navController: NavHostController, movie: MovieSearchResult, halfSheet: String, logViewModel: LogViewModel) {
+fun MovieResult(navController: NavHostController, movie: MovieSearchResult, halfSheet: String, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val allLogs by logViewModel.allLogs.collectAsState()
 
@@ -218,19 +222,46 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
             mutableStateOf(false)
         }
 
+        val context = LocalContext.current
+        var isClicked by remember { mutableStateOf(false) }
+
         // Add Button
         Column(modifier = Modifier
             .weight(1F)
             .height(70.dp)
-            .clickable { isSheetOpen = true }
+            .clickable {
+                if (isLogMenu && !isClicked) {
+                    logViewModel.addMovieToLog(logId, movie.id.toString())
+                    Toast
+                        .makeText(
+                            context,
+                            "Added movie to log!",
+                            Toast.LENGTH_SHORT
+                        )
+                        .show()
+                    isClicked = true
+            } else if (!isClicked){
+                    isSheetOpen = true
+                }
+            }
             .testTag("ADD_MOVIE_TO_LOG_BUTTON"),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
-            Image(
-                painter = painterResource(id = R.drawable.add),
-                contentDescription = "Add Icon",
-                modifier = Modifier.size(25.dp)
-            )
+
+            if (isClicked) {
+                Image(
+                    painter = painterResource(id = R.drawable.checkbutton2),
+                    contentDescription = "Movie is added",
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+            else {
+                Image(
+                    painter = painterResource(id = R.drawable.add),
+                    contentDescription = "Add Icon",
+                    modifier = Modifier.size(25.dp)
+                )
+            }
         }
 
 

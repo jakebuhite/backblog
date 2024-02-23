@@ -86,6 +86,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -175,14 +176,14 @@ fun LogDetailsScreen(
 
         DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
-        Box(modifier = Modifier
+        /*Box(modifier = Modifier
             .height(1000.dp)
             .background(Color.Green)
             .fillMaxWidth()
 
         ) {
             Text(text = "HIIIIIIIIIIIIIIIIIIIIII")
-        }
+        }*/
         AnimatedContent(
             targetState = isLoading,
             label = "",
@@ -213,7 +214,9 @@ fun LogDetailsScreen(
 
                 false -> {
                     Column {
-                        LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState)
+                        if (logId != null) {
+                            LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState, logId)
+                        }
                         Spacer(modifier = Modifier.height(20.dp))
                         LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
                     }
@@ -397,7 +400,8 @@ fun LogButtons(
     logViewModel: LogViewModel,
     friendsViewModel: FriendsViewModel,
     alertDialogState: AlertDialog,
-    setAlertDialogState: (AlertDialog) -> Unit
+    setAlertDialogState: (AlertDialog) -> Unit,
+    logId: String
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
@@ -537,11 +541,17 @@ fun LogButtons(
                         .size(50.dp)
                         .testTag("ADD_MOVIE_ICON")
                         .clickable(onClick = {
-                            sheetContent = { AddMovieMenu() }
+                            sheetContent = { AddMovieMenu(navController, logViewModel, logId) }
                             isSheetOpen = true
                         })
                 )
             }
+        }
+    }
+
+    LaunchedEffect(isSheetOpen) {
+        if (!isSheetOpen) {
+            logDetailsViewModel.getLogData(logId)
         }
     }
 
@@ -1209,7 +1219,9 @@ fun EditLogEntry(movie: MinimalMovieData) {
         horizontalArrangement = Arrangement.Center
     ) {
         // Remove Icon
-        Column(modifier = Modifier.weight(1F)) {
+        Column(modifier = Modifier.weight(1F),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
             Image(
                 painter = painterResource(id = R.drawable.remove),
                 contentDescription = null,
@@ -1255,8 +1267,8 @@ fun EditLogEntry(movie: MinimalMovieData) {
 }
 
 @Composable
-fun AddMovieMenu() {
-    val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
-    Text("Add Movie Menu")
-    /*SearchResultsScreen(navController = , logViewModel = )*/
+fun AddMovieMenu(navController: NavHostController, logViewModel: LogViewModel, logId: String) {
+    Column(modifier = Modifier.padding(top = 40.dp, start = 12.dp, end = 12.dp)) {
+        SearchBar(navController, logViewModel, isLogMenu = true, logId)
+    }
 }
