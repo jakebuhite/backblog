@@ -66,10 +66,10 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(
-                route = "home_movie_details_{movieId}",
-                arguments = listOf(navArgument("movieId") { type = NavType.StringType })
+                route = "home_movie_details_{movieId}_{logId}",
+                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), logViewModel, isFromLog = true)
+                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), backStackEntry.arguments?.getString("logId"), logViewModel, isFromLog = true)
             }
         }
 
@@ -87,7 +87,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "search_movie_details_{movieId}",
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType })
             ) { backStackEntry ->
-                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), logViewModel, isFromLog = false)
+                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel, isFromLog = false)
             }
         }
 
