@@ -629,7 +629,7 @@ fun LogList(
                                 )
                             }
                         },
-                        dismissContent = { MovieEntry(navController, movie) }
+                        dismissContent = { MovieEntry(navController, movie, logId) }
                     )
                 }
             }
@@ -690,7 +690,7 @@ fun LogList(
                                 )
                             }
                         },
-                        dismissContent = { MovieEntry(navController, movie) }
+                        dismissContent = { MovieEntry(navController, movie, logId) }
                     )
                 }
             }
@@ -700,12 +700,12 @@ fun LogList(
 }
 
 @Composable
-fun MovieEntry(navController: NavHostController, movie: MinimalMovieData) {
+fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId: String) {
 
     Row(modifier = Modifier
         .fillMaxWidth()
         .padding(top = 5.dp, bottom = 5.dp)
-        .clickable { navController.navigate("home_movie_details_${movie.id}") }
+        .clickable { navController.navigate("home_movie_details_${movie.id}_${logId}") }
         .testTag("MOVIE_ENTRY"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {

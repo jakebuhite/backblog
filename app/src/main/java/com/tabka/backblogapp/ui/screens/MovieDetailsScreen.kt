@@ -86,7 +86,7 @@ private val TAG = "MovieDetailsScreen"
 
 
 @Composable
-fun MovieDetailsScreen(navController: NavController, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean) {
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean) {
     val movieDetailsViewModel: MovieDetailsViewModel = viewModel()
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
@@ -350,9 +350,9 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                 )
                                 .show()
                             if (logId != null) {
+                                Log.d("THIS IS THE LOG ID:", logId.toString())
                                 logViewModel.markMovieAsWatched(logId, movie.id.toString())
                             }
-                                Log.d(TAG, movie.id.toString())
                         },
                         modifier = Modifier
                             .fillMaxWidth()

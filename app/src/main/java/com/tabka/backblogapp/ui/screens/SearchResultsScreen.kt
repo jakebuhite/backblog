@@ -183,7 +183,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
         Column(modifier = Modifier
             .weight(2F)
             .fillMaxHeight()
-            .clickable { navController.navigate("search_movie_details_${movie.id}") },
+            .clickable { navController.navigate("search_movie_details_${movie.id}_${logId}") },
         ) {
             Box(
                 modifier = Modifier

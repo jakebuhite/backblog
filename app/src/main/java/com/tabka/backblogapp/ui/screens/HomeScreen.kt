@@ -173,11 +173,11 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
             val usRelease = it.releaseDates?.results?.find { result -> result.iso31661 == "US" }
             val usRating = usRelease?.releaseDates?.get(0)?.certification.orEmpty()
 
-            NextMovie(navController, image, it.id)
+            NextMovie(navController, image, it.id, priorityLog.logId)
             Spacer(modifier = Modifier.height(5.dp))
             NextMovieInfo(it.id, it.title, it.releaseDate, usRating, it.posterPath, priorityLog.logId ?: "", logViewModel)
         } ?: run {
-            NextMovie(navController, null, null)
+            NextMovie(navController, null, null, null)
             Spacer(modifier = Modifier.height(63.dp))
         }
     }
@@ -194,7 +194,7 @@ fun PriorityLogTitle(logName: String) {
 
 
 @Composable
-fun NextMovie(navController: NavController, image: String?, movieId: Int?) {
+fun NextMovie(navController: NavController, image: String?, movieId: Int?, priorityLogId: String?) {
 
     val imageUrl = image?.let { "https://image.tmdb.org/t/p/w500/$it" }
     val painter = if (imageUrl != null) {
@@ -205,7 +205,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?) {
 
     var cardModifier = Modifier.fillMaxWidth()
     movieId?.let {
-        cardModifier = cardModifier.clickable { navController.navigate("home_movie_details_$it") }
+        cardModifier = cardModifier.clickable { navController.navigate("home_movie_details_${it}_$priorityLogId") }
     }
 
     Card(
@@ -344,6 +344,7 @@ fun NextMovieInfo(
                                 Toast.LENGTH_SHORT
                             )
                             .show()
+                        Log.d("This is the Log ID:", logId.toString())
                         logViewModel.markMovieAsWatched(logId, movieId.toString())
                     }
             )
