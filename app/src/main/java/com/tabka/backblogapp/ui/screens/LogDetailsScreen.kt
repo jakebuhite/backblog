@@ -3,6 +3,7 @@ package com.tabka.backblogapp.ui.screens
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.ColorRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -49,8 +50,10 @@ import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.twotone.Archive
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -75,6 +78,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -106,6 +110,8 @@ import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import me.saket.swipe.SwipeAction
+import me.saket.swipe.SwipeableActionsBox
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -218,7 +224,7 @@ fun LogDetailsScreen(
                             LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState, logId)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
-                        LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel)
+                        LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel, collaborators)
                     }
                 }
             }
@@ -573,7 +579,7 @@ fun LogButtons(
 @Composable
 fun LogList(
     navController: NavHostController, logId: String, movies: Map<String, MinimalMovieData>, watchedMovies: MutableMap<String, MinimalMovieData>,
-    logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel) {
+    logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel, collaboratorsList: List<UserData>) {
     Log.d(TAG, "Movies: $movies")
     Column {
         if (movies.isNotEmpty()) {
@@ -608,7 +614,28 @@ fun LogList(
                         }
                     }
 
-                    // Add to Watched
+                    /*val archive = SwipeAction(
+                        icon = rememberVectorPainter(Icons.TwoTone.Archive),
+                        background = Color.Green,
+                        onSwipe = { }
+                    )*/
+
+                    val addToWatched = SwipeAction(
+                        background = colorResource(R.color.sky_blue),
+                        icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
+                        onSwipe = {
+                            logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                            logDetailsViewModel.getLogData(logId)
+                        },
+                    )
+
+                    SwipeableActionsBox(
+                        endActions = listOf(addToWatched)
+                    ) {
+                        MovieEntry(navController,movie,logId, collaboratorsList)
+                    }
+
+                    /*// Add to Watched
                     SwipeToDismiss(
                         state = state,
                         directions = setOf(DismissDirection.EndToStart),
@@ -630,7 +657,7 @@ fun LogList(
                             }
                         },
                         dismissContent = { MovieEntry(navController, movie, logId) }
-                    )
+                    )*/
                 }
             }
         }
@@ -653,7 +680,7 @@ fun LogList(
 
                 items(watchedMoviesList.size) { index ->
                     val movie = watchedMoviesList[index]
-                    val state = rememberDismissState(
+                    /*val state = rememberDismissState(
                         confirmStateChange = {
                             if (it == DismissValue.DismissedToStart) {
                                 Log.d(TAG, "Unmark Movie as watched!")
@@ -661,16 +688,16 @@ fun LogList(
                             }
                             true
                         }
-                    )
+                    )*/
 
-                    LaunchedEffect(state.currentValue) {
+                    /*LaunchedEffect(state.currentValue) {
                         if (state.currentValue == DismissValue.DismissedToStart) {
                             logDetailsViewModel.getLogData(logId)
                         }
-                    }
+                    }*/
 
                     // Add to Watched
-                    SwipeToDismiss(
+                    /*SwipeToDismiss(
                         state = state,
                         directions = setOf(DismissDirection.EndToStart),
                         background = {
@@ -691,7 +718,21 @@ fun LogList(
                             }
                         },
                         dismissContent = { MovieEntry(navController, movie, logId) }
+                    )*/
+                    val addToLog = SwipeAction(
+                        background = colorResource(R.color.sky_blue),
+                        icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
+                        onSwipe = {
+                            logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                            logDetailsViewModel.getLogData(logId)
+                        },
                     )
+                    SwipeableActionsBox(
+                        endActions = listOf(addToLog)
+                    ) {
+                        MovieEntry(navController,movie,logId, collaboratorsList)
+                    }
+
                 }
             }
         }
@@ -700,7 +741,7 @@ fun LogList(
 }
 
 @Composable
-fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId: String) {
+fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId: String, collaboratorsList: List<UserData>) {
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -749,7 +790,7 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId:
             )
         }
 
-        // Add Button
+        // Collaborator icon
         Column(
             modifier = Modifier
                 .weight(1F)
@@ -758,12 +799,14 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId:
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                modifier = Modifier.size(35.dp),
-                colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
-            )
+            if (collaboratorsList.isNotEmpty()) {
+                Image(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(35.dp),
+                    colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
+                )
+            }
         }
     }
 }
