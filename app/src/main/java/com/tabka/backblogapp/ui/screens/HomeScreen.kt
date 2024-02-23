@@ -70,6 +70,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter.Companion.tint
@@ -131,7 +132,7 @@ fun HomeScreen(
             Log.d(TAG, "This is the first Log: ${allLogs!![0]}")
             WatchNextCard(navController, allLogs!![0], logViewModel)
         }
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(50.dp))
         MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
     }
 }
@@ -187,7 +188,7 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
 @Composable
 fun PriorityLogTitle(logName: String) {
     Row() {
-        Text("From $logName", style = MaterialTheme.typography.titleSmall,
+        Text("From $logName", style = MaterialTheme.typography.titleSmall, color = Color.LightGray,
             modifier = Modifier.testTag("PRIORITY_LOG_TITLE"))
     }
 }
@@ -210,7 +211,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?, prior
 
     Card(
         shape = RoundedCornerShape(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         modifier = cardModifier,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
@@ -302,7 +303,8 @@ fun NextMovieInfo(
                     usRating?.ifEmpty { "Not Rated" }?.let {
                         Text(
                             text = it,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.LightGray
                         )
                     }
                 }
@@ -312,7 +314,7 @@ fun NextMovieInfo(
                 // Release Date
                 Column(
                 ) {
-                    Text(text = releaseDate?.substring(0, 4) ?: "", style = MaterialTheme.typography.bodySmall,
+                    Text(text = releaseDate?.substring(0, 4) ?: "", style = MaterialTheme.typography.bodySmall, color = Color.LightGray,
                         modifier = Modifier.testTag("MOVIE_YEAR"))
                 }
             }

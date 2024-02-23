@@ -34,7 +34,13 @@ import androidx.navigation.NavController
 import com.tabka.backblogapp.R
 
 @Composable
-fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMovieDetails: Boolean, title: String, content: @Composable (scrollState: ScrollState) -> Unit) {
+fun BaseScreen(
+    navController: NavController,
+    isBackButtonVisible: Boolean,
+    isMovieDetails: Boolean,
+    title: String,
+    content: @Composable (scrollState: ScrollState) -> Unit
+) {
 
     if (!isMovieDetails) {
         val scrollState = rememberScrollState()
@@ -44,7 +50,6 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMov
             color = MaterialTheme.colorScheme.background
         ) {
             BackgroundGradient()
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -58,7 +63,6 @@ fun BaseScreen(navController: NavController, isBackButtonVisible: Boolean, isMov
                 content(scrollState)
                 Spacer(modifier = Modifier.height(70.dp))
             }
-
         }
     }
 }
@@ -94,8 +98,10 @@ fun backButton(navController: NavController, visible: Boolean) {
 
 @Composable
 fun pageTitle(title: String) {
-    Text(title, style = MaterialTheme.typography.headlineLarge,
-        modifier = Modifier.testTag("PAGE_TITLE"))
+    Text(
+        title, style = MaterialTheme.typography.headlineLarge,
+        modifier = Modifier.testTag("PAGE_TITLE")
+    )
 }
 
 @Composable
@@ -103,11 +109,19 @@ fun BackgroundGradient() {
     // Define the gradient colors
     val lightGrey = Color(0xFF37414A)
     val darkGrey = Color(0xFF191919)
+    val midColor = Color(0xFF292E33)
+
+    val bottomMidColor = Color(0xFF232629)
+    val topMidColor = Color(0xFF2F373E)
+
+  /*  val gradientColors = listOf(lightGrey, topMidColor, otherColor, bottomMidColor, darkGrey)*/
 
     val gradientColors = listOf(lightGrey, darkGrey)
 
     // Create a vertical gradient brush
-    Box(modifier = Modifier
-        .background(Brush.verticalGradient(gradientColors))
-        .testTag("GRADIENT"))
+    Box(
+        modifier = Modifier
+            .background(Brush.verticalGradient(gradientColors))
+            .testTag("GRADIENT")
+    )
 }
