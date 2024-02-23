@@ -2,12 +2,14 @@ package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -72,9 +74,8 @@ fun SearchScreen(navController: NavController) {
         }*/
         //SearchBar(navController)
         //Spacer(modifier = Modifier.height(20.dp))
-
         BrowseCategories()
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(75.dp))
         FriendsAdded()
     }
 }
@@ -126,17 +127,19 @@ fun SearchBarPlaceholder(navController: NavController) {
 @Composable
 fun BrowseCategories() {
     Row(modifier = Modifier.fillMaxSize()) {
-        Text("Browse Categories", style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.testTag("BROWSE_CATEGORIES_TITLE"))
+        Text(
+            "Browse Categories", style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.testTag("BROWSE_CATEGORIES_TITLE")
+        )
     }
 
     Spacer(modifier = Modifier.height(15.dp))
 
-/*    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-        items(4) { index ->
-            Category()
-        }
-    }*/
+    /*    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+            items(4) { index ->
+                Category()
+            }
+        }*/
 
     val genreList = listOf(
         "Action",
@@ -149,16 +152,18 @@ fun BrowseCategories() {
         "Fantasy"
     )
 
- /*   LazyRow() {
-        items(genreList) { genre ->
-            Column {
-                Category(genre)
-            }
-        }
-    }*/
-    
-    LazyHorizontalGrid(rows = GridCells.Fixed(2),
-        modifier = Modifier.height(160.dp)) {
+    /*   LazyRow() {
+           items(genreList) { genre ->
+               Column {
+                   Category(genre)
+               }
+           }
+       }*/
+
+    LazyHorizontalGrid(
+        rows = GridCells.Fixed(2),
+        modifier = Modifier.height(160.dp)
+    ) {
         items(genreList) { genre ->
             Category(genre)
         }
@@ -221,8 +226,10 @@ fun Category(genre: String) {
 @Composable
 fun FriendsAdded() {
     Row(modifier = Modifier.fillMaxSize()) {
-        Text("Friends Recently Added", style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.testTag("FRIENDS_RECENTLY_ADDED_TITLE"))
+        Text(
+            "Friends Recently Added", style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.testTag("FRIENDS_RECENTLY_ADDED_TITLE")
+        )
     }
 
     Spacer(modifier = Modifier.height(15.dp))
@@ -237,7 +244,8 @@ fun FriendsAdded() {
 @Composable
 fun FriendMovie() {
     Column(modifier = Modifier.padding(end = 10.dp)) {
-        Column(modifier = Modifier.fillMaxWidth(),
+        Column(
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -264,9 +272,11 @@ fun FriendMovie() {
                     }
                 }
             }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
 
                 Text(
                     text = "The Creator",
