@@ -3,6 +3,7 @@ package com.tabka.backblogapp.ui.screens
 import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -16,6 +17,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -74,6 +77,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter.Companion.tint
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -81,6 +85,7 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -331,6 +336,7 @@ fun NextMovieInfo(
             var isClicked by remember { mutableStateOf(false) }
             val scaleFactor = if (isClicked) 1.1f else 1f
 
+            val haptic = LocalHapticFeedback.current
             Image(
                 painter = painterResource(id = R.drawable.checkbutton2),
                 contentDescription = "Check icon",
@@ -339,6 +345,7 @@ fun NextMovieInfo(
                     .scale(scaleFactor)
                     .testTag("CHECK_ICON")
                     .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         Toast
                             .makeText(
                                 context,
@@ -350,6 +357,28 @@ fun NextMovieInfo(
                         logViewModel.markMovieAsWatched(logId, movieId.toString())
                     }
             )
+
+            /*Button(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                Toast
+                .makeText(
+                    context,
+                    "Successfully marked movie as watched!",
+                    Toast.LENGTH_SHORT
+                )
+                .show()
+                Log.d("This is the Log ID:", logId.toString())
+                logViewModel.markMovieAsWatched(logId, movieId.toString())},
+                modifier = Modifier.size(40.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.checkbutton2),
+                    contentDescription = "Check icon",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .scale(scaleFactor)
+                        .testTag("CHECK_ICON")
+                )
+            }*/
         }
     }
 }
