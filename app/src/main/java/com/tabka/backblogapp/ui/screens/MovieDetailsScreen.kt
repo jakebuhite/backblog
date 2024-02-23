@@ -351,8 +351,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                 .show()
                             if (logId != null) {
                                 logViewModel.markMovieAsWatched(logId, movie.id.toString())
-                                Log.d(TAG, movie.id.toString())
                             }
+                                Log.d(TAG, movie.id.toString())
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -363,7 +363,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         )
                     ) {
                         androidx.compose.material3.Text(
-                            "Complete",
+                            "Add to Watched",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )

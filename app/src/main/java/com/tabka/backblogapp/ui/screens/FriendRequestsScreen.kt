@@ -139,7 +139,7 @@ fun RequestActions(requestData: LogRequestData, updateRequest: (String, String, 
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Image(
-            painter = painterResource(id = R.drawable.check_icon),
+            painter = painterResource(id = R.drawable.checkbutton2),
             contentDescription = "Accept request",
             modifier = Modifier
                 .size(30.dp)
@@ -164,7 +164,7 @@ fun RequestActions(requestData: FriendRequestData, updateRequest: (String, Strin
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Image(
-            painter = painterResource(id = R.drawable.check_icon),
+            painter = painterResource(id = R.drawable.checkbutton2),
             contentDescription = "Accept request",
             modifier = Modifier
                 .size(30.dp)
@@ -172,7 +172,7 @@ fun RequestActions(requestData: FriendRequestData, updateRequest: (String, Strin
                 .testTag("ACCEPT_FRIEND_REQUEST_ICON")
         )
         Image(
-            painter = painterResource(id = R.drawable.delete_icon),
+            painter = painterResource(id = R.drawable.delete),
             contentDescription = "Delete request",
             modifier = Modifier
                 .size(30.dp)
