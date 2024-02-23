@@ -500,7 +500,9 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                         focusedLabelColor = Color(0xFF979C9E),
                         unfocusedLabelColor = Color(0xFF979C9E),
                         unfocusedBorderColor = Color(0xFF373737),
-                        backgroundColor = Color(0xFF373737)
+                        backgroundColor = Color(0xFF373737),
+                        cursorColor = Color.White,
+                        textColor = Color.White
                     ),
                 )
                 val icon = if (logIsVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
@@ -703,11 +705,21 @@ fun NewLogBottomSection(navController: NavController, logName: String, onCreateC
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
+        val context = LocalContext.current
+        val haptic = LocalHapticFeedback.current
         // Create Button
         Button(
             onClick = {
                 if (logName.isNotEmpty()) {
                     onCreateClick(logName)
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    Toast
+                        .makeText(
+                            context,
+                            "New Log Created!",
+                            Toast.LENGTH_SHORT
+                        )
+                        .show()
                 }
             },
             modifier = Modifier
