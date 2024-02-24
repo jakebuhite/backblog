@@ -41,7 +41,7 @@ open class LogDetailsViewModel: ViewModel() {
 
     //val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
     var movies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
-    val watchedMovies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
+    val watchedMovies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
 
 
     //open val watchedMovies: MutableLiveData<List<MinimalMovieData>> = MutableLiveData()
@@ -79,12 +79,18 @@ open class LogDetailsViewModel: ViewModel() {
 
     private fun updateMovies(newList: Map<String, MinimalMovieData>) {
         Log.d(tag, "Old movies: ${movies.value}")
+        movies.value = emptyMap()
         movies.value = newList
         Log.d(tag, "Updated movies: ${movies.value}")
     }
 
-    private fun updateWatchedMovies(newList: MutableMap<String, MinimalMovieData>) {
-        watchedMovies.postValue(newList)
+    private fun updateWatchedMovies(newList: Map<String, MinimalMovieData>) {
+        Log.d(tag, "Old watched movies: ${watchedMovies.value}")
+
+        watchedMovies.value = emptyMap()
+        watchedMovies.value = newList
+        Log.d(tag, "New watched movies: ${watchedMovies.value}")
+
     }
 
     private fun updateIsOwner(userIsOwner: Boolean) {
