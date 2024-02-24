@@ -16,17 +16,21 @@ import com.tabka.backblogapp.network.repository.LogLocalRepository
 import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.util.DataResult
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import java.util.concurrent.Executors
 
 
 open class LogViewModel : ViewModel() {
     private val TAG = "LogViewModel"
     private val localLogRepository = LogLocalRepository()
+    val singleThreadContext: CoroutineDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
     // Log Data
     private val _allLogs = MutableStateFlow<List<LogData>?>(emptyList())
@@ -75,6 +79,8 @@ open class LogViewModel : ViewModel() {
         _allLogs.value = _allLogs.value!!.toMutableList().apply {
             add(to, removeAt(from))
         }
+
+        Log.d(TAG, "New order: ${_allLogs.value}")
         val currentUser = Firebase.auth.currentUser
         if (currentUser != null) {
             val logIds = allLogs.value?.map { log ->
@@ -86,7 +92,7 @@ open class LogViewModel : ViewModel() {
             } ?: emptyList()
 
             Log.d(TAG, "NEW ORDER: $logIds")
-            viewModelScope.launch {
+            viewModelScope.launch(singleThreadContext) {
                 logRepository.updateUserLogOrder(currentUser.uid, logIds)
             }
         } else {
