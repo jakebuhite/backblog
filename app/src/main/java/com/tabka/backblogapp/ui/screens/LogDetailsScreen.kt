@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -172,14 +173,7 @@ fun LogDetailsScreen(
 
         DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
-        /*Box(modifier = Modifier
-            .height(1000.dp)
-            .background(Color.Green)
-            .fillMaxWidth()
 
-        ) {
-            Text(text = "HIIIIIIIIIIIIIIIIIIIIII")
-        }*/
         AnimatedContent(
             targetState = isLoading,
             label = "",
@@ -202,7 +196,7 @@ fun LogDetailsScreen(
                             modifier = Modifier
                                 .zIndex(10f)
                                 .offset(y = 250.dp)
-                                .width(50.dp),
+                                .fillMaxWidth(.15f),
                             color = Color(0xFF3891E1)
                         )
                     }
@@ -290,7 +284,7 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
         }
 
         // Number of Movies with Slide Animation
-        AnimatedVisibility(
+/*        AnimatedVisibility(
             visible = isOwnerVisible,
             enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
             fadeIn(animationSpec = tween(1000)),
@@ -304,7 +298,45 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
             }
+        }*/
+
+        Crossfade(
+            targetState = if (isOwnerVisible) movieCount else null,
+            modifier = Modifier.padding(start = 8.dp),
+            animationSpec = tween(durationMillis = 1000)
+        ) { targetCount ->
+            if (targetCount != null) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "$targetCount Movies",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
+/*        AnimatedVisibility(
+            visible = isOwnerVisible,
+            enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
+                    fadeIn(animationSpec = tween(1000)),
+            exit = fadeOut(animationSpec = tween(
+                durationMillis = 3000))
+        ) {
+            Crossfade(targetState = movieCount, label = "") { targetCount ->
+                Column(
+                    modifier = Modifier.padding(start = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "$targetCount Movies",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }*/
     }
 }
 
@@ -512,6 +544,7 @@ fun LogList(
         val moviesList = movies.values.toList()
         if (moviesList.isNotEmpty()) {
             items(moviesList, key = { it.id ?: 0 }) { movie ->
+
 
                 val addToWatched = SwipeAction(
                     background = colorResource(R.color.sky_blue),
