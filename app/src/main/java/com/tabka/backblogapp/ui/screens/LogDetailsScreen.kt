@@ -3,7 +3,6 @@ package com.tabka.backblogapp.ui.screens
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.ColorRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -32,29 +31,22 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.DismissDirection
-import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.twotone.Archive
-import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -78,7 +70,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -105,7 +96,6 @@ import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
-import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -139,7 +129,7 @@ fun LogDetailsScreen(
 
     // Watched Moviess
     val watchedMovieState = logDetailsViewModel.watchedMovies.observeAsState()
-    val watchedMovies = watchedMovieState.value ?: mutableMapOf()
+    val watchedMovies = watchedMovieState.value ?: emptyMap()
 
     // Owner
     val ownerState = logDetailsViewModel.owner.observeAsState()
@@ -235,79 +225,7 @@ fun LogDetailsScreen(
     ShowAlertDialog(alertDialogState, setAlertDialogState)
 }
 
-//@Composable
-/*fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>){
-    Row(modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically) {
-        // Creator Picture
-        Column(
-            modifier = Modifier.padding(end = 5.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(id = getAvatarResourceId(owner.avatarPreset ?: 1).second),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(35.dp)
-                    .testTag("CREATOR_PICTURE"),
-            )
-        }
 
-        var isVisible by remember { mutableStateOf(false) }
-        if (collaborators.size > 0) {
-            isVisible = true
-        }
-        // Collaborator Pictures
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(animationSpec = tween(1000)) + slideInVertically(animationSpec = tween(1000)),
-            exit = fadeOut(animationSpec = tween(1000)) + slideOutVertically(animationSpec = tween(1000))
-        ){
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                LazyRow {
-                    val itemsToShow = if (collaborators.size > 4) 4 else collaborators.size
-                    items(count = itemsToShow) { index ->
-                        val collaborator = collaborators[index]
-                        Image(
-                            painter = painterResource(
-                                id = getAvatarResourceId(
-                                    collaborator.avatarPreset ?: 1
-                                ).second
-                            ),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(35.dp)
-                                .testTag("COLLABS_PICTURE"), // Unique tag for each image
-                        )
-
-                    }
-                    if (collaborators.size > 4) {
-                        item {
-                            Button(
-                                onClick = { *//* TODO: Implement your click action here *//* },
-                                modifier = Modifier.testTag("VIEW_ALL_COLLABS_BUTTON")
-                            ) {
-                                Text("+${collaborators.size - 4} more")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Number of Movies
-        Column(
-            modifier = Modifier.padding(start = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                "$movieCount Movies",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}*/
 @Composable
 fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
     Row(modifier = Modifier.fillMaxWidth(),
@@ -575,169 +493,117 @@ fun LogButtons(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LogList(
-    navController: NavHostController, logId: String, movies: Map<String, MinimalMovieData>, watchedMovies: MutableMap<String, MinimalMovieData>,
+    navController: NavHostController, logId: String, movies: Map<String, MinimalMovieData>, watchedMovies: Map<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel, collaboratorsList: List<UserData>) {
-    Log.d(TAG, "Movies: $movies")
-    Column {
-        if (movies.isNotEmpty()) {
-            // Height of image and padding times number of movies
-            val moviesHeight: Dp = (80 * movies.size).dp
 
-            LazyColumn(
-                userScrollEnabled = false,
-                modifier = Modifier
-                    .height(moviesHeight)
-                    .testTag("MOVIES_LIST")
-            ) {
+    val colHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + 100.dp // 60.dp for the request header and spacer
 
-                val moviesList = movies.values.toList()
+    LazyColumn(
+        userScrollEnabled = false,
+        modifier = Modifier
+            .height(colHeight)
+            .testTag("MOVIES_LIST")
+    ) {
+        Log.d(TAG, "Movies: ${movies.values}\nWatched movies: ${watchedMovies.values}")
 
-                items(moviesList.size) { index ->
-                    val movie = moviesList[index]
+        val moviesList = movies.values.toList()
+        if (moviesList.isNotEmpty()) {
+            items(moviesList, key = { it.id ?: 0 }) { movie ->
 
-                    val state = rememberDismissState(
-                        confirmStateChange = {
-                            if (it == DismissValue.DismissedToStart) {
-                                Log.d(TAG, "Remove movie!")
-                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                val addToWatched = SwipeAction(
+                    background = colorResource(R.color.sky_blue),
+                    icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
+                    onSwipe = {
+                        val movieId = movie.id.toString()
+
+                        val removedMovieData = logDetailsViewModel.movies.value?.let { movies ->
+                            val updatedMovies = movies.toMutableMap().apply {
+                                remove(movieId)
                             }
-                            true
+                            logDetailsViewModel.movies.value = updatedMovies
+                            movies[movieId] // Get the removed movie data to add it to movies
                         }
-                    )
 
-                    LaunchedEffect(state.currentValue) {
-                        if (state.currentValue == DismissValue.DismissedToStart) {
-                            logDetailsViewModel.getLogData(logId)
+                        removedMovieData?.let { movieData ->
+                            val currentMovies = logDetailsViewModel.watchedMovies.value ?: mapOf()
+                            val updatedMovies = currentMovies.toMutableMap().apply {
+                                this[movieId] = movieData
+                            }
+                            logDetailsViewModel.watchedMovies.value = updatedMovies
                         }
-                    }
+                        logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                    },
+                )
 
-                    /*val archive = SwipeAction(
-                        icon = rememberVectorPainter(Icons.TwoTone.Archive),
-                        background = Color.Green,
-                        onSwipe = { }
-                    )*/
-
-                    val addToWatched = SwipeAction(
-                        background = colorResource(R.color.sky_blue),
-                        icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
-                        onSwipe = {
-                            logViewModel.markMovieAsWatched(logId, movie.id.toString())
-                            logDetailsViewModel.getLogData(logId)
-                        },
-                    )
-
-                    SwipeableActionsBox(
-                        endActions = listOf(addToWatched)
-                    ) {
-                        MovieEntry(navController,movie,logId, collaboratorsList)
-                    }
-
-                    /*// Add to Watched
-                    SwipeToDismiss(
-                        state = state,
-                        directions = setOf(DismissDirection.EndToStart),
-                        background = {
-                            val color = when (state.dismissDirection) {
-                                DismissDirection.EndToStart -> Color.Red
-                                else -> Color.Transparent
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(color)
-                                    .padding(top = 5.dp, bottom = 5.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete, contentDescription = null,
-                                    modifier = Modifier.align(Alignment.CenterEnd)
-                                )
-                            }
-                        },
-                        dismissContent = { MovieEntry(navController, movie, logId) }
-                    )*/
+                SwipeableActionsBox(
+                    endActions = listOf(addToWatched),
+                    modifier = Modifier
+                        .animateItemPlacement(
+                            animationSpec = tween(
+                                durationMillis = 1000
+                            )
+                        )
+                ) {
+                    MovieEntry(navController,movie,logId, collaboratorsList)
                 }
             }
         }
 
-        if (watchedMovies.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(50.dp))
 
-            // Watched Movie Section
-            val watchedMoviesHeight: Dp = (80 * watchedMovies.size).dp
+        val watchedMoviesList = watchedMovies.values.toList()
 
-            RequestHeader(title = "Watched Movies")
-            LazyColumn(
-                userScrollEnabled = false,
-                modifier = Modifier
-                    .height(watchedMoviesHeight)
-                    .testTag("WATCHED_MOVIES_LIST")
-            ) {
+        if (watchedMoviesList.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(50.dp))
+                RequestHeader(title = "Watched Movies")
+            }
 
-                val watchedMoviesList = watchedMovies.values.toList()
+            items(watchedMoviesList, key = { it.id ?: 0 }) { watchedMovie ->
 
-                items(watchedMoviesList.size) { index ->
-                    val movie = watchedMoviesList[index]
-                    /*val state = rememberDismissState(
-                        confirmStateChange = {
-                            if (it == DismissValue.DismissedToStart) {
-                                Log.d(TAG, "Unmark Movie as watched!")
-                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                val addToMovies = SwipeAction(
+                    background = colorResource(R.color.sky_blue),
+                    icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
+                    onSwipe = {
+                        val watchedMovieId = watchedMovie.id.toString()
+
+                        val removedMovieData = logDetailsViewModel.watchedMovies.value?.let { watchedMovies ->
+                            val updatedWatchedMovies = watchedMovies.toMutableMap().apply {
+                                remove(watchedMovieId)
                             }
-                            true
+                            logDetailsViewModel.watchedMovies.value = updatedWatchedMovies
+                            watchedMovies[watchedMovieId] // Get the removed movie data to add it to movies
                         }
-                    )*/
 
-                    /*LaunchedEffect(state.currentValue) {
-                        if (state.currentValue == DismissValue.DismissedToStart) {
-                            logDetailsViewModel.getLogData(logId)
+                        removedMovieData?.let { movieData ->
+                            val currentMovies = logDetailsViewModel.movies.value ?: mapOf()
+                            val updatedMovies = currentMovies.toMutableMap().apply {
+                                this[watchedMovieId] = movieData
+                            }
+                            logDetailsViewModel.movies.value = updatedMovies
                         }
-                    }*/
 
-                    // Add to Watched
-                    /*SwipeToDismiss(
-                        state = state,
-                        directions = setOf(DismissDirection.EndToStart),
-                        background = {
-                            val color = when (state.dismissDirection) {
-                                DismissDirection.EndToStart -> Color.Red
-                                else -> Color.Transparent
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(color)
-                                    .padding(top = 5.dp, bottom = 5.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete, contentDescription = null,
-                                    modifier = Modifier.align(Alignment.CenterEnd)
-                                )
-                            }
-                        },
-                        dismissContent = { MovieEntry(navController, movie, logId) }
-                    )*/
-                    val addToLog = SwipeAction(
-                        background = colorResource(R.color.sky_blue),
-                        icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
-                        onSwipe = {
-                            logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
-                            logDetailsViewModel.getLogData(logId)
-                        },
-                    )
-                    SwipeableActionsBox(
-                        endActions = listOf(addToLog)
-                    ) {
-                        MovieEntry(navController,movie,logId, collaboratorsList)
-                    }
+                        Log.d(TAG, "Watched movies after swipe: ${logDetailsViewModel.watchedMovies.value}")
+                        logViewModel.unmarkMovieAsWatched(logId, watchedMovie.id.toString())
+                    },
+                )
 
+                SwipeableActionsBox(
+                    endActions = listOf(addToMovies),
+                    modifier = Modifier
+                        .animateItemPlacement(
+                            animationSpec = tween(
+                                durationMillis = 1000
+                            )
+                        )
+                ) {
+                    MovieEntry(navController, watchedMovie, logId, collaboratorsList)
                 }
             }
         }
     }
-    Log.d(TAG, "Watched List: $watchedMovies")
 }
 
 @Composable
