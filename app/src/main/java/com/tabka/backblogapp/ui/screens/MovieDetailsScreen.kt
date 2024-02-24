@@ -340,7 +340,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                if (isFromLog) {
+                var isClicked by remember { mutableStateOf(false) }
+                if (isFromLog && !isClicked) {
                     val context = LocalContext.current
                     val haptic = LocalHapticFeedback.current
                     Button(
@@ -357,6 +358,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                 Log.d("THIS IS THE LOG ID:", logId.toString())
                                 logViewModel.markMovieAsWatched(logId, movie.id.toString())
                             }
+                            isClicked = true
                         },
                         modifier = Modifier
                             .fillMaxWidth()
