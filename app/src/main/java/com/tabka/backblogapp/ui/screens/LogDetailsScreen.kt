@@ -531,6 +531,10 @@ fun LogList(
     navController: NavHostController, logId: String, movies: Map<String, MinimalMovieData>, watchedMovies: Map<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel, collaboratorsList: List<UserData>) {
 
+    val moviesList = movies.values.toList()
+    val watchedMoviesList = watchedMovies.values.toList()
+
+    val extraHeight = if (watchedMoviesList.isNotEmpty()) 100.dp else 0.dp
     val colHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + 100.dp // 60.dp for the request header and spacer
 
     LazyColumn(
@@ -541,7 +545,6 @@ fun LogList(
     ) {
         Log.d(TAG, "Movies: ${movies.values}\nWatched movies: ${watchedMovies.values}")
 
-        val moviesList = movies.values.toList()
         if (moviesList.isNotEmpty()) {
             items(moviesList, key = { it.id ?: 0 }) { movie ->
 
@@ -584,9 +587,6 @@ fun LogList(
                 }
             }
         }
-
-
-        val watchedMoviesList = watchedMovies.values.toList()
 
         if (watchedMoviesList.isNotEmpty()) {
             item {
@@ -926,172 +926,117 @@ fun EditSheetContent(
 ) {
 
     var editedLogName by remember { mutableStateOf(logName) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("EDIT_SHEET_CONTENT"),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val focusManager = LocalFocusManager.current
-
-        TextField(
-            value = editedLogName,
-            onValueChange = { editedLogName = it },
-            singleLine = true,
-            modifier = Modifier.testTag("LOG_NAME_INPUT"),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus()
-                }
-            ),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFF373737),
-                focusedLabelColor = Color(0xFF979C9E),
-                unfocusedLabelColor = Color(0xFF979C9E),
-                unfocusedBorderColor = Color(0xFF373737),
-                backgroundColor = Color(0xFF373737)
-            ),
-        )
-    }
-
-    Spacer(modifier = Modifier.height(60.dp))
-
-    /*    Box(modifier = Modifier.height(450.dp)) {
-            LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-                items(movies) { movie ->
-                    EditLogEntry(movie)
-                }
-            }
-        }*/
-    val editedMovies = remember { mutableStateOf(movies.values.toList()) }
-
-    Box(modifier = Modifier.height(450.dp)) {
-        val state = rememberReorderableLazyListState(onMove = { from, to ->
-            Log.d(TAG, "Gotta move!")
-            editedMovies.value = editedMovies.value.toMutableList().apply {
-                add(to.index, removeAt(from.index))
-            }
-        })
-        LazyColumn(
-            state = state.listState,
-            modifier = Modifier
-                .reorderable(state)
-                .detectReorderAfterLongPress(state)
-        ) {
-            items(editedMovies.value, { it.id ?: 0 }) { movie ->
-                ReorderableItem(state, key = movie.id) { isDragging ->
-                    val elevation = animateDpAsState(if (isDragging) 16.dp else 0.dp)
-                    Column(
-                        modifier = Modifier
-                            .shadow(elevation.value)
-                    ) {
-                        EditLogEntry(movie) // Your custom item UI
-                    }
-                }
-            }
-        }
-    }
-
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
-        verticalArrangement = Arrangement.Bottom
+        modifier = Modifier.fillMaxSize()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.Center
+                .testTag("EDIT_SHEET_CONTENT"),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Divider(thickness = 1.dp, color = Color(0xFF303437))
+            val focusManager = LocalFocusManager.current
+
+            TextField(
+                value = editedLogName,
+                onValueChange = { editedLogName = it },
+                singleLine = true,
+                modifier = Modifier.testTag("LOG_NAME_INPUT"),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                ),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color(0xFF373737),
+                    focusedLabelColor = Color(0xFF979C9E),
+                    unfocusedLabelColor = Color(0xFF979C9E),
+                    unfocusedBorderColor = Color(0xFF373737),
+                    backgroundColor = Color(0xFF373737)
+                ),
+            )
         }
 
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(60.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+        val editedMovies = remember { mutableStateOf(movies.values.toList()) }
+
+        // Box holding the list of movies
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
         ) {
-            // Save Button
-            Button(
-                onClick = {
-                    setAlertDialogState(
-                        AlertDialog(
-                            isVisible = true,
-                            header = "Save Changes to Log",
-                            message = "Are you sure you want to save changes to this log?",
-                            dismiss = Dismiss(text = "Cancel"),
-                            accept = Accept(
-                                text = "Save",
-                                action = {
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        logDetailsViewModel.updateLog(
-                                            editedLogName,
-                                            editedMovies.value
-                                        )
-                                        logViewModel.loadLogs()
-                                        logViewModel.resetMovie()
-                                        onDismiss()
-                                    }
-                                }
-                            )
-                        )
-                    )
-                },
+            val state = rememberReorderableLazyListState(onMove = { from, to ->
+                Log.d(TAG, "Gotta move!")
+                editedMovies.value = editedMovies.value.toMutableList().apply {
+                    add(to.index, removeAt(from.index))
+                }
+            })
+            LazyColumn(
+                state = state.listState,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp)
-                    .padding(horizontal = 24.dp)
-                    .testTag("EDIT_SAVE_BUTTON"),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.sky_blue),
-                    disabledContainerColor = Color.Gray
-                ),
+                    .reorderable(state)
+                    .detectReorderAfterLongPress(state)
             ) {
-                Text(
-                    "Save",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                items(editedMovies.value, { it.id ?: 0 }) { movie ->
+                    ReorderableItem(state, key = movie.id) { isDragging ->
+                        val elevation = animateDpAsState(if (isDragging) 16.dp else 0.dp)
+                        Column(
+                            modifier = Modifier
+                                .shadow(elevation.value)
+                        ) {
+                            EditLogEntry(movie) // Your custom item UI
+                        }
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+        // Action Buttons
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+                //.weight(1f),
+            verticalArrangement = Arrangement.Bottom
         ) {
-            val context = LocalContext.current
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Divider(thickness = 1.dp, color = Color(0xFF303437))
+            }
 
-            if (isOwner) {
-                // Delete Button
+            Spacer(modifier = Modifier.height(5.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Save Button
                 Button(
                     onClick = {
                         setAlertDialogState(
                             AlertDialog(
                                 isVisible = true,
-                                header = "Delete log",
-                                message = "Are you sure you want to permanently delete this log?",
+                                header = "Save Changes to Log",
+                                message = "Are you sure you want to save changes to this log?",
                                 dismiss = Dismiss(text = "Cancel"),
                                 accept = Accept(
-                                    text = "Delete",
-                                    textColor = Color.Red,
+                                    text = "Save",
                                     action = {
                                         CoroutineScope(Dispatchers.Main).launch {
-                                            val asyncJob = logDetailsViewModel.deleteLog()
-                                            asyncJob?.join()
-
+                                            logDetailsViewModel.updateLog(
+                                                editedLogName,
+                                                editedMovies.value
+                                            )
                                             logViewModel.loadLogs()
-                                            navController.navigate("home")
-                                            Toast.makeText(
-                                                context, "Successfully deleted $logName!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            logViewModel.resetMovie()
+                                            onDismiss()
                                         }
                                     }
                                 )
@@ -1102,52 +1047,109 @@ fun EditSheetContent(
                         .fillMaxWidth()
                         .height(55.dp)
                         .padding(horizontal = 24.dp)
+                        .testTag("EDIT_SAVE_BUTTON"),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.sky_blue),
+                        disabledContainerColor = Color.Gray
+                    ),
+                ) {
+                    Text(
+                        "Save",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                val context = LocalContext.current
+
+                if (isOwner) {
+                    // Delete Button
+                    Button(
+                        onClick = {
+                            setAlertDialogState(
+                                AlertDialog(
+                                    isVisible = true,
+                                    header = "Delete log",
+                                    message = "Are you sure you want to permanently delete this log?",
+                                    dismiss = Dismiss(text = "Cancel"),
+                                    accept = Accept(
+                                        text = "Delete",
+                                        textColor = Color.Red,
+                                        action = {
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                val asyncJob = logDetailsViewModel.deleteLog()
+                                                asyncJob?.join()
+
+                                                logViewModel.loadLogs()
+                                                navController.navigate("home")
+                                                Toast.makeText(
+                                                    context, "Successfully deleted $logName!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    )
+                                )
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp)
+                            .padding(horizontal = 24.dp)
+                            .background(color = Color.Transparent)
+                            .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp))
+                            .testTag("EDIT_DELETE_BUTTON"),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        ),
+                    ) {
+                        Text(
+                            "Delete Log",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFDC3545)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Cancel Button
+                Button(
+                    onClick = { onDismiss() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp)
+                        .padding(horizontal = 24.dp)
                         .background(color = Color.Transparent)
-                        .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp))
-                        .testTag("EDIT_DELETE_BUTTON"),
+                        .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent
                     ),
                 ) {
                     Text(
-                        "Delete Log",
+                        "Cancel",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFDC3545)
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(50.dp))
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            // Cancel Button
-            Button(
-                onClick = { onDismiss() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp)
-                    .padding(horizontal = 24.dp)
-                    .background(color = Color.Transparent)
-                    .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ),
-            ) {
-                Text(
-                    "Cancel",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(50.dp))
     }
 }
 
