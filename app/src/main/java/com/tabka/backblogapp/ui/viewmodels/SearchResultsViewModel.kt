@@ -41,4 +41,25 @@ class SearchResultsViewModel : ViewModel() {
             }
         )
     }
+
+    fun getMovieResultsByGenre(genreId: String) {
+        movieRepository.searchMoviesByGenre(1, genreId,
+            onResponse = { searchData ->
+                searchData?.results?.forEach {
+                    val movieId = it.id?.toString() ?: ""
+                    movieRepository.getMovieHalfSheet(movieId,
+                        onResponse = {backdropPath ->
+                            _halfSheets.value[movieId] = backdropPath
+                        },
+                        onFailure = { error ->
+                            Log.d(TAG, error)
+                        })
+                }
+                _movieResults.value = searchData?.results
+            },
+            onFailure = { error ->
+                Log.d(TAG, error)
+            }
+        )
+    }
 }
