@@ -168,9 +168,9 @@ class FriendsViewModel : ViewModel() {
                 }
 
                 if ((targetRequests as DataResult.Success).item.any {
-                        it.senderId == targetId && it.targetId == userId
+                        it.senderId == userId && it.targetId == targetId
                 }) {
-                    updateMessage("$targetUsername has already sent you a friend request!")
+                    updateMessage("You've already sent a request to $targetUsername!")
                     return@launch
                 }
 
@@ -180,9 +180,9 @@ class FriendsViewModel : ViewModel() {
                 }
 
                 if ((userRequests as DataResult.Success).item.any {
-                    it.senderId == userId && it.targetId == targetId
+                    it.senderId == targetId && it.targetId == userId
                 }) {
-                    updateMessage("You've already sent a request to $targetUsername!")
+                    updateMessage("$targetUsername has already sent you a friend request!")
                     return@launch
                 }
 
