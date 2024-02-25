@@ -2,14 +2,12 @@ package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -74,7 +72,7 @@ fun SearchScreen(navController: NavController) {
         }*/
         //SearchBar(navController)
         //Spacer(modifier = Modifier.height(20.dp))
-        BrowseCategories()
+        BrowseCategories(navController)
         Spacer(modifier = Modifier.height(75.dp))
         FriendsAdded()
     }
@@ -125,7 +123,7 @@ fun SearchBarPlaceholder(navController: NavController) {
 }
 
 @Composable
-fun BrowseCategories() {
+fun BrowseCategories(navController: NavController) {
     Row(modifier = Modifier.fillMaxSize()) {
         Text(
             "Browse Categories", style = MaterialTheme.typography.headlineMedium,
@@ -142,14 +140,14 @@ fun BrowseCategories() {
         }*/
 
     val genreList = listOf(
-        "Action",
-        "Adventure",
-        "Animation",
-        "Comedy",
-        "Crime",
-        "Drama",
-        "Family",
-        "Fantasy"
+        ("Action" to 28),
+        ("Adventure" to 12),
+        ("Animation" to 16),
+        ("Comedy" to 35),
+        ("Crime" to 80),
+        ("Drama" to 18),
+        ("Family" to 10751),
+        ("Fantasy" to 14)
     )
 
     /*   LazyRow() {
@@ -165,19 +163,20 @@ fun BrowseCategories() {
         modifier = Modifier.height(160.dp)
     ) {
         items(genreList) { genre ->
-            Category(genre)
+            Category(navController, genre)
         }
     }
 }
 
 
 @Composable
-fun Category(genre: String) {
+fun Category(navController: NavController, genre: Pair<String, Int>) {
     Card(
         modifier = Modifier
             .height(80.dp)
             .width(183.dp)
-            .padding(end = 10.dp, bottom = 10.dp),
+            .padding(end = 10.dp, bottom = 10.dp)
+            .clickable { navController.navigate("category_results_${genre.second}_${genre.first}") },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -209,7 +208,7 @@ fun Category(genre: String) {
 
             // Text overlay
             Text(
-                text = genre,
+                text = genre.first,
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.White,
                 textAlign = TextAlign.Center,

@@ -17,6 +17,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.tabka.backblogapp.ui.screens.CategoryResultsScreen
 import com.tabka.backblogapp.ui.screens.FriendsScreen
 import com.tabka.backblogapp.ui.screens.HomeScreen
 import com.tabka.backblogapp.ui.screens.LogDetailsScreen
@@ -81,6 +82,15 @@ fun BottomNavGraph(navController: NavHostController) {
 
             composable(route = "search_results") {
                 SearchResultsScreen(navController, logViewModel)
+            }
+
+            composable(
+                route = "category_results_{genreId}_{name}",
+                arguments = listOf(
+                    navArgument("genreId") { type = NavType.StringType },
+                    navArgument("name") { type = NavType.StringType })
+            ) { backStackEntry ->
+                CategoryResultsScreen(navController, logViewModel, backStackEntry.arguments?.getString("genreId"), backStackEntry.arguments?.getString("name"))
             }
 
             composable(
