@@ -2,14 +2,12 @@ package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,24 +54,6 @@ fun SearchScreen(navController: NavController) {
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBarPlaceholder(navController)
         Spacer(modifier = Modifier.height(30.dp))
-        /*Text("Click here to go to results page",
-            modifier = Modifier.clickable { navController.navigate("search_results") }
-        )*/
-        /*Card() {
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(16.dp)
-                .clickable {
-                    // Navigate to another page with the search query
-                    navController.navigate("search_results")
-                }
-            ) {
-                Text("Search for a movie")
-            }
-        }*/
-        //SearchBar(navController)
-        //Spacer(modifier = Modifier.height(20.dp))
         BrowseCategories()
         Spacer(modifier = Modifier.height(75.dp))
         FriendsAdded()
@@ -142,27 +122,16 @@ fun BrowseCategories() {
         }*/
 
     val genreList = listOf(
-        "Action",
-        "Adventure",
-        "Animation",
-        "Comedy",
-        "Crime",
-        "Drama",
-        "Family",
-        "Fantasy"
+        listOf("Action", "image"),
+        listOf("Adventure", "image"),
+        listOf("Animation", "image"),
+        listOf("Comedy", "image")
     )
 
-    /*   LazyRow() {
-           items(genreList) { genre ->
-               Column {
-                   Category(genre)
-               }
-           }
-       }*/
 
     LazyHorizontalGrid(
         rows = GridCells.Fixed(2),
-        modifier = Modifier.height(160.dp)
+        modifier = Modifier.height(250.dp)
     ) {
         items(genreList) { genre ->
             Category(genre)
@@ -172,10 +141,10 @@ fun BrowseCategories() {
 
 
 @Composable
-fun Category(genre: String) {
+fun Category(genre: List<String>) {
     Card(
         modifier = Modifier
-            .height(80.dp)
+            .height(100.dp)
             .width(183.dp)
             .padding(end = 10.dp, bottom = 10.dp),
         shape = RoundedCornerShape(20.dp),
@@ -186,7 +155,7 @@ fun Category(genre: String) {
     ) {
         Box(
             modifier = Modifier
-                .height(80.dp)
+                .height(100.dp)
                 .width(183.dp)
                 .fillMaxSize()
         ) {
@@ -209,7 +178,7 @@ fun Category(genre: String) {
 
             // Text overlay
             Text(
-                text = genre,
+                text = genre[0],
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.White,
                 textAlign = TextAlign.Center,
