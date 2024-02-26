@@ -140,6 +140,10 @@ fun LogDetailsScreen(
     val isOwnerState = logDetailsViewModel.isOwner.observeAsState()
     val isOwner = isOwnerState.value ?: true
 
+    // Is Current User Collaborator
+    val isCollaboratorState = logDetailsViewModel.isCollaborator.observeAsState()
+    val isCollaborator = isCollaboratorState.value ?: false
+
     val isLoadingState = logDetailsViewModel.isLoading.observeAsState()
     val isLoading = isLoadingState.value ?: true
 
@@ -202,7 +206,7 @@ fun LogDetailsScreen(
                 false -> {
                     Column {
                         if (logId != null) {
-                            LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState, logId)
+                            LogButtons(navController, pageTitle, movies, isOwner, isCollaborator, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState, logId)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel, collaborators)
@@ -348,6 +352,7 @@ fun LogButtons(
     logName: String,
     movies: Map<String, MinimalMovieData>,
     isOwner: Boolean,
+    isCollaborator: Boolean,
     collaborators: List<UserData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel,
@@ -362,40 +367,76 @@ fun LogButtons(
         mutableStateOf(false)
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .padding(horizontal = 7.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    if (isCollaborator || isOwner) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .padding(horizontal = 7.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-        Row(modifier = Modifier.weight(1F)) {
-            // Collaborators Icon
-            if (isOwner) {
+            Row(modifier = Modifier.weight(1F)) {
+                // Collaborators Icon
+                if (isOwner) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1F)
+                            /*.width(60.dp)*/
+                            .fillMaxHeight()
+                            .padding(end = 10.dp),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.user_add),
+                            contentDescription = "Add Icon",
+                            modifier = Modifier
+                                .size(35.dp)
+                                .testTag("ADD_ICON")
+                                .clickable(onClick = {
+                                    sheetContent = {
+                                        CollaboratorsSheetContent(
+                                            logName,
+                                            collaborators,
+                                            onDismiss = { isSheetOpen = false },
+                                            logDetailsViewModel,
+                                            friendsViewModel
+                                        )
+                                    }
+                                    isSheetOpen = true
+                                })
+                        )
+                    }
+                }
+
+                // Edit Log Icon
                 Column(
                     modifier = Modifier
-                        .weight(1F)
-                        /*.width(60.dp)*/
-                        .fillMaxHeight()
-                        .padding(end = 10.dp),
+                        .weight(3F)
+                        .fillMaxHeight(),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.user_add),
-                        contentDescription = "Add Icon",
+                        painter = painterResource(id = R.drawable.edit),
+                        contentDescription = "Edit",
                         modifier = Modifier
                             .size(35.dp)
-                            .testTag("ADD_ICON")
+                            .testTag("EDIT_ICON")
                             .clickable(onClick = {
                                 sheetContent = {
-                                    CollaboratorsSheetContent(
-                                        logName,
-                                        collaborators,
+                                    EditSheetContent(
+                                        navController,
+                                        isSheetOpen,
                                         onDismiss = { isSheetOpen = false },
+                                        alertDialogState,
+                                        setAlertDialogState,
+                                        isOwner,
+                                        logName,
+                                        movies,
                                         logDetailsViewModel,
-                                        friendsViewModel
+                                        logViewModel
                                     )
                                 }
                                 isSheetOpen = true
@@ -404,100 +445,66 @@ fun LogButtons(
                 }
             }
 
-            // Edit Log Icon
-            Column(
-                modifier = Modifier
-                    .weight(3F)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "Edit",
+            Row(modifier = Modifier.weight(1F)) {
+                // Shuffle Icon
+                Column(
                     modifier = Modifier
-                        .size(35.dp)
-                        .testTag("EDIT_ICON")
-                        .clickable(onClick = {
-                            sheetContent = {
-                                EditSheetContent(
-                                    navController,
-                                    isSheetOpen,
-                                    onDismiss = { isSheetOpen = false },
-                                    alertDialogState,
-                                    setAlertDialogState,
-                                    isOwner,
-                                    logName,
-                                    movies,
-                                    logDetailsViewModel,
-                                    logViewModel
-                                )
-                            }
-                            isSheetOpen = true
-                        })
-                )
-            }
-        }
-
-        Row(modifier = Modifier.weight(1F)) {
-            // Shuffle Icon
-            Column(
-                modifier = Modifier
-                    .weight(2F)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.shuffle_arrow),
-                    contentDescription = "Shuffle",
-                    modifier = Modifier
-                        .size(35.dp)
-                        .fillMaxHeight()
-                        .testTag("SHUFFLE_ICON")
-                        .clickable {
-                            setAlertDialogState(
-                                AlertDialog(
-                                    isVisible = true,
-                                    header = "Shuffle",
-                                    message = "Are you sure you want to shuffle the movies?",
-                                    dismiss = Dismiss(text = "Cancel"),
-                                    accept = Accept(
-                                        text = "Shuffle",
-                                        action = {
-                                            CoroutineScope(Dispatchers.Main).launch {
-                                                logDetailsViewModel.shuffleMovies()
-                                                logViewModel.loadLogs()
-                                                logViewModel.resetMovie()
+                        .weight(2F)
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.shuffle_arrow),
+                        contentDescription = "Shuffle",
+                        modifier = Modifier
+                            .size(35.dp)
+                            .fillMaxHeight()
+                            .testTag("SHUFFLE_ICON")
+                            .clickable {
+                                setAlertDialogState(
+                                    AlertDialog(
+                                        isVisible = true,
+                                        header = "Shuffle",
+                                        message = "Are you sure you want to shuffle the movies?",
+                                        dismiss = Dismiss(text = "Cancel"),
+                                        accept = Accept(
+                                            text = "Shuffle",
+                                            action = {
+                                                CoroutineScope(Dispatchers.Main).launch {
+                                                    logDetailsViewModel.shuffleMovies()
+                                                    logViewModel.loadLogs()
+                                                    logViewModel.resetMovie()
+                                                }
                                             }
-                                        }
+                                        )
                                     )
                                 )
-                            )
-                            Log.d(TAG, "Is Visible? ${alertDialogState.isVisible}")
-                        }
-                )
-            }
+                                Log.d(TAG, "Is Visible? ${alertDialogState.isVisible}")
+                            }
+                    )
+                }
 
-            // Add Movie Icon
-            Column(
-                modifier = Modifier
-                    .weight(1F)
-                    .padding(start = 10.dp)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.End
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.add),
-                    contentDescription = "Add Icon",
+                // Add Movie Icon
+                Column(
                     modifier = Modifier
-                        .size(50.dp)
-                        .testTag("ADD_MOVIE_ICON")
-                        .clickable(onClick = {
-                            sheetContent = { AddMovieMenu(navController, logViewModel, logId) }
-                            isSheetOpen = true
-                        })
-                )
+                        .weight(1F)
+                        .padding(start = 10.dp)
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.add),
+                        contentDescription = "Add Icon",
+                        modifier = Modifier
+                            .size(50.dp)
+                            .testTag("ADD_MOVIE_ICON")
+                            .clickable(onClick = {
+                                sheetContent = { AddMovieMenu(navController, logViewModel, logId) }
+                                isSheetOpen = true
+                            })
+                    )
+                }
             }
         }
     }

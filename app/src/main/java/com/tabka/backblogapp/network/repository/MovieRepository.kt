@@ -7,7 +7,6 @@ import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
-import com.tabka.backblogapp.network.models.tmdb.MinimalMovieDataResult
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
@@ -145,6 +144,34 @@ class MovieRepository(private val movieApiService: ApiService) {
         Log.d(tag, query)
 
         val call = movieApiService.searchMovies(query, includeAdult, language, page, "Bearer " + BuildConfig.MOVIE_SECRET)
+
+        call.enqueue(object : Callback<MovieSearchData> {
+            override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
+                if (response.isSuccessful) {
+                    val movieSearchData = response.body()
+                    Log.d("Movies", "$movieSearchData")
+                    onResponse(movieSearchData)
+                } else {
+                    // Handle error
+                    Log.d("Movies", "Error: ${response.code()} - ${response.message()}")
+                    println("Error: ${response.code()} - ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MovieSearchData>, t: Throwable) {
+                Log.d("Movies", "Failure: ${t.message}")
+                onFailure("Failure: ${t.message}")
+            }
+        })
+    }
+
+    fun searchMoviesByGenre(page: Int, genreId: String, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {
+        val includeAdult = false
+        val includeVideo = false
+        val language = "en-US"
+        val sortBy = "popularity.desc"
+
+        val call = movieApiService.searchMoviesByGenre(includeAdult, includeVideo, language, page, sortBy, genreId, "Bearer " + BuildConfig.MOVIE_SECRET)
 
         call.enqueue(object : Callback<MovieSearchData> {
             override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {

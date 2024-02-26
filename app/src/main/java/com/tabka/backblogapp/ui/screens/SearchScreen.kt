@@ -54,7 +54,7 @@ fun SearchScreen(navController: NavController) {
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBarPlaceholder(navController)
         Spacer(modifier = Modifier.height(30.dp))
-        BrowseCategories()
+        BrowseCategories(navController)
         Spacer(modifier = Modifier.height(75.dp))
         FriendsAdded()
     }
@@ -105,7 +105,7 @@ fun SearchBarPlaceholder(navController: NavController) {
 }
 
 @Composable
-fun BrowseCategories() {
+fun BrowseCategories(navController: NavController) {
     Row(modifier = Modifier.fillMaxSize()) {
         Text(
             "Browse Categories", style = MaterialTheme.typography.headlineMedium,
@@ -122,10 +122,14 @@ fun BrowseCategories() {
         }*/
 
     val genreList = listOf(
-        listOf("Action", "image"),
-        listOf("Adventure", "image"),
-        listOf("Animation", "image"),
-        listOf("Comedy", "image")
+        ("Action" to 28),
+        ("Adventure" to 12),
+        ("Animation" to 16),
+        ("Comedy" to 35),
+        ("Crime" to 80),
+        ("Drama" to 18),
+        ("Family" to 10751),
+        ("Fantasy" to 14)
     )
 
 
@@ -134,19 +138,20 @@ fun BrowseCategories() {
         modifier = Modifier.height(250.dp)
     ) {
         items(genreList) { genre ->
-            Category(genre)
+            Category(navController, genre)
         }
     }
 }
 
 
 @Composable
-fun Category(genre: List<String>) {
+fun Category(navController: NavController, genre: Pair<String, Int>) {
     Card(
         modifier = Modifier
             .height(100.dp)
             .width(183.dp)
-            .padding(end = 10.dp, bottom = 10.dp),
+            .padding(end = 10.dp, bottom = 10.dp)
+            .clickable { navController.navigate("category_results_${genre.second}_${genre.first}") },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -178,7 +183,7 @@ fun Category(genre: List<String>) {
 
             // Text overlay
             Text(
-                text = genre[0],
+                text = genre.first,
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.White,
                 textAlign = TextAlign.Center,
