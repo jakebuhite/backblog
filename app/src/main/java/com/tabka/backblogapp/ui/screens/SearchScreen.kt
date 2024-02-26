@@ -54,24 +54,6 @@ fun SearchScreen(navController: NavController) {
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBarPlaceholder(navController)
         Spacer(modifier = Modifier.height(30.dp))
-        /*Text("Click here to go to results page",
-            modifier = Modifier.clickable { navController.navigate("search_results") }
-        )*/
-        /*Card() {
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(16.dp)
-                .clickable {
-                    // Navigate to another page with the search query
-                    navController.navigate("search_results")
-                }
-            ) {
-                Text("Search for a movie")
-            }
-        }*/
-        //SearchBar(navController)
-        //Spacer(modifier = Modifier.height(20.dp))
         BrowseCategories(navController)
         Spacer(modifier = Modifier.height(75.dp))
         FriendsAdded()
@@ -150,17 +132,10 @@ fun BrowseCategories(navController: NavController) {
         ("Fantasy" to 14)
     )
 
-    /*   LazyRow() {
-           items(genreList) { genre ->
-               Column {
-                   Category(genre)
-               }
-           }
-       }*/
 
     LazyHorizontalGrid(
         rows = GridCells.Fixed(2),
-        modifier = Modifier.height(160.dp)
+        modifier = Modifier.height(250.dp)
     ) {
         items(genreList) { genre ->
             Category(navController, genre)
@@ -173,7 +148,7 @@ fun BrowseCategories(navController: NavController) {
 fun Category(navController: NavController, genre: Pair<String, Int>) {
     Card(
         modifier = Modifier
-            .height(80.dp)
+            .height(100.dp)
             .width(183.dp)
             .padding(end = 10.dp, bottom = 10.dp)
             .clickable { navController.navigate("category_results_${genre.second}_${genre.first}") },
@@ -185,7 +160,7 @@ fun Category(navController: NavController, genre: Pair<String, Int>) {
     ) {
         Box(
             modifier = Modifier
-                .height(80.dp)
+                .height(100.dp)
                 .width(183.dp)
                 .fillMaxSize()
         ) {

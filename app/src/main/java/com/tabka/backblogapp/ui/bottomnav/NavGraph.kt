@@ -103,7 +103,7 @@ fun BottomNavGraph(navController: NavHostController) {
 
         navigation(startDestination = if (auth.currentUser == null) "login" else "friends", route = BottomNavigationBar.Friends.route) {
             composable(route = "friends") {
-                FriendsScreen(navController, friendsViewModel)
+                FriendsScreen(navController, friendsViewModel, logViewModel)
             }
 
             composable(route = "login") {
@@ -129,7 +129,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "friends_page_{friendId}",
                 arguments = listOf(navArgument("friendId") { type = NavType.StringType })
             ) { backStackEntry ->
-                ProfileScreen(navController, backStackEntry.arguments?.getString("friendId"), profileViewModel)
+                ProfileScreen(navController, backStackEntry.arguments?.getString("friendId"), profileViewModel, logViewModel)
             }
         }
     }
