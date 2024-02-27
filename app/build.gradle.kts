@@ -83,7 +83,7 @@ tasks.create("jacocoTestReport", JacocoReport::class) {
         html.required.set(true)
     }
 
-    val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    val debugTree = fileTree("${layout.buildDirectory}/tmp/kotlin-classes/debug") {
         exclude("**/R.class")
         exclude("**/R$*.class")
         exclude("**/BuildConfig.*")
@@ -94,7 +94,7 @@ tasks.create("jacocoTestReport", JacocoReport::class) {
 
     classDirectories.setFrom(files(debugTree))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
-    executionData.setFrom(fileTree(buildDir) {
+    executionData.setFrom(fileTree(layout.buildDirectory) {
         include("jacoco/testDebugUnitTest.exec", "outputs/code-coverage/connected/*coverage.ec")
     })
 }

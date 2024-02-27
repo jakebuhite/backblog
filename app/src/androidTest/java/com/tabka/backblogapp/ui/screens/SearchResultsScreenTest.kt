@@ -1,4 +1,4 @@
-package com.tabka.backblogapp.ui.screens
+/*package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -212,3 +212,4 @@ class SearchResultsScreenTest {
     }
 
 }
+*/

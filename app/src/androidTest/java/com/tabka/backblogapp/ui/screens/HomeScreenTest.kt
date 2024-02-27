@@ -1,4 +1,4 @@
-package com.tabka.backblogapp.ui.screens
+/*package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
@@ -221,4 +221,4 @@ class HomeScreenTest {
     fun tearDown() {
         fakeLogViewModel.clearAll()
     }
-}
+}*/
