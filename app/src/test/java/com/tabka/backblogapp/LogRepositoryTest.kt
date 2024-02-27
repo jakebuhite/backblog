@@ -263,36 +263,224 @@ class LogRepositoryTest {
     }
 
     @Test
-    fun testGetLogsShouldReturnException(): Unit = runBlocking {
+    fun testGetLogsForUserOwnedPrivateShouldReturnSuccess(): Unit = runBlocking {
         // Arrange
-        val userId = "fakeUserId"
+        val userId = "user123"
+        val private = true
+        val logData = LogData(
+            logId = "log123",
+            name = "My log",
+            collaborators = mutableListOf(userId),
+            creationDate = "3453454534",
+            lastModifiedDate = "43545654654",
+            isVisible = true,
+            owner = Owner(userId = userId, priority = 0),
+            order = emptyMap(),
+            movieIds = mutableListOf(),
+            watchedIds = mutableListOf()
+        )
+        val logDataMap = mapOf(
+            "log_id" to "log123",
+            "name" to "My log",
+            "collaborators" to mutableListOf(userId),
+            "creation_date" to "3453454534",
+            "last_modified_date" to "43545654654",
+            "is_visible" to true,
+            "owner" to mapOf("user_id" to userId, "priority" to 0),
+            "order" to emptyMap<String, Int>(),
+            "movie_ids" to mutableListOf<String>(),
+            "watched_ids" to mutableListOf<String>()
+        )
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
-        whenever(mockCollection.document()).thenReturn(mockDocument)
-        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
-        whenever(mockDocument.id).thenReturn("doc123")
-
         whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
-        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
-
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
-
-        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf())
-
-        whenever(mockQuerySnapshot.documents.map<DocumentSnapshot, LogData> { doc ->
-            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
-        }).thenReturn(emptyList())
-
-        val exception = Exception("Simulated exception")
-        val task: Task<Void> = Tasks.forException(exception)
-        whenever(mockDocument.set(anyMap<String, Any>())).thenReturn(task)
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
 
         // Act
-        val result = logRepository.getLogs(userId, true)
+        val result = logRepository.getLogs(userId, private)
 
         // Assert
-        assert(result is DataResult.Failure)
-        assert((result as DataResult.Failure).throwable == exception)
+        assert(result is DataResult.Success)
+        assertEquals((result as DataResult.Success).item.first(), logData)
+    }
+
+    @Test
+    fun testGetLogsForUserOwnedPublicShouldReturnSuccess(): Unit = runBlocking {
+        // Arrange
+        val userId = "user123"
+        val private = false
+        val logData = LogData(
+            logId = "log123",
+            name = "My log",
+            collaborators = mutableListOf(userId),
+            creationDate = "3453454534",
+            lastModifiedDate = "43545654654",
+            isVisible = true,
+            owner = Owner(userId = userId, priority = 0),
+            order = emptyMap(),
+            movieIds = mutableListOf(),
+            watchedIds = mutableListOf()
+        )
+        val logDataMap = mapOf(
+            "log_id" to "log123",
+            "name" to "My log",
+            "collaborators" to mutableListOf(userId),
+            "creation_date" to "3453454534",
+            "last_modified_date" to "43545654654",
+            "is_visible" to true,
+            "owner" to mapOf("user_id" to userId, "priority" to 0),
+            "order" to emptyMap<String, Int>(),
+            "movie_ids" to mutableListOf<String>(),
+            "watched_ids" to mutableListOf<String>()
+        )
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
+
+        // Act
+        val result = logRepository.getLogs(userId, private)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assertEquals((result as DataResult.Success).item.first(), logData)
+    }
+
+    @Test
+    fun testGetLogsForCollaboratorPrivateShouldReturnSuccess(): Unit = runBlocking {
+        // Arrange
+        val userId = "user123"
+        val private = true
+        val logData = LogData(
+            logId = "log123",
+            name = "My log",
+            collaborators = mutableListOf(userId),
+            creationDate = "3453454534",
+            lastModifiedDate = "43545654654",
+            isVisible = false,
+            owner = Owner(userId = userId, priority = 0),
+            order = emptyMap(),
+            movieIds = mutableListOf(),
+            watchedIds = mutableListOf()
+        )
+        val logDataMap = mapOf(
+            "log_id" to "log123",
+            "name" to "My log",
+            "collaborators" to mutableListOf(userId),
+            "creation_date" to "3453454534",
+            "last_modified_date" to "43545654654",
+            "is_visible" to false,
+            "owner" to mapOf("user_id" to userId, "priority" to 0),
+            "order" to emptyMap<String, Int>(),
+            "movie_ids" to mutableListOf<String>(),
+            "watched_ids" to mutableListOf<String>()
+        )
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
+
+        // Act
+        val result = logRepository.getLogs(userId, private)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assertEquals((result as DataResult.Success).item.first(), logData)
+    }
+
+    @Test
+    fun testGetLogsForCollaboratorPublicShouldReturnSuccess(): Unit = runBlocking {
+        // Arrange
+        val userId = "user123"
+        val private = false
+        val logData = LogData(
+            logId = "log123",
+            name = "My log",
+            collaborators = mutableListOf(userId),
+            creationDate = "3453454534",
+            lastModifiedDate = "43545654654",
+            isVisible = true,
+            owner = Owner(userId = "anotherUser123", priority = 0),
+            order = emptyMap(),
+            movieIds = mutableListOf(),
+            watchedIds = mutableListOf()
+        )
+        val logDataMap = mapOf(
+            "log_id" to "log123",
+            "name" to "My log",
+            "collaborators" to mutableListOf(userId),
+            "creation_date" to "3453454534",
+            "last_modified_date" to "43545654654",
+            "is_visible" to true,
+            "owner" to mapOf("user_id" to "anotherUser123", "priority" to 0),
+            "order" to emptyMap<String, Int>(),
+            "movie_ids" to mutableListOf<String>(),
+            "watched_ids" to mutableListOf<String>()
+        )
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
+
+        // Act
+        val result = logRepository.getLogs(userId, private)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assertEquals((result as DataResult.Success).item.first(), logData)
+    }
+
+    @Test
+    fun testGetLogsShouldReturnEmptyListWhenNoLogsFound(): Unit = runBlocking {
+        // Arrange
+        val userId = "user123"
+        val private = false
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+        whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockQuerySnapshot.documents).thenReturn(emptyList())
+
+        // Act
+        val result = logRepository.getLogs(userId, private)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assertEquals((result as DataResult.Success).item.size, 0)
+    }
+
+    @Test
+    fun testGetLogsShouldReturnFailureOnException(): Unit = runBlocking {
+        // Arrange
+        val userId = "user123"
+        val private = false
+        val exception = Exception("Simulated exception")
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        val task: Task<QuerySnapshot> = Tasks.forException(exception)
+        whenever(mockQuery.get()).thenReturn(task)
+
+        // Act
+        val result = logRepository.getLogs(userId, private)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assert((result as DataResult.Success).item.isEmpty())
     }
 }

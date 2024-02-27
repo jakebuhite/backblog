@@ -102,7 +102,11 @@ class LogLocalRepository {
             val existingLogs = jsonUtility.readFromFile()
 
             // Find specific log
-            val log = existingLogs.find { it.logId == logId }!!
+            val log = existingLogs.find { it.logId == logId }
+
+            if (log == null) {
+                return
+            }
 
             val updatedMovieIds = log.movieIds ?: mutableListOf()
             updatedMovieIds.add(movieId)

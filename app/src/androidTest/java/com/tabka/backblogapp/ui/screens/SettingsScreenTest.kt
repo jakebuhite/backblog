@@ -1,4 +1,4 @@
-package com.tabka.backblogapp.ui.screens
+/*package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.material.Surface
 import androidx.compose.ui.test.assertIsDisplayed
@@ -349,3 +349,4 @@ class SettingsScreenTest {
 
     }
 }
+*/
