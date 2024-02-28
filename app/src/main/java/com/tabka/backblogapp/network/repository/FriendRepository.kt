@@ -1,11 +1,11 @@
 package com.tabka.backblogapp.network.repository
 
-import android.provider.ContactsContract.Data
 import android.util.Log
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogRequestData
@@ -17,20 +17,18 @@ import com.tabka.backblogapp.util.NetworkError
 import com.tabka.backblogapp.util.NetworkExceptionType
 import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class FriendRepository {
-    private val db = Firebase.firestore
-    private val auth = Firebase.auth
+class FriendRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: FirebaseAuth = Firebase.auth) {
     private val tag = "FriendsRepo"
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
         return try {
-            val reqId = db.collection("log_requests").document().id
+            val reqRef = db.collection("log_requests").document()
+            val reqId = reqRef.id
 
             val logRequestData = mapOf(
                 "request_id" to reqId,
