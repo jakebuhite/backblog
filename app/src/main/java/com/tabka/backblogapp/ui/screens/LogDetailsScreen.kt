@@ -168,8 +168,6 @@ fun LogDetailsScreen(
     // Get data
     LaunchedEffect(Unit) {
         logDetailsViewModel.getLogData(logId!!)
-
-        Log.d(TAG, "Doing this launch now")
     }
 
 
@@ -188,7 +186,6 @@ fun LogDetailsScreen(
             },
             modifier = Modifier
                 .fillMaxSize()
-                /*.border(width = 2.dp, color = Color.Black)*/
         ) { targetState ->
             when (targetState) {
                 true -> {
@@ -541,8 +538,9 @@ fun LogList(
     val moviesList = movies.values.toList()
     val watchedMoviesList = watchedMovies.values.toList()
 
+    // Extra height is for the "Watched Movies" header and the spacer
     val extraHeight = if (watchedMoviesList.isNotEmpty()) 100.dp else 0.dp
-    val colHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + 100.dp // 60.dp for the request header and spacer
+    val colHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + extraHeight
 
     LazyColumn(
         userScrollEnabled = false,
@@ -554,7 +552,6 @@ fun LogList(
 
         if (moviesList.isNotEmpty()) {
             items(moviesList, key = { it.id ?: 0 }) { movie ->
-
 
                 val addToWatched = SwipeAction(
                     background = colorResource(R.color.sky_blue),

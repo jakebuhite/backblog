@@ -1,49 +1,47 @@
 package com.tabka.backblogapp.ui.shared
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.Text
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.screens.LogEntry
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import kotlin.math.ceil
 
 @Composable
-fun PublicLogs(navController: NavController, publicLogs: List<LogData>) {
+fun PublicLogs(navController: NavHostController, publicLogs: List<LogData>, logViewModel: LogViewModel) {
     Text("Public Logs", style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier
             .padding(bottom = 8.dp)
             .testTag("PAGE_SUB_TITLE"))
-    DisplayPublicLogs(navController = navController, allLogs = publicLogs)
+    DisplayPublicLogs(navController = navController, allLogs = publicLogs, logViewModel = logViewModel)
 }
 
 @Composable
-fun DisplayPublicLogs(navController: NavController, allLogs: List<LogData>?) {
+fun DisplayPublicLogs(navController: NavHostController, allLogs: List<LogData>?, logViewModel: LogViewModel) {
     val multiplier = ceil(allLogs!!.size / 2.0).toInt()
     val containerHeight: Dp = (185 * multiplier).dp
 
@@ -57,7 +55,29 @@ fun DisplayPublicLogs(navController: NavController, allLogs: List<LogData>?) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(allLogs.size, key = { index -> allLogs[index].logId!! }) { index ->
+            items(allLogs, { it.logId ?: 0 }) { log ->
+                var painter by remember { mutableStateOf<Painter?>(null) }
+                var movieData by remember { mutableStateOf<Pair<MovieData?, String>>(null to "") }
+                val movieId = log.movieIds?.firstOrNull()
+
+                LaunchedEffect(log.logId, movieId) {
+                    movieId?.let {
+                        logViewModel.fetchMovieDetails(it) { result ->
+                            result.data?.let { data ->
+                                movieData = data
+                            }
+                        }
+                    }
+                }
+
+                painter = if (movieData.first != null) {
+                    rememberAsyncImagePainter("https://image.tmdb.org/t/p/w500/${movieData.second}")
+                } else {
+                    painterResource(id = R.drawable.icon_empty_log)
+                }
+                LogEntry(navController = navController, log.logId ?: "", log.name ?: "", painter!!)
+            }
+            /*items(allLogs.size, key = { index -> allLogs[index].logId!! }) { index ->
                 val log = allLogs[index]
                 Card(
                     modifier = Modifier
@@ -98,7 +118,7 @@ fun DisplayPublicLogs(navController: NavController, allLogs: List<LogData>?) {
                         )
                     }
                 }
-            }
+            }*/
         }
     }
 }

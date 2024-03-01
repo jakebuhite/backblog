@@ -52,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.tabka.backblogapp.R
@@ -59,6 +60,7 @@ import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.shared.FriendsList
 import com.tabka.backblogapp.ui.shared.PublicLogs
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.ProfileViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.CoroutineScope
@@ -66,7 +68,7 @@ import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun ProfileScreen(navController: NavController, friendId: String?, profileViewModel: ProfileViewModel) {
+fun ProfileScreen(navController: NavHostController, friendId: String?, profileViewModel: ProfileViewModel, logViewModel: LogViewModel) {
     val userDataState = profileViewModel.userData.observeAsState()
     val pageTitle: String = userDataState.value?.username ?: ""
 
@@ -108,6 +110,7 @@ fun ProfileScreen(navController: NavController, friendId: String?, profileViewMo
         publicLogs,
         friends,
         userAvatar,
+        logViewModel,
         alreadyFriend,
         addFriend,
         removeFriend,
@@ -118,11 +121,12 @@ fun ProfileScreen(navController: NavController, friendId: String?, profileViewMo
 
 @Composable
 fun FriendsPageContent(
-    navController: NavController,
+    navController: NavHostController,
     pageTitle: String,
     publicLogs: List<LogData>,
     friends: State<List<UserData>>,
     userAvatar: Int,
+    logViewModel: LogViewModel,
     alreadyFriend: Boolean,
     onAddFriendSelected: () -> Unit,
     onRemoveFriendSelected: () -> Unit,
@@ -160,7 +164,7 @@ fun FriendsPageContent(
                 )
                 PageTitle(pageTitle)
             }
-            TabScreen(navController, publicLogs, friends)
+            TabScreen(navController, publicLogs, friends, logViewModel)
             if (showBottomSheet) {
                 AddFriendOrBlockDialog(
                     onAddFriendSelected = {
@@ -185,7 +189,7 @@ fun FriendsPageContent(
 }
 
 @Composable
-fun FriendsPageHeader(navController: NavController, showBottomSheet: () -> Unit) {
+fun FriendsPageHeader(navController: NavHostController, showBottomSheet: () -> Unit) {
     Row {
         BackButton(navController = navController, visible = true)
         Spacer(Modifier.weight(1f))
@@ -204,9 +208,10 @@ fun FriendsPageHeader(navController: NavController, showBottomSheet: () -> Unit)
 
 @Composable
 fun TabScreen(
-    navController: NavController,
+    navController: NavHostController,
     publicLogs: List<LogData>,
     friends: State<List<UserData>>,
+    logViewModel: LogViewModel
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -244,7 +249,7 @@ fun TabScreen(
             }
         }
         when (selectedTab) {
-            0 -> PublicLogs(navController, publicLogs)
+            0 -> PublicLogs(navController, publicLogs, logViewModel)
             1 -> FriendsPageFriendsList(navController, friends)
         }
     }
