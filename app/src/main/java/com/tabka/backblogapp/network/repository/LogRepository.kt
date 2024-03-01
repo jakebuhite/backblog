@@ -2,6 +2,7 @@ package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,7 +20,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 
-class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
+class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: FirebaseAuth = Firebase.auth) {
     private val tag = "LogRepo"
 
     suspend fun addLog(name: String, isVisible: Boolean, ownerId: String): DataResult<String> {
@@ -221,17 +222,20 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore) {
 
     suspend fun addCollaborators(logId: String, collaborators: List<String>): DataResult<Boolean> {
         return try {
-            if (Firebase.auth.currentUser?.uid == null) {
+            if (auth.currentUser?.uid == null) {
                 return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
             }
 
             // Iterate through each collaborator in the array
             collaborators.forEach { collaborator ->
                 // Add collaborator to the updatedCollaborators object
-                val result = FriendRepository().addLogRequest(Firebase.auth.currentUser?.uid!!, collaborator, logId, System.currentTimeMillis().toString())
+                val result = FriendRepository(db, auth).addLogRequest(auth.currentUser?.uid!!, collaborator, logId, System.currentTimeMillis().toString())
                 when (result) {
                     is DataResult.Success -> Unit
-                    is DataResult.Failure -> Log.d(tag, "Error sending log request: ${result.throwable.message}")
+                    is DataResult.Failure -> {
+                        Log.d(tag, "Error sending log request: ${result.throwable.message}")
+                        return DataResult.Failure(result.throwable)
+                    }
                 }
             }
 
