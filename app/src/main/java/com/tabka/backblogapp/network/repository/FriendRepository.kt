@@ -1,11 +1,11 @@
 package com.tabka.backblogapp.network.repository
 
-import android.provider.ContactsContract.Data
 import android.util.Log
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogRequestData
@@ -17,15 +17,15 @@ import com.tabka.backblogapp.util.NetworkError
 import com.tabka.backblogapp.util.NetworkExceptionType
 import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class FriendRepository {
-    private val db = Firebase.firestore
-    private val auth = Firebase.auth
+class FriendRepository(
+    val db: FirebaseFirestore = Firebase.firestore,
+    val auth: FirebaseAuth = Firebase.auth
+) {
     private val tag = "FriendsRepo"
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
@@ -267,11 +267,10 @@ class FriendRepository {
         }
     }
 
-    private suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
+    suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
         return try {
-            db.collection("users").document(userId)
-                .update("friends.$friendId", true)
-                .await()
+            val userRef = db.collection("users").document(userId)
+            userRef.update("friends.$friendId", true).await()
             DataResult.Success(true)
         } catch (e: Exception) {
             println("Error updating user document $e")
@@ -279,13 +278,13 @@ class FriendRepository {
         }
     }
 
-    private suspend fun addCollaborator(userId: String, logId: String): DataResult<Boolean> {
+    suspend fun addCollaborator(userId: String, logId: String): DataResult<Boolean> {
         return try {
             val logRef = db.collection("logs").document(logId)
 
             val priority: Int
 
-            when (val result = LogRepository().getLogs(userId, true)) {
+            when (val result = LogRepository(db).getLogs(userId, true)) {
                 is DataResult.Success -> {
                     priority = result.item.size
 
@@ -300,7 +299,7 @@ class FriendRepository {
                     Log.d(tag, "User successfully added as a collaborator!")
                     DataResult.Success(true)
                 }
-                is DataResult.Failure -> DataResult.Failure(result.throwable)
+                is DataResult.Failure -> throw result.throwable
             }
         } catch (e: Exception) {
             Log.w(tag, "Error reading log document", e)
