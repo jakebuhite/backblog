@@ -501,8 +501,11 @@ class FriendRepositoryTest {
         whenever(mockDocument.get()).thenReturn(Tasks.forResult(mockDocumentSnapshot))
         whenever(mockDocumentSnapshot.exists()).thenReturn(true)
 
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
         whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
         whenever(mockQuerySnapshot.documents).thenReturn(emptyList())
+        whenever(mockDocumentSnapshot.data).thenReturn(emptyMap())
 
         // Act
         val result = friendRepo.addCollaborator(userId, logId)
