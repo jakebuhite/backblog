@@ -1,3 +1,9 @@
+//
+//  BottomNavigationBar.kt
+//  backblog
+//
+//  Created by Christian Totaro on 2/3/24.
+//
 package com.tabka.backblogapp.ui.bottomnav
 
 import androidx.compose.material.icons.Icons
