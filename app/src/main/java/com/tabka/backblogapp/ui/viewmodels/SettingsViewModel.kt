@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.repository.LogLocalRepository
@@ -18,11 +19,12 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
-open class SettingsViewModel: ViewModel() {
-    private val auth = Firebase.auth
-    private val userRepository = UserRepository()
-    private val logLocalRepository = LogLocalRepository()
-    private val logRepository = LogRepository()
+open class SettingsViewModel(
+    val auth: FirebaseAuth = Firebase.auth,
+    val userRepository: UserRepository = UserRepository(),
+    val logLocalRepository: LogLocalRepository = LogLocalRepository(),
+    val logRepository: LogRepository = LogRepository()
+): ViewModel() {
     private val tag = "SettingsViewModel"
 
     open suspend fun getUserData(): DataResult<UserData?> {

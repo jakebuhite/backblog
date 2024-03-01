@@ -126,7 +126,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: Fi
                         logs.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
                     } catch (e: Exception) {
                         Log.w(tag, "Error receiving logs document (userOwned)", e)
-                        return@async DataResult.Failure(e)
+                        throw e
                     }
                 }
 
@@ -142,7 +142,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: Fi
                         })
                     } catch (e: Exception) {
                         Log.w(tag, "Error receiving logs document (userCollab)", e)
-                        return@async DataResult.Failure(e)
+                        throw e
                     }
                 }
 

@@ -22,7 +22,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class FriendRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: FirebaseAuth = Firebase.auth) {
+class FriendRepository(
+    val db: FirebaseFirestore = Firebase.firestore,
+    val auth: FirebaseAuth = Firebase.auth
+) {
     private val tag = "FriendsRepo"
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
@@ -265,11 +268,10 @@ class FriendRepository(val db: FirebaseFirestore = Firebase.firestore, val auth:
         }
     }
 
-    private suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
+    suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
         return try {
-            db.collection("users").document(userId)
-                .update("friends.$friendId", true)
-                .await()
+            val userRef = db.collection("users").document(userId)
+            userRef.update("friends.$friendId", true).await()
             DataResult.Success(true)
         } catch (e: Exception) {
             println("Error updating user document $e")
@@ -277,13 +279,13 @@ class FriendRepository(val db: FirebaseFirestore = Firebase.firestore, val auth:
         }
     }
 
-    private suspend fun addCollaborator(userId: String, logId: String): DataResult<Boolean> {
+    suspend fun addCollaborator(userId: String, logId: String): DataResult<Boolean> {
         return try {
             val logRef = db.collection("logs").document(logId)
 
             val priority: Int
 
-            when (val result = LogRepository().getLogs(userId, true)) {
+            when (val result = LogRepository(db).getLogs(userId, true)) {
                 is DataResult.Success -> {
                     priority = result.item.size
 
@@ -298,7 +300,7 @@ class FriendRepository(val db: FirebaseFirestore = Firebase.firestore, val auth:
                     Log.d(tag, "User successfully added as a collaborator!")
                     DataResult.Success(true)
                 }
-                is DataResult.Failure -> DataResult.Failure(result.throwable)
+                is DataResult.Failure -> throw result.throwable
             }
         } catch (e: Exception) {
             Log.w(tag, "Error reading log document", e)

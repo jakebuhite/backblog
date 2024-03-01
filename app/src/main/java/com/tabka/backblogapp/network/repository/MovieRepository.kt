@@ -68,51 +68,6 @@ class MovieRepository(private val movieApiService: ApiService) {
         }
     }
 
-    suspend fun getWatchNextMovie(userId: String): DataResult<String> {
-        try {
-            // Log Id -> Movie Data
-            val logRepository = LogRepository()
-            when (val logsResult = logRepository.getLogs(userId, true)) {
-                is DataResult.Success -> {
-                    val logs: List<LogData> = logsResult.item
-
-                    if (logs.isEmpty()) {
-                        return DataResult.Failure(FirebaseError(FirebaseExceptionType.DOES_NOT_EXIST))
-                    }
-
-                    var priorityLog: LogData? = null
-                    var highestPriority = Int.MAX_VALUE
-
-                    logs.forEach { log ->
-                        val userPriority: Int = if (log.owner?.userId == userId) {
-                            log.owner.priority ?: 0
-                        } else {
-                            log.order?.get(userId) ?: 0
-                        }
-
-                        if (userPriority < highestPriority && !log.movieIds.isNullOrEmpty()) {
-                            highestPriority = userPriority
-                            priorityLog = log
-                        }
-                    }
-
-                    // No movies in any of the logs
-                    if (priorityLog == null || priorityLog!!.movieIds.isNullOrEmpty()) {
-                        return DataResult.Failure(FirebaseError(FirebaseExceptionType.DOES_NOT_EXIST))
-                    }
-
-                    return DataResult.Success(priorityLog!!.movieIds!!.first())
-                }
-                is DataResult.Failure -> {
-                    return logsResult
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(tag, "Error getting watch next movie", e)
-            return DataResult.Failure(e)
-        }
-    }
-
     fun getMovieById(movieId: String, onResponse: (MovieData?) -> Unit, onFailure: (String) -> Unit) {
         val call = movieApiService.getMovieDetails(
             movieId = movieId,
