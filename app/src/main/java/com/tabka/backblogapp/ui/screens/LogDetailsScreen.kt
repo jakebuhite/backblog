@@ -319,7 +319,8 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
                     Text(
                         "$targetCount Movies",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.LightGray
                     )
                 }
             }
