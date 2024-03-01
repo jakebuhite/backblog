@@ -30,7 +30,8 @@ class FriendRepository(
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
         return try {
-            val reqId = db.collection("log_requests").document().id
+            val reqRef = db.collection("log_requests").document()
+            val reqId = reqRef.id
 
             val logRequestData = mapOf(
                 "request_id" to reqId,
