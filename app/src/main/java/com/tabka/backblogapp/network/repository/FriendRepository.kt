@@ -285,7 +285,7 @@ class FriendRepository(
 
             val priority: Int
 
-            when (val result = LogRepository(db).getLogs(userId, true)) {
+            when (val result = LogRepository(db, auth).getLogs(userId, true)) {
                 is DataResult.Success -> {
                     priority = result.item.size
 

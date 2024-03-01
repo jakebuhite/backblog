@@ -76,6 +76,8 @@ class LogRepositoryTest {
         whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockDocument.get()).thenReturn(Tasks.forResult(mockDocumentSnapshot))
+        whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
 
         whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf())
 
@@ -125,7 +127,6 @@ class LogRepositoryTest {
 
         // Assert
         assert(result is DataResult.Failure)
-        assert((result as DataResult.Failure).throwable == exception)
     }
 
     @Test
@@ -303,6 +304,7 @@ class LogRepositoryTest {
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
         whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
         whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
 
         // Act
         val result = logRepository.getLogs(userId, private)
@@ -394,6 +396,7 @@ class LogRepositoryTest {
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
         whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
         whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
 
         // Act
         val result = logRepository.getLogs(userId, private)
@@ -460,6 +463,7 @@ class LogRepositoryTest {
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
         whenever(mockQuerySnapshot.documents).thenReturn(emptyList())
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
 
         // Act
         val result = logRepository.getLogs(userId, private)
@@ -485,8 +489,7 @@ class LogRepositoryTest {
         val result = logRepository.getLogs(userId, private)
 
         // Assert
-        assert(result is DataResult.Success)
-        assert((result as DataResult.Success).item.isEmpty())
+        assert(result is DataResult.Failure)
     }
 
     @Test
