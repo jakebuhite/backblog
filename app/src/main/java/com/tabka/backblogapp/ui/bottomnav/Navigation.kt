@@ -1,3 +1,9 @@
+//
+//  Navigation.kt
+//  backblog
+//
+//  Created by Christian Totaro on 2/3/24.
+//
 package com.tabka.backblogapp.ui.bottomnav
 
 import android.annotation.SuppressLint

@@ -1,3 +1,9 @@
+//
+//  LogDetailsScreen.kt
+//  backblog
+//
+//  Created by Tom Krusinski on 2/1/24.
+//
 package com.tabka.backblogapp.ui.screens
 
 import android.annotation.SuppressLint

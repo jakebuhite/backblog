@@ -1,3 +1,9 @@
+//
+//  CategoryResultsScreen.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/24/24.
+//
 package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.animation.AnimatedContent

@@ -1,3 +1,9 @@
+//
+//  LogRepository.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/9/24.
+//
 package com.tabka.backblogapp.network.repository
 
 import android.util.Log

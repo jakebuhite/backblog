@@ -1,3 +1,9 @@
+//
+//  FriendRequestsScreen.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/15/24.
+//
 package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.foundation.Image

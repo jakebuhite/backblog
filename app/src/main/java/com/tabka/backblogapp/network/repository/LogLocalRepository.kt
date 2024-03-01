@@ -1,3 +1,9 @@
+//
+//  LogLocalRepository.kt
+//  backblog
+//
+//  Created by Christian Totaro on 2/4/24.
+//
 package com.tabka.backblogapp.network.repository
 
 import android.util.Log

@@ -1,3 +1,9 @@
+//
+//  GetAvatarResourceId.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/1/24.
+//
 package com.tabka.backblogapp.util
 
 import com.tabka.backblogapp.R
