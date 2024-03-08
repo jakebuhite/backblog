@@ -273,7 +273,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                             val usRating =
                                 usRelease?.releaseDates?.get(0)?.certification.orEmpty()
 
-                            Text(text = usRating.ifEmpty { "Not Rated" }, style = MaterialTheme.typography.bodySmall)
+                            Text(text = usRating.ifEmpty { "Not Rated" }, style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
                         }
 
                         Spacer(modifier = Modifier.width(5.dp))
@@ -285,7 +285,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                 val year = releaseDate.substring(0, 4)
                                 Text(
                                     year,
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.LightGray
                                 )
                             }
                         }
@@ -294,7 +295,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                     Row() {
                         val runtime = movie.runtime
 
-                        Text("$runtime minutes", style = MaterialTheme.typography.bodySmall)
+                        Text("$runtime minutes", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
                     }
 
                     // Genres
@@ -603,8 +604,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                             Card(modifier = Modifier.padding(end = 5.dp)) {
                                 Box(
                                     modifier = Modifier
-                                        .width(40.dp)
-                                        .height(40.dp)
+                                        .width(50.dp)
+                                        .height(50.dp)
                                 ) {
                                     Image(
                                         painter = rememberAsyncImagePainter("https://image.tmdb.org/t/p/original/$logoPath"),
@@ -622,6 +623,9 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(30.dp))
 
             // Plot Summary
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
+                Text("Plot Summary", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
+            }
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     movie?.overview!!,
@@ -633,8 +637,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(30.dp))
 
             // Directors
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text("Directors", style = MaterialTheme.typography.bodyMedium)
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
+                Text("Directors", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
             }
             Row {
                 movie?.credits?.crew?.let { crew ->
@@ -650,8 +654,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(20.dp))
 
             // Stars
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text("Stars", style = MaterialTheme.typography.bodyMedium)
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
+                Text("Stars", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
             }
 
             Row {
@@ -692,7 +696,8 @@ fun GenreContainer(genre: String) {
         ) {
             Text(
                 genre.uppercase(),
-                color = Color.White,
+                /*color = Color.White,*/
+                color = Color.LightGray,
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
