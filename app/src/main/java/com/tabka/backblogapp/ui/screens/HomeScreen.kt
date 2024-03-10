@@ -589,7 +589,7 @@ fun NewLogCollaborator(
             Image(
                 painter = painterResource(id = getAvatarResourceId(friend.avatarPreset ?: 1).second),
                 contentDescription = null,
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(60.dp).testTag("NEW_LOG_COLLABORATOR_AVATAR"),
             )
         }
 
@@ -600,7 +600,10 @@ fun NewLogCollaborator(
                 .height(60.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(friend.username ?: "", style = MaterialTheme.typography.bodyLarge)
+            Text(friend.username ?: "",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.testTag("NEW_LOG_COLLABORATOR_USERNAME")
+            )
         }
 
         if (currentCollab) {
@@ -613,7 +616,8 @@ fun NewLogCollaborator(
                         if (collaboratorsList.contains(friend.userId)) {
                             collaboratorsList.remove(friend.userId)
                         }
-                    },
+                    }
+                    .testTag("REMOVE_COLLABORATOR_BUTTON"),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -621,7 +625,7 @@ fun NewLogCollaborator(
                     imageVector = Icons.Default.RemoveCircle,
                     contentDescription = "Add Icon",
                     colorFilter = tint(color = Color.Red),
-                    modifier = Modifier.size(25.dp)
+                    modifier = Modifier.size(25.dp).testTag("REMOVE_COLLABORATOR_ICON")
                 )
             }
         } else {
@@ -635,14 +639,15 @@ fun NewLogCollaborator(
                             collaboratorsList.add(friend.userId)
                         }
 
-                    },
+                    }
+                    .testTag("ADD_COLLABORATOR_BUTTON"),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(25.dp)
+                    modifier = Modifier.size(25.dp).testTag("ADD_COLLABORATOR_ICON")
                 )
             }
         }
