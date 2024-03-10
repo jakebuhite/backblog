@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FriendsViewModel : ViewModel() {
+open class FriendsViewModel : ViewModel() {
     private val tag = "FriendsViewModel"
     private val auth = Firebase.auth
 
@@ -39,7 +39,7 @@ class FriendsViewModel : ViewModel() {
 
     //val friendsData: MutableLiveData<List<UserData>> = MutableLiveData()
     private val _friendsData = MutableStateFlow<List<UserData>>(emptyList())
-    val friendsData = _friendsData.asStateFlow()
+    open val friendsData = _friendsData.asStateFlow()
 
     // Status Message
     val notificationMsg: MutableLiveData<String> = MutableLiveData("")

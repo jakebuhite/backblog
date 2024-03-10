@@ -1,7 +1,5 @@
 package com.tabka.backblogapp.ui.screens
 
-/*import com.tabka.backblogapp.ui.bottomnav.logViewModel
-import com.tabka.backblogapp.ui.viewmodels.LogViewModel*/
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent

@@ -57,23 +57,26 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         var userData by remember { mutableStateOf<UserData?>(null) }
+        var isLoading by remember { mutableStateOf(true) }
 
         LaunchedEffect(Unit) {
             when (val result = settingsViewModel.getUserData()) {
                 is DataResult.Success -> {
                     userData = result.item
+                    isLoading = false
                 }
                 is DataResult.Failure -> {
                     val e = result.throwable.message
                     Log.d("SettingsScreen", "Error getting the user's data $e")
+                    isLoading = false
                 }
             }
         }
 
-        if (userData == null) {
+        if (isLoading) {
             LoadingSpinner()
         } else {
-            SettingsForm(userData!!, settingsViewModel::updateUserData,
+            SettingsForm(userData, settingsViewModel::updateUserData,
                 settingsViewModel::syncLocalLogsToDB,
                 settingsViewModel::getLogCount)
         }
@@ -81,13 +84,13 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
 }
 
 @Composable
-fun SettingsForm(userData: UserData,
+fun SettingsForm(userData: UserData?,
                  updateUserData: suspend (Map<String, Any?>, String) -> DataResult<Boolean>,
                  syncLocalLogsToDB: suspend () -> DataResult<Boolean>,
                  getLogCount: () -> Int) {
     // Avatar selection button
     var showDialog by remember { mutableStateOf(false) }
-    var selectedAvatar by remember { mutableIntStateOf(userData.avatarPreset!!) }
+    var selectedAvatar by remember { mutableIntStateOf(userData?.avatarPreset ?: 1) }
 
     Column {
         Row (
@@ -133,7 +136,7 @@ fun SettingsForm(userData: UserData,
             value = username,
             onValueChange = { username = it },
             label = { Text("Username") },
-            placeholder = { Text(userData.username!!) },
+            placeholder = { Text(userData?.username ?: "") },
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth()
@@ -217,12 +220,12 @@ fun SettingsForm(userData: UserData,
             CoroutineScope(Dispatchers.Default).launch {
                 if (password.isNotEmpty()) {
                     // Check if any field was updated
-                    if (username.isNotEmpty() || newPassword.isNotEmpty() || selectedAvatar != userData.avatarPreset!!) {
+                    if (username.isNotEmpty() || newPassword.isNotEmpty() || selectedAvatar != (userData?.avatarPreset ?: 1)) {
                         val updates = mutableMapOf<String, Any>()
 
                         if (username.isNotEmpty()) { updates["username"] = username }
                         if (newPassword.isNotEmpty()) { updates["password"] = newPassword }
-                        if (selectedAvatar != userData.avatarPreset!!) { updates["avatar_preset"] = selectedAvatar }
+                        if (selectedAvatar != (userData?.avatarPreset ?: 1)) { updates["avatar_preset"] = selectedAvatar }
 
                         when (val result = updateUserData(updates, password)) {
                             is DataResult.Success -> {

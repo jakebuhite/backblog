@@ -126,7 +126,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: Fi
                     try {
                         var q: Query = logRef.whereEqualTo("owner.user_id", userId)
                         if (!private) {
-                            q = logRef.whereEqualTo("is_visible", true)
+                            q = logRef.whereEqualTo("owner.user_id", userId).whereEqualTo("is_visible", true)
                         }
                         val snapshot = q.get().await()
                         logs.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
@@ -140,7 +140,7 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: Fi
                     try {
                         var q: Query = logRef.whereArrayContains("collaborators", userId)
                         if (!private) {
-                            q = logRef.whereEqualTo("is_visible", true)
+                            q = logRef.whereArrayContains("collaborators", userId).whereEqualTo("is_visible", true)
                         }
                         val snapshot = q.get().await()
                         logs.addAll(snapshot.documents.map { doc ->

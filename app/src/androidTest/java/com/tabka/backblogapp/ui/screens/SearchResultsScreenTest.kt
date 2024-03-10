@@ -1,4 +1,4 @@
-/*package com.tabka.backblogapp.ui.screens
+package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -37,10 +37,7 @@ class SearchResultsScreenTest {
     fun setUp() {
         mockNavController = TestNavHostController(ApplicationProvider.getApplicationContext())
         mockNavController.navigatorProvider.addNavigator(ComposeNavigator())
-
-
     }
-
 
     @Test
     fun testInitialStateShowsSearchBar() {
@@ -53,7 +50,6 @@ class SearchResultsScreenTest {
             .assertIsDisplayed()
     }
 
-
     @Test
     fun testInputTextUpdatesSearchQuery() {
         composeTestRule.setContent {
@@ -65,7 +61,10 @@ class SearchResultsScreenTest {
         composeTestRule.onNodeWithTag("SEARCH_BAR_INPUT", useUnmergedTree = true)
             .performTextInput(query)
 
-        composeTestRule.onAllNodesWithText(query)[1].assertIsDisplayed()
+        composeTestRule.waitUntil(7000) {
+            composeTestRule.onAllNodesWithTag("MOVIE_RESULT").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onAllNodesWithText(query)[0].assertIsDisplayed()
     }
 
     @Test
@@ -155,7 +154,6 @@ class SearchResultsScreenTest {
 
     @Test
     fun testAddMovieToLogButtonWithLogs() {
-
         val initialLogs = listOf(
             LogData(
                 logId = "log1",
@@ -195,7 +193,6 @@ class SearchResultsScreenTest {
         composeTestRule.waitUntil(3000) {
             composeTestRule.onAllNodesWithTag("MOVIE_RESULT").fetchSemanticsNodes().size > 1
         }
-        /*composeTestRule.onNodeWithText(query).performClick()*/
         composeTestRule.onAllNodesWithTag("ADD_MOVIE_TO_LOG_BUTTON")[0].performClick()
 
         // Verify the popup opens
@@ -212,4 +209,3 @@ class SearchResultsScreenTest {
     }
 
 }
-*/

@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -116,7 +115,6 @@ import org.burnoutcrew.reorderable.reorderable
 
 private val TAG = "LogDetailsScreen"
 
-@OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LogDetailsScreen(
@@ -203,7 +201,8 @@ fun LogDetailsScreen(
                             modifier = Modifier
                                 .zIndex(10f)
                                 .offset(y = 250.dp)
-                                .fillMaxWidth(.15f),
+                                .fillMaxWidth(.15f)
+                                .testTag("LOADING_PROGRESS"),
                             color = Color(0xFF3891E1)
                         )
                     }
@@ -320,7 +319,8 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
                         "$targetCount Movies",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.LightGray
+                        color = Color.LightGray,
+                        modifier = Modifier.testTag("MOVIE_COUNT")
                     )
                 }
             }
@@ -347,10 +347,6 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
         }*/
     }
 }
-
-
-
-
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -693,7 +689,7 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId:
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = movie.title!!,
+                text = movie.title ?: "",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -1181,7 +1177,7 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 painter = painterResource(id = R.drawable.remove),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier.size(35.dp).testTag("REMOVE_MOVIE_ICON"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -1197,7 +1193,8 @@ fun EditLogEntry(movie: MinimalMovieData) {
             Text(
                 movie.title ?: "",
                 style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("EDIT_LOG_MOVIE_TITLE")
             )
         }
 
@@ -1214,7 +1211,7 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 imageVector = Icons.Default.DragHandle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier.size(35.dp).testTag("DRAG_ICON"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }

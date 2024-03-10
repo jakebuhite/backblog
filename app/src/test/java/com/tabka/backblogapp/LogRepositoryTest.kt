@@ -48,6 +48,9 @@ class LogRepositoryTest {
     private lateinit var mockQuery: Query
 
     @Mock
+    private lateinit var mockQuery2: Query
+
+    @Mock
     private lateinit var mockDocumentSnapshot: DocumentSnapshot
 
     @Mock
@@ -345,10 +348,13 @@ class LogRepositoryTest {
         )
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
-        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
         whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery2)
+        whenever(mockQuery.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockQuery2.whereEqualTo(anyString(), any())).thenReturn(mockQuery2)
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockQuery2.get()).thenReturn(taskQuerySnapshot)
         whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
         whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
 
@@ -438,9 +444,14 @@ class LogRepositoryTest {
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
         whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
-        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery2)
+
+        whenever(mockQuery.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockQuery2.whereEqualTo(anyString(), any())).thenReturn(mockQuery2)
+
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockQuery2.get()).thenReturn(taskQuerySnapshot)
         whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
         whenever(mockDocumentSnapshot.data).thenReturn(logDataMap)
 
@@ -460,10 +471,14 @@ class LogRepositoryTest {
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
         whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery2)
+        whenever(mockQuery.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockQuery2.whereEqualTo(anyString(), any())).thenReturn(mockQuery2)
+
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
+        whenever(mockQuery2.get()).thenReturn(taskQuerySnapshot)
         whenever(mockQuerySnapshot.documents).thenReturn(emptyList())
-        whenever(mockCollection.whereArrayContains(anyString(), any())).thenReturn(mockQuery)
 
         // Act
         val result = logRepository.getLogs(userId, private)
