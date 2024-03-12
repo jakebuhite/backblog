@@ -205,7 +205,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?, prior
     val painter = if (imageUrl != null) {
         rememberAsyncImagePainter(model = imageUrl)
     } else {
-        painterResource(id = R.drawable.icon_empty_log) // Placeholder image
+        painterResource(id = R.drawable.caughtup) // Placeholder image
     }
 
     var cardModifier = Modifier.fillMaxWidth()
@@ -749,13 +749,13 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
         })
 
     val multiplier = ceil(allLogs!!.size / 2.0).toInt()
-    val containerHeight: Dp = (185 * multiplier).dp
+    val containerHeight: Dp = (190 * multiplier).dp
 
     Log.d(TAG, "ALL LOGS: $allLogs")
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         state = state.gridState,
-        contentPadding = PaddingValues(top = 5.dp),
+        contentPadding = PaddingValues(top = 5.dp, bottom = 5.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         userScrollEnabled = false,
@@ -790,7 +790,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                     painter = if (movieData.first != null) {
                         rememberAsyncImagePainter("https://image.tmdb.org/t/p/w500/${movieData.second}")
                     } else {
-                        painterResource(id = R.drawable.icon_empty_log)
+                        painterResource(id = R.drawable.emptylog)
                     }
                     LogEntry(navController = navController, log.logId ?: "", log.name ?: "", painter!!)
                 }
@@ -804,7 +804,7 @@ fun LogEntry(navController: NavHostController, logId: String, logName: String, p
 
     Card(
         modifier = Modifier
-            .size(175.dp)
+            .size(180.dp)
             .clickable { navController.navigate("home_log_details_$logId") },
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(

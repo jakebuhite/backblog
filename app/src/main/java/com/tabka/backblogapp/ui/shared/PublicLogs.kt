@@ -80,6 +80,15 @@ fun DisplayPublicLogs(navController: NavHostController, allLogs: List<LogData>?,
             }
             /*items(allLogs.size, key = { index -> allLogs[index].logId!! }) { index ->
                 val log = allLogs[index]
+                var painter by remember { mutableStateOf<Painter?>(null) }
+                var movieData by remember { mutableStateOf<Pair<MovieData?, String>>(null to "") }
+
+                painter = if (movieData.first != null) {
+                    rememberAsyncImagePainter("https://image.tmdb.org/t/p/w500/${movieData.second}")
+                } else {
+                    painterResource(id = R.drawable.emptylog)
+                }
+
                 Card(
                     modifier = Modifier
                         .size(175.dp)
@@ -92,9 +101,10 @@ fun DisplayPublicLogs(navController: NavHostController, allLogs: List<LogData>?,
                             .fillMaxSize()
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.creator),
+                            painter = painter!!,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                         Box(
                             modifier = Modifier

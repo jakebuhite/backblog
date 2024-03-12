@@ -403,6 +403,9 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
+                        var isAnyChecked by remember { mutableStateOf(false) }
+                        isAnyChecked = checkedStates.any { it }
+                        val buttonText = if (isAnyChecked) "Add to Log" else "Create New Log"
                         // Add Button
                         androidx.compose.material3.Button(
                             modifier = Modifier
@@ -436,7 +439,8 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                             )
                         ) {
                             Text(
-                                "Add",
+                                /*"Add"*/
+                                buttonText,
                                 color = Color.White,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
