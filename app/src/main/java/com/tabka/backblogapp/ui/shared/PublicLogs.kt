@@ -74,7 +74,7 @@ fun DisplayPublicLogs(navController: NavHostController, allLogs: List<LogData>?,
                 painter = if (movieData.first != null) {
                     rememberAsyncImagePainter("https://image.tmdb.org/t/p/w500/${movieData.second}")
                 } else {
-                    painterResource(id = R.drawable.icon_empty_log)
+                    painterResource(id = R.drawable.emptylog)
                 }
                 LogEntry(navController = navController, log.logId ?: "", log.name ?: "", painter!!)
             }
