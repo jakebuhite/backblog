@@ -1,9 +1,17 @@
+//
+//  FriendRepository.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/9/24.
+//
 package com.tabka.backblogapp.network.repository
 
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogRequestData
@@ -20,14 +28,16 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class FriendRepository {
-    private val db = Firebase.firestore
-    private val auth = Firebase.auth
+class FriendRepository(
+    val db: FirebaseFirestore = Firebase.firestore,
+    val auth: FirebaseAuth = Firebase.auth
+) {
     private val tag = "FriendsRepo"
 
     suspend fun addLogRequest(senderId: String, targetId: String, logId: String, requestDate: String): DataResult<Boolean> {
         return try {
-            val reqId = db.collection("log_requests").document().id
+            val reqRef = db.collection("log_requests").document()
+            val reqId = reqRef.id
 
             val logRequestData = mapOf(
                 "request_id" to reqId,
@@ -197,7 +207,7 @@ class FriendRepository {
                     return DataResult.Failure(FirebaseError(FirebaseExceptionType.DOES_NOT_EXIST))
                 }
 
-                when (addCollaborator(reqData["sender_id"].toString(), reqData["target_id"].toString())) {
+                when (addCollaborator(reqData["target_id"].toString(), reqData["log_id"].toString())) {
                     is DataResult.Success -> {
                         DataResult.Success(true)
                     }
@@ -219,10 +229,44 @@ class FriendRepository {
             val userRef = db.collection("users").document(userId)
 
             // Remove friend from user's friends
-            val updates = mapOf("friends.${friendId}" to FieldValue.delete())
-            userRef.update(updates).await()
+            val userUpdate = mapOf("friends.${friendId}" to FieldValue.delete())
+            userRef.update(userUpdate).await()
+
+            // Remove user from friend's map
+            val friendRef = db.collection("users").document(friendId)
+            val friendUpdate = mapOf("friends.${userId}" to FieldValue.delete())
+            friendRef.update(friendUpdate).await()
 
             Log.d(tag, "Friend successfully removed!")
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error removing friend", e)
+            DataResult.Failure(e)
+        }
+    }
+
+    // TODO Ensure blocker is removed from logs involving this user (excluding ones he owns)
+    //  Blocked user must also be removed from the logs that the user above owns
+    suspend fun blockUser(userId: String, blockedId: String, isFriend: Boolean): DataResult<Boolean> {
+        return try {
+            // Add to blocked
+            db.collection("users").document(userId)
+                .update(mapOf("blocked.${blockedId}" to true)).await()
+
+            // Remove from friends list (both)
+            if (isFriend) {
+                when(val removeUser = removeFriend(userId, blockedId)) {
+                    is DataResult.Failure -> DataResult.Failure(removeUser.throwable)
+                    is DataResult.Success -> {
+                        when(val removeBlocked = removeFriend(blockedId, userId)) {
+                            is DataResult.Failure -> DataResult.Failure(removeBlocked.throwable)
+                            is DataResult.Success -> DataResult.Success(true)
+                        }
+                    }
+                }
+            }
+
+            Log.d(tag, "User successfully blocked!")
             DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error updating user document", e)
@@ -230,26 +274,10 @@ class FriendRepository {
         }
     }
 
-    // TODO Ensure blocker is removed from friends list, logs involving this user (excluding ones he owns)
-    //  Blocked user must also be removed from the logs that the user above owns
-    suspend fun blockUser(userId: String, blockedId: String): DataResult<Boolean> {
+    suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
         return try {
-            db.collection("users").document(userId)
-                .update(mapOf("blocked.${blockedId}" to true)).await()
-
-            Log.d(tag, "User successfully blocked!")
-            DataResult.Success(true)
-        } catch (e: Exception) {
-            Log.w(tag, "Error updating log document", e)
-            DataResult.Failure(e)
-        }
-    }
-
-    private suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
-        return try {
-            db.collection("users").document(userId)
-                .update("friends.$friendId", true)
-                .await()
+            val userRef = db.collection("users").document(userId)
+            userRef.update("friends.$friendId", true).await()
             DataResult.Success(true)
         } catch (e: Exception) {
             println("Error updating user document $e")
@@ -257,13 +285,13 @@ class FriendRepository {
         }
     }
 
-    private suspend fun addCollaborator(userId: String, logId: String): DataResult<Boolean> {
+    suspend fun addCollaborator(userId: String, logId: String): DataResult<Boolean> {
         return try {
             val logRef = db.collection("logs").document(logId)
 
             val priority: Int
 
-            when (val result = LogRepository().getLogs(userId, true)) {
+            when (val result = LogRepository(db, auth).getLogs(userId, true)) {
                 is DataResult.Success -> {
                     priority = result.item.size
 
@@ -278,7 +306,7 @@ class FriendRepository {
                     Log.d(tag, "User successfully added as a collaborator!")
                     DataResult.Success(true)
                 }
-                is DataResult.Failure -> DataResult.Failure(result.throwable)
+                is DataResult.Failure -> throw result.throwable
             }
         } catch (e: Exception) {
             Log.w(tag, "Error reading log document", e)

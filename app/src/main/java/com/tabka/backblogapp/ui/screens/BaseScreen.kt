@@ -1,3 +1,9 @@
+//
+//  BaseScreen.kt
+//  backblog
+//
+//  Created by Christian Totaro on 2/1/24.
+//
 package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility

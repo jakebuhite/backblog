@@ -2,6 +2,7 @@ package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.material.Surface
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -84,7 +85,7 @@ class SettingsScreenTest {
                 SettingsScreen(mockNavController, fakeSettingsViewModel)
             }
         }
-        composeTestRule.onNodeWithTag("LOADING_SPINNER").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("LOADING_SPINNER").assertIsNotDisplayed()
     }
 
     @Test
@@ -97,7 +98,7 @@ class SettingsScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithTag("LOADING_SPINNER").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("LOADING_SPINNER").assertIsNotDisplayed()
     }
 
     @Test

@@ -1,3 +1,9 @@
+//
+//  FriendsScreen.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/10/24.
+//
 package com.tabka.backblogapp.ui.screens
 
 import android.annotation.SuppressLint
@@ -40,6 +46,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogData
@@ -47,12 +54,13 @@ import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.shared.PublicLogs
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewModel) {
+fun FriendsScreen(navController: NavHostController, friendsViewModel: FriendsViewModel, logViewModel: LogViewModel) {
     val userDataState = friendsViewModel.userData.observeAsState()
     val pageTitle: String = userDataState.value?.username ?: ""
     val userAvatar = userDataState.value?.avatarPreset ?: 1
@@ -101,12 +109,12 @@ fun FriendsScreen(navController: NavController, friendsViewModel: FriendsViewMod
 
     // UI Content
     FriendsContent(navController, pageTitle, publicLogs,
-        friendReqs, logReqs, friends, userAvatar, addFriend, updateRequest)
+        friendReqs, logReqs, friends, userAvatar, addFriend, updateRequest, logViewModel)
 }
 
 @Composable
 fun FriendsContent(
-    navController: NavController,
+    navController: NavHostController,
     pageTitle: String,
     publicLogs: List<LogData>,
     friendRequests:List<Pair<FriendRequestData, UserData>>,
@@ -114,7 +122,8 @@ fun FriendsContent(
     friends: State<List<UserData>>,
     userAvatar: Int,
     addFriend: (String) -> Unit,
-    updateRequest: (String, String, Boolean) -> Unit
+    updateRequest: (String, String, Boolean) -> Unit,
+    logViewModel: LogViewModel
 ) {
     val scrollState = rememberScrollState()
 
@@ -146,7 +155,7 @@ fun FriendsContent(
                 )
                 PageTitle(pageTitle)
             }
-            TabScreen(navController, publicLogs, friendRequests, logRequests, friends, addFriend, updateRequest)
+            TabScreen(navController, publicLogs, friendRequests, logRequests, friends, addFriend, updateRequest, logViewModel)
             Spacer(modifier = Modifier.height(70.dp))
         }
     }
@@ -167,13 +176,14 @@ fun FriendHeader(navController: NavController) {
 
 @Composable
 fun TabScreen(
-    navController: NavController,
+    navController: NavHostController,
     publicLogs: List<LogData>,
     friendRequests: List<Pair<FriendRequestData, UserData>>,
     logRequests: List<Pair<LogRequestData, UserData>>,
     friends: State<List<UserData>>,
     addFriend: (String) -> Unit,
-    updateRequest: (String, String, Boolean) -> Unit
+    updateRequest: (String, String, Boolean) -> Unit,
+    logViewModel: LogViewModel
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -220,7 +230,7 @@ fun TabScreen(
             }
         }
         when (selectedTab) {
-            0 -> PublicLogs(navController, publicLogs)
+            0 -> PublicLogs(navController, publicLogs, logViewModel)
             1 -> FriendRequestsScreen(navController, friendRequests, logRequests, friends, addFriend, updateRequest)
         }
     }

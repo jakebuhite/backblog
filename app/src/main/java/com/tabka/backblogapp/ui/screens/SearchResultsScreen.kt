@@ -1,9 +1,12 @@
 package com.tabka.backblogapp.ui.screens
 
-/*import com.tabka.backblogapp.ui.bottomnav.logViewModel
-import com.tabka.backblogapp.ui.viewmodels.LogViewModel*/
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Icon
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
@@ -42,9 +47,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -71,6 +78,7 @@ import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
+import kotlinx.coroutines.launch
 
 private val TAG = "SearchResultsScreen"
 val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
@@ -86,13 +94,12 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBar(navController, logViewModel, isLogMenu, logId)
-        //DisplayMovieResults
     }
 }
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?) {
-    var text by remember { mutableStateOf("") }
+    var text by rememberSaveable { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -101,7 +108,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLo
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-
+        val coroutineScope = rememberCoroutineScope()
         Card(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -112,10 +119,17 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLo
                     value = text,
                     onValueChange = {
                         text = it
+
+                        Log.d(TAG, "TeXT: $text")
                         // If there is something
                         if (text.isNotBlank()) {
                             Log.d(TAG, text)
-                            searchResultsViewModel.getMovieResults(text)
+                            coroutineScope.launch {
+                                searchResultsViewModel.getMovieResults(text)
+                            }
+                        } else {
+                            Log.d(TAG, "Text is blank!")
+                            searchResultsViewModel.resetMovieResults()
                         }
                     },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -149,25 +163,58 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLo
         }
     }
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
-
     val halfSheets = searchResultsViewModel.halfSheet.collectAsState().value
-    if (movieResults?.isNotEmpty() == true) {
-        Box(modifier = Modifier.height(if (isLogMenu) 700.dp else 600.dp)) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 20.dp)
-                    .testTag("MOVIE_RESULTS_LIST")
-            ) {
-                items(movieResults.size) { index ->
-                    val movie = movieResults[index]
-                    val halfSheet = halfSheets[movie.id.toString()] ?: ""
-                    MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId)
+
+    val isLoadingState = searchResultsViewModel.isLoading.observeAsState()
+    val isLoading = isLoadingState.value ?: false
+    Log.d(TAG, "Loading: $isLoading")
+
+    AnimatedContent(
+        targetState = isLoading,
+        label = "",
+        transitionSpec = {
+            fadeIn(animationSpec = tween(800)) togetherWith fadeOut(
+                animationSpec = tween(800)
+            )
+        },
+        modifier = Modifier.fillMaxSize()
+    ) {targetState ->
+        when (targetState) {
+            true -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .offset(y = 20.dp)
+                            .fillMaxWidth(.15f),
+                        color = Color(0xFF3891E1)
+                    )
+                }
+            }
+            false -> {
+                Log.d(TAG, "Movie results size: ${movieResults?.size}")
+                if (movieResults?.isNotEmpty() == true) {
+                    Box(modifier = Modifier.height(if (isLogMenu) 700.dp else 600.dp)) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 20.dp)
+                                .testTag("MOVIE_RESULTS_LIST")
+                        ) {
+                            items(movieResults.size) { index ->
+                                val movie = movieResults[index]
+                                val halfSheet = halfSheets[movie.id.toString()] ?: ""
+                                MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId)
+                            }
+                        }
+                    }
+                } else if (text.isNotEmpty() && !isLoading){
+                    NoResults()
                 }
             }
         }
-    } else if (text.isNotEmpty()){
-        NoResults()
     }
 }
 
@@ -244,7 +291,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                         )
                         .show()
                     isClicked = true
-            } else if (!isClicked){
+                } else if (!isClicked) {
                     isSheetOpen = true
                 }
             }

@@ -4,7 +4,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
@@ -13,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
+import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.ProfileViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,7 +69,7 @@ class ProfileScreenTest {
             BottomNavGraph(navController = mockNavController)
             MaterialTheme {
                 Surface {
-                    ProfileScreen(navController = mockNavController, friendId = "friend123", fakeProfileViewModel)
+                    ProfileScreen(navController = mockNavController, friendId = "friend123", fakeProfileViewModel, LogViewModel())
                 }
             }
         }

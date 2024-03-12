@@ -1,3 +1,9 @@
+//
+//  HomeScreen.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/10/24.
+//
 package com.tabka.backblogapp.ui.screens
 
 import android.annotation.SuppressLint
@@ -110,6 +116,7 @@ import kotlin.math.ceil
 
 private val TAG = "HomeScreen"
 
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
@@ -119,9 +126,11 @@ fun HomeScreen(
 ) {
     val allLogs by logViewModel.allLogs.collectAsState()
 
+
     val hasBackButton = false
     val isMovieDetails = false
     val pageTitle = "What's Next?"
+
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) { scrollState ->
 
@@ -129,7 +138,7 @@ fun HomeScreen(
         if (!allLogs.isNullOrEmpty()) {
             WatchNextCard(navController, allLogs!![0], logViewModel)
         }
-        Spacer(Modifier.height(50.dp))
+        Spacer(Modifier.height(30.dp))
         MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
     }
 }
@@ -171,7 +180,7 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
 
             NextMovie(navController, image, it.id, priorityLog.logId)
             Spacer(modifier = Modifier.height(5.dp))
-            NextMovieInfo(it.id, it.title, it.releaseDate, usRating, it.posterPath, priorityLog.logId ?: "", logViewModel)
+            NextMovieInfo(it.id, it.title, it.releaseDate, usRating, priorityLog.logId ?: "", logViewModel)
         } ?: run {
             NextMovie(navController, null, null, null)
             Spacer(modifier = Modifier.height(63.dp))
@@ -221,43 +230,6 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?, prior
             )
         }
     }
-    /*val painter = if (image == null) {
-        // Use painterResource for local drawable resources
-        painterResource(id = R.drawable.icon_empty_log)
-    } else {
-        // Use rememberAsyncImagePainter for remote images
-        val imageUrl = "https://image.tmdb.org/t/p/w500/$image"
-        rememberAsyncImagePainter(model = imageUrl)
-    }
-
-    // Next movie image
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        Card(
-            shape = RoundedCornerShape(5.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
-            modifier = Modifier.clickable{ navController.navigate("home_movie_details_0") },
-            colors = CardDefaults.cardColors(
-                containerColor = Color.Transparent
-            )
-        ) {
-            Box(
-                modifier = Modifier.height(200.dp)
-            ) {
-                Image(
-                    //painter = painterResource(id = image),
-                    painter = painter,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("MOVIE_IMAGE")
-                )
-            }
-        }
-    }*/
 }
 
 
@@ -268,9 +240,8 @@ fun NextMovieInfo(
     title: String?,
     releaseDate: String?,
     usRating: String?,
-    image: String?,
     logId: String,
-    logViewModel: LogViewModel
+    logViewModel: LogViewModel,
 ) {
 
     Row(modifier = Modifier.fillMaxWidth(),
@@ -618,7 +589,7 @@ fun NewLogCollaborator(
             Image(
                 painter = painterResource(id = getAvatarResourceId(friend.avatarPreset ?: 1).second),
                 contentDescription = null,
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(60.dp).testTag("NEW_LOG_COLLABORATOR_AVATAR"),
             )
         }
 
@@ -629,7 +600,10 @@ fun NewLogCollaborator(
                 .height(60.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(friend.username ?: "", style = MaterialTheme.typography.bodyLarge)
+            Text(friend.username ?: "",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.testTag("NEW_LOG_COLLABORATOR_USERNAME")
+            )
         }
 
         if (currentCollab) {
@@ -642,7 +616,8 @@ fun NewLogCollaborator(
                         if (collaboratorsList.contains(friend.userId)) {
                             collaboratorsList.remove(friend.userId)
                         }
-                    },
+                    }
+                    .testTag("REMOVE_COLLABORATOR_BUTTON"),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -650,7 +625,7 @@ fun NewLogCollaborator(
                     imageVector = Icons.Default.RemoveCircle,
                     contentDescription = "Add Icon",
                     colorFilter = tint(color = Color.Red),
-                    modifier = Modifier.size(25.dp)
+                    modifier = Modifier.size(25.dp).testTag("REMOVE_COLLABORATOR_ICON")
                 )
             }
         } else {
@@ -664,14 +639,15 @@ fun NewLogCollaborator(
                             collaboratorsList.add(friend.userId)
                         }
 
-                    },
+                    }
+                    .testTag("ADD_COLLABORATOR_BUTTON"),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(25.dp)
+                    modifier = Modifier.size(25.dp).testTag("ADD_COLLABORATOR_ICON")
                 )
             }
         }

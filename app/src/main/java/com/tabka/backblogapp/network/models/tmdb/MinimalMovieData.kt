@@ -1,3 +1,9 @@
+//
+//  MinimalMovieData.kt
+//  backblog
+//
+//  Created by Christian Totaro on 2/27/24.
+//
 package com.tabka.backblogapp.network.models.tmdb
 
 import kotlinx.serialization.SerialName

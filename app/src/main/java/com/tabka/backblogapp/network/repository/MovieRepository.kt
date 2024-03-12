@@ -1,3 +1,9 @@
+//
+//  MovieRepository.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/9/24.
+//
 package com.tabka.backblogapp.network.repository
 
 import android.util.Log
@@ -7,7 +13,6 @@ import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
 import com.tabka.backblogapp.network.models.LogData
-import com.tabka.backblogapp.network.models.tmdb.MinimalMovieDataResult
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
@@ -69,51 +74,6 @@ class MovieRepository(private val movieApiService: ApiService) {
         }
     }
 
-    suspend fun getWatchNextMovie(userId: String): DataResult<String> {
-        try {
-            // Log Id -> Movie Data
-            val logRepository = LogRepository()
-            when (val logsResult = logRepository.getLogs(userId, true)) {
-                is DataResult.Success -> {
-                    val logs: List<LogData> = logsResult.item
-
-                    if (logs.isEmpty()) {
-                        return DataResult.Failure(FirebaseError(FirebaseExceptionType.DOES_NOT_EXIST))
-                    }
-
-                    var priorityLog: LogData? = null
-                    var highestPriority = Int.MAX_VALUE
-
-                    logs.forEach { log ->
-                        val userPriority: Int = if (log.owner?.userId == userId) {
-                            log.owner.priority ?: 0
-                        } else {
-                            log.order?.get(userId) ?: 0
-                        }
-
-                        if (userPriority < highestPriority && !log.movieIds.isNullOrEmpty()) {
-                            highestPriority = userPriority
-                            priorityLog = log
-                        }
-                    }
-
-                    // No movies in any of the logs
-                    if (priorityLog == null || priorityLog!!.movieIds.isNullOrEmpty()) {
-                        return DataResult.Failure(FirebaseError(FirebaseExceptionType.DOES_NOT_EXIST))
-                    }
-
-                    return DataResult.Success(priorityLog!!.movieIds!!.first())
-                }
-                is DataResult.Failure -> {
-                    return logsResult
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(tag, "Error getting watch next movie", e)
-            return DataResult.Failure(e)
-        }
-    }
-
     fun getMovieById(movieId: String, onResponse: (MovieData?) -> Unit, onFailure: (String) -> Unit) {
         val call = movieApiService.getMovieDetails(
             movieId = movieId,
@@ -145,6 +105,34 @@ class MovieRepository(private val movieApiService: ApiService) {
         Log.d(tag, query)
 
         val call = movieApiService.searchMovies(query, includeAdult, language, page, "Bearer " + BuildConfig.MOVIE_SECRET)
+
+        call.enqueue(object : Callback<MovieSearchData> {
+            override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {
+                if (response.isSuccessful) {
+                    val movieSearchData = response.body()
+                    Log.d("Movies", "$movieSearchData")
+                    onResponse(movieSearchData)
+                } else {
+                    // Handle error
+                    Log.d("Movies", "Error: ${response.code()} - ${response.message()}")
+                    println("Error: ${response.code()} - ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MovieSearchData>, t: Throwable) {
+                Log.d("Movies", "Failure: ${t.message}")
+                onFailure("Failure: ${t.message}")
+            }
+        })
+    }
+
+    fun searchMoviesByGenre(page: Int, genreId: String, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {
+        val includeAdult = false
+        val includeVideo = false
+        val language = "en-US"
+        val sortBy = "popularity.desc"
+
+        val call = movieApiService.searchMoviesByGenre(includeAdult, includeVideo, language, page, sortBy, genreId, "Bearer " + BuildConfig.MOVIE_SECRET)
 
         call.enqueue(object : Callback<MovieSearchData> {
             override fun onResponse(call: Call<MovieSearchData>, response: Response<MovieSearchData>) {

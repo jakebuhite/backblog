@@ -1,3 +1,9 @@
+//
+//  ApiService.kt
+//  backblog
+//
+//  Created by Jake Buhite on 2/14/24.
+//
 package com.tabka.backblogapp.network
 
 import com.tabka.backblogapp.network.models.tmdb.MovieData
@@ -33,4 +39,14 @@ interface ApiService {
         @Header("Authorization") authorization: String
     ): Call<MovieSearchData>
 
+    @GET("discover/movie")
+    fun searchMoviesByGenre(
+        @Query("include_adult") includeAdult: Boolean,
+        @Query("include_video") includeVideo: Boolean,
+        @Query("language") language: String,
+        @Query("page") page: Int,
+        @Query("sort_by") sortBy: String,
+        @Query("with_genres") withGenres: String,
+        @Header("Authorization") authorization: String
+    ): Call<MovieSearchData>
 }

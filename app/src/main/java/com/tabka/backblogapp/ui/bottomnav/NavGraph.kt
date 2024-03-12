@@ -1,3 +1,9 @@
+//
+//  NavGraph.kt
+//  backblog
+//
+//  Created by Christian Totaro on 2/3/24.
+//
 package com.tabka.backblogapp.ui.bottomnav
 
 import android.os.Build
@@ -17,6 +23,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.tabka.backblogapp.ui.screens.CategoryResultsScreen
 import com.tabka.backblogapp.ui.screens.FriendsScreen
 import com.tabka.backblogapp.ui.screens.HomeScreen
 import com.tabka.backblogapp.ui.screens.LogDetailsScreen
@@ -84,6 +91,15 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(
+                route = "category_results_{genreId}_{name}",
+                arguments = listOf(
+                    navArgument("genreId") { type = NavType.StringType },
+                    navArgument("name") { type = NavType.StringType })
+            ) { backStackEntry ->
+                CategoryResultsScreen(navController, logViewModel, backStackEntry.arguments?.getString("genreId"), backStackEntry.arguments?.getString("name"))
+            }
+
+            composable(
                 route = "search_movie_details_{movieId}",
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType })
             ) { backStackEntry ->
@@ -93,7 +109,7 @@ fun BottomNavGraph(navController: NavHostController) {
 
         navigation(startDestination = if (auth.currentUser == null) "login" else "friends", route = BottomNavigationBar.Friends.route) {
             composable(route = "friends") {
-                FriendsScreen(navController, friendsViewModel)
+                FriendsScreen(navController, friendsViewModel, logViewModel)
             }
 
             composable(route = "login") {
@@ -119,7 +135,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "friends_page_{friendId}",
                 arguments = listOf(navArgument("friendId") { type = NavType.StringType })
             ) { backStackEntry ->
-                ProfileScreen(navController, backStackEntry.arguments?.getString("friendId"), profileViewModel)
+                ProfileScreen(navController, backStackEntry.arguments?.getString("friendId"), profileViewModel, logViewModel)
             }
         }
     }

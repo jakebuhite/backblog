@@ -1,3 +1,9 @@
+//
+//  LogDetailsScreen.kt
+//  backblog
+//
+//  Created by Tom Krusinski on 2/1/24.
+//
 package com.tabka.backblogapp.ui.screens
 
 import android.annotation.SuppressLint
@@ -6,7 +12,6 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -110,7 +115,6 @@ import org.burnoutcrew.reorderable.reorderable
 
 private val TAG = "LogDetailsScreen"
 
-@OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LogDetailsScreen(
@@ -140,6 +144,10 @@ fun LogDetailsScreen(
     val isOwnerState = logDetailsViewModel.isOwner.observeAsState()
     val isOwner = isOwnerState.value ?: true
 
+    // Is Current User Collaborator
+    val isCollaboratorState = logDetailsViewModel.isCollaborator.observeAsState()
+    val isCollaborator = isCollaboratorState.value ?: false
+
     val isLoadingState = logDetailsViewModel.isLoading.observeAsState()
     val isLoading = isLoadingState.value ?: true
 
@@ -164,8 +172,6 @@ fun LogDetailsScreen(
     // Get data
     LaunchedEffect(Unit) {
         logDetailsViewModel.getLogData(logId!!)
-
-        Log.d(TAG, "Doing this launch now")
     }
 
 
@@ -184,7 +190,6 @@ fun LogDetailsScreen(
             },
             modifier = Modifier
                 .fillMaxSize()
-                /*.border(width = 2.dp, color = Color.Black)*/
         ) { targetState ->
             when (targetState) {
                 true -> {
@@ -196,7 +201,8 @@ fun LogDetailsScreen(
                             modifier = Modifier
                                 .zIndex(10f)
                                 .offset(y = 250.dp)
-                                .fillMaxWidth(.15f),
+                                .fillMaxWidth(.15f)
+                                .testTag("LOADING_PROGRESS"),
                             color = Color(0xFF3891E1)
                         )
                     }
@@ -205,7 +211,7 @@ fun LogDetailsScreen(
                 false -> {
                     Column {
                         if (logId != null) {
-                            LogButtons(navController, pageTitle, movies, isOwner, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState, logId)
+                            LogButtons(navController, pageTitle, movies, isOwner, isCollaborator, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState, logId)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel, collaborators)
@@ -313,7 +319,8 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
                         "$targetCount Movies",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.LightGray
+                        color = Color.LightGray,
+                        modifier = Modifier.testTag("MOVIE_COUNT")
                     )
                 }
             }
@@ -341,10 +348,6 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
     }
 }
 
-
-
-
-
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LogButtons(
@@ -352,6 +355,7 @@ fun LogButtons(
     logName: String,
     movies: Map<String, MinimalMovieData>,
     isOwner: Boolean,
+    isCollaborator: Boolean,
     collaborators: List<UserData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel,
@@ -366,40 +370,76 @@ fun LogButtons(
         mutableStateOf(false)
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .padding(horizontal = 7.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    if (isCollaborator || isOwner) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .padding(horizontal = 7.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-        Row(modifier = Modifier.weight(1F)) {
-            // Collaborators Icon
-            if (isOwner) {
+            Row(modifier = Modifier.weight(1F)) {
+                // Collaborators Icon
+                if (isOwner) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1F)
+                            /*.width(60.dp)*/
+                            .fillMaxHeight()
+                            .padding(end = 10.dp),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.user_add),
+                            contentDescription = "Add Icon",
+                            modifier = Modifier
+                                .size(35.dp)
+                                .testTag("ADD_ICON")
+                                .clickable(onClick = {
+                                    sheetContent = {
+                                        CollaboratorsSheetContent(
+                                            logName,
+                                            collaborators,
+                                            onDismiss = { isSheetOpen = false },
+                                            logDetailsViewModel,
+                                            friendsViewModel
+                                        )
+                                    }
+                                    isSheetOpen = true
+                                })
+                        )
+                    }
+                }
+
+                // Edit Log Icon
                 Column(
                     modifier = Modifier
-                        .weight(1F)
-                        /*.width(60.dp)*/
-                        .fillMaxHeight()
-                        .padding(end = 10.dp),
+                        .weight(3F)
+                        .fillMaxHeight(),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.user_add),
-                        contentDescription = "Add Icon",
+                        painter = painterResource(id = R.drawable.edit),
+                        contentDescription = "Edit",
                         modifier = Modifier
                             .size(35.dp)
-                            .testTag("ADD_ICON")
+                            .testTag("EDIT_ICON")
                             .clickable(onClick = {
                                 sheetContent = {
-                                    CollaboratorsSheetContent(
-                                        logName,
-                                        collaborators,
+                                    EditSheetContent(
+                                        navController,
+                                        isSheetOpen,
                                         onDismiss = { isSheetOpen = false },
+                                        alertDialogState,
+                                        setAlertDialogState,
+                                        isOwner,
+                                        logName,
+                                        movies,
                                         logDetailsViewModel,
-                                        friendsViewModel
+                                        logViewModel
                                     )
                                 }
                                 isSheetOpen = true
@@ -408,100 +448,66 @@ fun LogButtons(
                 }
             }
 
-            // Edit Log Icon
-            Column(
-                modifier = Modifier
-                    .weight(3F)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "Edit",
+            Row(modifier = Modifier.weight(1F)) {
+                // Shuffle Icon
+                Column(
                     modifier = Modifier
-                        .size(35.dp)
-                        .testTag("EDIT_ICON")
-                        .clickable(onClick = {
-                            sheetContent = {
-                                EditSheetContent(
-                                    navController,
-                                    isSheetOpen,
-                                    onDismiss = { isSheetOpen = false },
-                                    alertDialogState,
-                                    setAlertDialogState,
-                                    isOwner,
-                                    logName,
-                                    movies,
-                                    logDetailsViewModel,
-                                    logViewModel
-                                )
-                            }
-                            isSheetOpen = true
-                        })
-                )
-            }
-        }
-
-        Row(modifier = Modifier.weight(1F)) {
-            // Shuffle Icon
-            Column(
-                modifier = Modifier
-                    .weight(2F)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.shuffle_arrow),
-                    contentDescription = "Shuffle",
-                    modifier = Modifier
-                        .size(35.dp)
-                        .fillMaxHeight()
-                        .testTag("SHUFFLE_ICON")
-                        .clickable {
-                            setAlertDialogState(
-                                AlertDialog(
-                                    isVisible = true,
-                                    header = "Shuffle",
-                                    message = "Are you sure you want to shuffle the movies?",
-                                    dismiss = Dismiss(text = "Cancel"),
-                                    accept = Accept(
-                                        text = "Shuffle",
-                                        action = {
-                                            CoroutineScope(Dispatchers.Main).launch {
-                                                logDetailsViewModel.shuffleMovies()
-                                                logViewModel.loadLogs()
-                                                logViewModel.resetMovie()
+                        .weight(2F)
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.shuffle_arrow),
+                        contentDescription = "Shuffle",
+                        modifier = Modifier
+                            .size(35.dp)
+                            .fillMaxHeight()
+                            .testTag("SHUFFLE_ICON")
+                            .clickable {
+                                setAlertDialogState(
+                                    AlertDialog(
+                                        isVisible = true,
+                                        header = "Shuffle",
+                                        message = "Are you sure you want to shuffle the movies?",
+                                        dismiss = Dismiss(text = "Cancel"),
+                                        accept = Accept(
+                                            text = "Shuffle",
+                                            action = {
+                                                CoroutineScope(Dispatchers.Main).launch {
+                                                    logDetailsViewModel.shuffleMovies()
+                                                    logViewModel.loadLogs()
+                                                    logViewModel.resetMovie()
+                                                }
                                             }
-                                        }
+                                        )
                                     )
                                 )
-                            )
-                            Log.d(TAG, "Is Visible? ${alertDialogState.isVisible}")
-                        }
-                )
-            }
+                                Log.d(TAG, "Is Visible? ${alertDialogState.isVisible}")
+                            }
+                    )
+                }
 
-            // Add Movie Icon
-            Column(
-                modifier = Modifier
-                    .weight(1F)
-                    .padding(start = 10.dp)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.End
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.add),
-                    contentDescription = "Add Icon",
+                // Add Movie Icon
+                Column(
                     modifier = Modifier
-                        .size(50.dp)
-                        .testTag("ADD_MOVIE_ICON")
-                        .clickable(onClick = {
-                            sheetContent = { AddMovieMenu(navController, logViewModel, logId) }
-                            isSheetOpen = true
-                        })
-                )
+                        .weight(1F)
+                        .padding(start = 10.dp)
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.add),
+                        contentDescription = "Add Icon",
+                        modifier = Modifier
+                            .size(50.dp)
+                            .testTag("ADD_MOVIE_ICON")
+                            .clickable(onClick = {
+                                sheetContent = { AddMovieMenu(navController, logViewModel, logId) }
+                                isSheetOpen = true
+                            })
+                    )
+                }
             }
         }
     }
@@ -535,8 +541,9 @@ fun LogList(
     val moviesList = movies.values.toList()
     val watchedMoviesList = watchedMovies.values.toList()
 
+    // Extra height is for the "Watched Movies" header and the spacer
     val extraHeight = if (watchedMoviesList.isNotEmpty()) 100.dp else 0.dp
-    val colHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + 100.dp // 60.dp for the request header and spacer
+    val colHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + extraHeight
 
     LazyColumn(
         userScrollEnabled = false,
@@ -548,7 +555,6 @@ fun LogList(
 
         if (moviesList.isNotEmpty()) {
             items(moviesList, key = { it.id ?: 0 }) { movie ->
-
 
                 val addToWatched = SwipeAction(
                     background = colorResource(R.color.sky_blue),
@@ -683,7 +689,7 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId:
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = movie.title!!,
+                text = movie.title ?: "",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -1171,7 +1177,7 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 painter = painterResource(id = R.drawable.remove),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier.size(35.dp).testTag("REMOVE_MOVIE_ICON"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -1187,7 +1193,8 @@ fun EditLogEntry(movie: MinimalMovieData) {
             Text(
                 movie.title ?: "",
                 style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("EDIT_LOG_MOVIE_TITLE")
             )
         }
 
@@ -1204,7 +1211,7 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 imageVector = Icons.Default.DragHandle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp),
+                modifier = Modifier.size(35.dp).testTag("DRAG_ICON"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }

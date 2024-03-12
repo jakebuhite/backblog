@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.util.getAvatarResourceId
 
@@ -21,7 +23,13 @@ fun UserInfo(navController: NavController, userData: UserData) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.clickable { navController.navigate("friends_page_${userData.userId ?: ""}") }
+        modifier = Modifier.clickable {
+            if (Firebase.auth.currentUser?.uid == userData.userId) {
+                navController.navigate("friends")
+            } else {
+                navController.navigate("friends_page_${userData.userId ?: ""}")
+            }
+        }
     ) {
         Image(
             painter = painterResource(id = getAvatarResourceId(userData.avatarPreset ?: 1).second),

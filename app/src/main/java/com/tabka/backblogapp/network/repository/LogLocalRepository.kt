@@ -1,3 +1,9 @@
+//
+//  LogLocalRepository.kt
+//  backblog
+//
+//  Created by Christian Totaro on 2/4/24.
+//
 package com.tabka.backblogapp.network.repository
 
 import android.util.Log
@@ -102,7 +108,11 @@ class LogLocalRepository {
             val existingLogs = jsonUtility.readFromFile()
 
             // Find specific log
-            val log = existingLogs.find { it.logId == logId }!!
+            val log = existingLogs.find { it.logId == logId }
+
+            if (log == null) {
+                return
+            }
 
             val updatedMovieIds = log.movieIds ?: mutableListOf()
             updatedMovieIds.add(movieId)

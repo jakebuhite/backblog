@@ -308,6 +308,33 @@ class UserRepositoryTest {
     }
 
     @Test
+    fun testUpdateUserWithoutPasswordShouldReturnSuccess(): Unit = runBlocking {
+        // Arrange
+        val userId = "fakeUserId"
+        val updateData = mapOf(
+            "username" to "NewUsername",
+            "avatar_preset" to 2,
+            "friends" to mapOf("friendId" to true),
+            "blocked" to mapOf("blockedId" to true)
+        )
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+
+        val updateDataTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockDocument.update(anyMap())).thenReturn(updateDataTask)
+
+        whenever(mockAuth.currentUser).thenReturn(mock())
+
+        // Act
+        val result = userRepository.updateUser(userId, updateData)
+
+        // Assert
+        assert(result is DataResult.Success)
+        verify(mockDocument).update(anyMap())
+    }
+
+    @Test
     fun testUpdateUserShouldReturnException(): Unit = runBlocking {
         // Arrange
         val userId = "fakeUserId"

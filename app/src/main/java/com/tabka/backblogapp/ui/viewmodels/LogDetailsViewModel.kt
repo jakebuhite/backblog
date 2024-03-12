@@ -40,16 +40,17 @@ open class LogDetailsViewModel: ViewModel() {
     private val userRepository = UserRepository()
 
     //val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
-    var movies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
-    val watchedMovies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
+    open var movies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
+    open val watchedMovies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
 
 
     //open val watchedMovies: MutableLiveData<List<MinimalMovieData>> = MutableLiveData()
-    val owner: MutableLiveData<UserData> = MutableLiveData()
+    open val owner: MutableLiveData<UserData> = MutableLiveData()
     open val isOwner: MutableLiveData<Boolean> = MutableLiveData()
+    open val isCollaborator: MutableLiveData<Boolean> = MutableLiveData()
     open val collaboratorsList: MutableLiveData<List<UserData>> = MutableLiveData()
 
-    val isLoading: MutableLiveData<Boolean> = MutableLiveData()
+    open val isLoading: MutableLiveData<Boolean> = MutableLiveData()
 
     private suspend fun updateLogData(newLog: LogData) {
         withContext(Dispatchers.Main) {
@@ -95,6 +96,10 @@ open class LogDetailsViewModel: ViewModel() {
 
     private fun updateIsOwner(userIsOwner: Boolean) {
         isOwner.postValue(userIsOwner)
+    }
+
+    private fun updateIsCollaborator(userIsCollaborator: Boolean) {
+        isCollaborator.postValue(userIsCollaborator)
     }
 
     private fun updateOwner(user: UserData) {
@@ -367,5 +372,12 @@ open class LogDetailsViewModel: ViewModel() {
             localRepository.deleteLog(logId)
             null
         }
+    }
+
+    fun isCollaborator(): Boolean {
+        val userId = auth.currentUser?.uid ?: ""
+        val collaborators = logData.value?.collaborators ?: mutableListOf()
+
+        return userId in collaborators
     }
 }

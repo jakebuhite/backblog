@@ -1,12 +1,12 @@
-
 package com.tabka.backblogapp.ui.screens
 
-import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.compose.ComposeNavigator
@@ -16,9 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.Owner
 import com.tabka.backblogapp.network.models.UserData
-import com.tabka.backblogapp.network.models.tmdb.Genre
-import com.tabka.backblogapp.network.models.tmdb.MovieData
-import com.tabka.backblogapp.network.models.tmdb.ProductionCompany
+import com.tabka.backblogapp.network.models.tmdb.MinimalMovieData
 import com.tabka.backblogapp.ui.bottomnav.BottomNavGraph
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
@@ -29,33 +27,42 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-class FakeLogDetailsViewModel() : LogDetailsViewModel() {
-
+class FakeLogDetailsViewModel : LogDetailsViewModel() {
     override val logData: MutableLiveData<LogData> = MutableLiveData()
     override val collaboratorsList: MutableLiveData<List<UserData>> = MutableLiveData()
-    override val movies: MutableLiveData<List<MovieData>> = MutableLiveData()
-    override val watchedMovies: MutableLiveData<List<MovieData>> = MutableLiveData()
+    override var movies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
+    override val watchedMovies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
     override val isOwner: MutableLiveData<Boolean> = MutableLiveData(false)
+    override val owner: MutableLiveData<UserData> = MutableLiveData()
+    override val isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
 
-    fun updateMoviesList(newList: List<MovieData>) {
+    fun updateMoviesList(newList: Map<String, MinimalMovieData>) {
+        movies.postValue(emptyMap())
         movies.postValue(newList)
     }
-    fun updateWatchedMoviesList(newList: List<MovieData>) {
+
+    fun updateWatchedMoviesList(newList: Map<String, MinimalMovieData>) {
+        watchedMovies.postValue(emptyMap())
         watchedMovies.postValue(newList)
     }
 
-    fun updateOwner(owner: Boolean) {
+    fun updateIsOwner(owner: Boolean) {
         isOwner.postValue(owner)
+    }
+
+    fun updateOwner(newOwner: UserData) {
+        owner.postValue(newOwner)
+    }
+
+    fun updateIsLoading(newBool: Boolean) {
+        isLoading.postValue(newBool)
     }
 
     fun updateCollaboratorsList(newList: List<UserData>) {
         collaboratorsList.postValue(newList)
     }
 
-    fun resetCollaboratorsList() {
-        collaboratorsList.value = emptyList()
-    }
-    override suspend fun getLogData(logId: String) {
+    override fun getLogData(logId: String) {
         logData.value = LogData(
             logId = "1234",
             name = "My Movie Log",
@@ -71,6 +78,17 @@ class FakeLogDetailsViewModel() : LogDetailsViewModel() {
             movieIds = mutableListOf("movieId1", "movieId2"),
             watchedIds = mutableListOf("watchedId1", "watchedId2")
         )
+
+        val fakeUser = UserData(
+            userId = "user123",
+            username = "bob123",
+            joinDate = "3435345454",
+            avatarPreset = 1,
+            friends = emptyMap(),
+            blocked= emptyMap()
+        )
+        updateOwner(fakeUser)
+        updateIsOwner(true)
     }
 
     override suspend fun deleteLog(): Job? {
@@ -112,7 +130,24 @@ class LogDetailsScreenTest {
     @Test
     fun testLogDetailsScreenInView() {
         setContent()
-        composeTestRule.onNodeWithTag("CREATOR_PICTURE").assertIsDisplayed()
+        composeTestRule.waitUntil(2000) {
+            composeTestRule.onAllNodesWithTag("LOADING_PROGRESS").fetchSemanticsNodes().isEmpty()
+        }
+        composeTestRule.onNodeWithTag("OWNER_PICTURE").assertIsDisplayed()
+        composeTestRule.onNodeWithText("My Movie Log").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("MOVIE_COUNT").assertIsDisplayed()
+        // Buttons
+        composeTestRule.onNodeWithTag("ADD_ICON").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("EDIT_ICON").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("SHUFFLE_ICON").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ADD_MOVIE_ICON").assertIsDisplayed()
+    }
+
+    @Test
+    fun testProgressBarInView() {
+        logDetailsViewModel.updateIsLoading(true)
+        setContent()
+        composeTestRule.onNodeWithTag("LOADING_PROGRESS").assertIsDisplayed()
     }
 
     @Test
@@ -127,13 +162,18 @@ class LogDetailsScreenTest {
         logDetailsViewModel.updateCollaboratorsList(userDataList)
         setContent()
 
-        composeTestRule.onAllNodesWithTag("COLLABS_PICTURE").assertCountEquals(4)
+        composeTestRule.onNodeWithTag("COLLAB_PICTURE_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("COLLAB_PICTURE_1").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("COLLAB_PICTURE_2").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("COLLAB_PICTURE_3").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("COLLAB_PICTURE_4").assertIsNotDisplayed()
         composeTestRule.onNodeWithTag("VIEW_ALL_COLLABS_BUTTON").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("VIEW_ALL_COLLABS_BUTTON").assertHasClickAction()
     }
 
     @Test
     fun testAddFriendsButtonClick() {
-        logDetailsViewModel.updateOwner(true)
+        logDetailsViewModel.updateIsOwner(true)
         setContent()
         composeTestRule.onNodeWithTag("ADD_ICON").performClick()
         composeTestRule.onNodeWithTag("ADD_COLLAB_LOG_NAME").assertIsDisplayed()
@@ -146,7 +186,7 @@ class LogDetailsScreenTest {
             UserData()
         )
         logDetailsViewModel.updateCollaboratorsList(collabsList)
-        logDetailsViewModel.updateOwner(true)
+        logDetailsViewModel.updateIsOwner(true)
         setContent()
         composeTestRule.onNodeWithTag("ADD_ICON").performClick()
         composeTestRule.onNodeWithTag("COLLABS_LIST_ADD_SHEET").assertIsDisplayed()
@@ -166,8 +206,43 @@ class LogDetailsScreenTest {
     }
 
     @Test
+    fun testEditLogButtonShowsMovies() {
+        val movieDataList = mapOf(
+            "1" to MinimalMovieData(
+                image = "/pathToBackdrop1.jpg",
+                id = "1",
+                title = null,
+            ),
+            "2" to MinimalMovieData(
+                image = "/pathToBackdrop2.jpg",
+                id = "2",
+                title = "Example Movie Title 2",
+            )
+        )
+        val watchedDataList = mapOf(
+            "3" to MinimalMovieData(
+                image = "/pathToBackdrop3.jpg",
+                id = "3",
+                title = "Example Movie Title 3",
+            ),
+            "4" to MinimalMovieData(
+                image = "/pathToBackdrop4.jpg",
+                id = "4",
+                title = "Example Movie Title 4",
+            )
+        )
+        logDetailsViewModel.updateMoviesList(movieDataList)
+        logDetailsViewModel.updateWatchedMoviesList(watchedDataList)
+        setContent()
+        composeTestRule.onNodeWithTag("EDIT_ICON").performClick()
+        composeTestRule.onAllNodesWithTag("REMOVE_MOVIE_ICON").fetchSemanticsNodes().isNotEmpty()
+        composeTestRule.onAllNodesWithTag("EDIT_LOG_MOVIE_TITLE").fetchSemanticsNodes().isNotEmpty()
+        composeTestRule.onAllNodesWithTag("DRAG_ICON").fetchSemanticsNodes().isNotEmpty()
+    }
+
+    @Test
     fun testEditLogButtonClickDeleteLog() {
-        logDetailsViewModel.updateOwner(owner = true)
+        logDetailsViewModel.updateIsOwner(owner = true)
         setContent()
         composeTestRule.onNodeWithTag("EDIT_ICON").performClick()
         composeTestRule.onNodeWithTag("EDIT_DELETE_BUTTON").assertIsDisplayed()
@@ -185,79 +260,34 @@ class LogDetailsScreenTest {
 
     @Test
     fun testInViewMovies() {
-        val movieDataList = listOf(
-            MovieData(
-                adult = false,
-                backdropPath = "/pathToBackdrop1.jpg",
-                belongsToCollection = null,
-                budget = 100000000,
-                genres = null,
-                homepage = "https://examplemovie1.com",
-                id = 1,
-                imdbId = "tt1234567",
-                originalLanguage = "en",
-                originalTitle = "Example Movie Title 1",
-                overview = "This is a brief overview of the first example movie.",
-                popularity = 8.5,
-                posterPath = "/pathToPoster1.jpg",
-                productionCompanies = listOf(
-                    ProductionCompany(id = 1, logoPath = "/logoPath1.jpg", name = "Example Production Company 1", originCountry = "US")
-                ),
-                productionCountries = listOf(mapOf("iso_3166_1" to "US", "name" to "United States of America")),
-                releaseDate = "2024-01-01",
-                revenue = 500000000,
-                runtime = 120,
-                spokenLanguages = listOf(mapOf("iso_639_1" to "en", "name" to "English")),
-                status = "Released",
-                tagline = "This is the tagline for the first movie.",
+        val movieDataList = mapOf(
+            "1" to MinimalMovieData(
+                image = "/pathToBackdrop1.jpg",
+                id = "1",
                 title = "Example Movie Title 1",
-                video = false,
-                voteAverage = 7.8,
-                voteCount = 256,
-                images = null,
-                releaseDates = null,
-                watchProviders = null,
-                credits = null
             ),
-            MovieData(
-                adult = false,
-                backdropPath = "/pathToBackdrop2.jpg",
-                belongsToCollection = null,
-                budget = 150000000,
-                genres = listOf(Genre(id = 14, name = "Fantasy"), Genre(id = 878, name = "Science Fiction")),
-                homepage = "https://examplemovie2.com",
-                id = 2,
-                imdbId = "tt7654321",
-                originalLanguage = "en",
-                originalTitle = "Example Movie Title 2",
-                overview = "This is a brief overview of the second example movie.",
-                popularity = 9.3,
-                posterPath = "/pathToPoster2.jpg",
-                productionCompanies = listOf(
-                    ProductionCompany(id = 2, logoPath = "/logoPath2.jpg", name = "Example Production Company 2", originCountry = "UK")
-                ),
-                productionCountries = listOf(mapOf("iso_3166_1" to "GB", "name" to "United Kingdom")),
-                releaseDate = "2024-06-01",
-                revenue = 750000000,
-                runtime = 140,
-                spokenLanguages = listOf(mapOf("iso_639_1" to "en", "name" to "English")),
-                status = "Released",
-                tagline = "This is the tagline for the second movie.",
+            "2" to MinimalMovieData(
+                image = "/pathToBackdrop2.jpg",
+                id = "2",
                 title = "Example Movie Title 2",
-                video = false,
-                voteAverage = 8.2,
-                voteCount = 422,
-                images = null,
-                releaseDates = null,
-                watchProviders = null,
-                credits = null
+            )
+        )
+        val watchedDataList = mapOf(
+            "3" to MinimalMovieData(
+                image = "/pathToBackdrop3.jpg",
+                id = "3",
+                title = "Example Movie Title 3",
+            ),
+            "4" to MinimalMovieData(
+                image = "/pathToBackdrop4.jpg",
+                id = "4",
+                title = "Example Movie Title 4",
             )
         )
         logDetailsViewModel.updateMoviesList(movieDataList)
-        logDetailsViewModel.updateWatchedMoviesList(movieDataList)
+        logDetailsViewModel.updateWatchedMoviesList(watchedDataList)
         setContent()
         composeTestRule.onAllNodesWithTag("MOVIE_ENTRY").fetchSemanticsNodes().isNotEmpty()
         composeTestRule.onNodeWithTag("MOVIES_LIST").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("WATCHED_MOVIES_LIST").assertIsDisplayed()
     }
 }

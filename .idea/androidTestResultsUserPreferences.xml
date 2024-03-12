@@ -10,6 +10,7 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -23,6 +24,7 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Pixel_3a_API_34_extension_level_7_x86_64" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
@@ -90,6 +92,7 @@
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
                   <entry key="Pixel_2_API_30" value="120" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -155,6 +158,7 @@
               <option name="preferredColumnWidths">
                 <map>
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Pixel_3a_API_34_extension_level_7_x86_64" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
@@ -183,6 +187,20 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="-1461506255">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Pixel_7_Pro_API_30" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -223,6 +241,7 @@
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
                   <entry key="Pixel_2_API_30" value="120" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -264,6 +283,7 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -290,6 +310,7 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -475,6 +496,7 @@
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
                   <entry key="Pixel_2_API_UpsideDownCakePrivacySandbox" value="120" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -488,6 +510,19 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="91598531">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Pixel_7_Pro_API_30" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -566,6 +601,33 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="315071145">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="346285795">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -579,6 +641,19 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="351469928">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -803,6 +878,7 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -870,6 +946,19 @@
                 <map>
                   <entry key="BLU B135DL" value="120" />
                   <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="1998471130">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Pixel_3a_API_34" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>

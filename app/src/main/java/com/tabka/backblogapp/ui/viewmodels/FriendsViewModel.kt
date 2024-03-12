@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FriendsViewModel : ViewModel() {
+open class FriendsViewModel : ViewModel() {
     private val tag = "FriendsViewModel"
     private val auth = Firebase.auth
 
@@ -39,7 +39,7 @@ class FriendsViewModel : ViewModel() {
 
     //val friendsData: MutableLiveData<List<UserData>> = MutableLiveData()
     private val _friendsData = MutableStateFlow<List<UserData>>(emptyList())
-    val friendsData = _friendsData.asStateFlow()
+    open val friendsData = _friendsData.asStateFlow()
 
     // Status Message
     val notificationMsg: MutableLiveData<String> = MutableLiveData("")
@@ -168,9 +168,9 @@ class FriendsViewModel : ViewModel() {
                 }
 
                 if ((targetRequests as DataResult.Success).item.any {
-                        it.senderId == targetId && it.targetId == userId
+                        it.senderId == userId && it.targetId == targetId
                 }) {
-                    updateMessage("$targetUsername has already sent you a friend request!")
+                    updateMessage("You've already sent a request to $targetUsername!")
                     return@launch
                 }
 
@@ -180,9 +180,9 @@ class FriendsViewModel : ViewModel() {
                 }
 
                 if ((userRequests as DataResult.Success).item.any {
-                    it.senderId == userId && it.targetId == targetId
+                    it.senderId == targetId && it.targetId == userId
                 }) {
-                    updateMessage("You've already sent a request to $targetUsername!")
+                    updateMessage("$targetUsername has already sent you a friend request!")
                     return@launch
                 }
 
