@@ -19,9 +19,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -29,8 +35,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.tmdb.MovieData
 import kotlin.math.ceil
 
 @Composable
@@ -59,6 +67,15 @@ fun DisplayPublicLogs(navController: NavController, allLogs: List<LogData>?) {
         ) {
             items(allLogs.size, key = { index -> allLogs[index].logId!! }) { index ->
                 val log = allLogs[index]
+                var painter by remember { mutableStateOf<Painter?>(null) }
+                var movieData by remember { mutableStateOf<Pair<MovieData?, String>>(null to "") }
+
+                painter = if (movieData.first != null) {
+                    rememberAsyncImagePainter("https://image.tmdb.org/t/p/w500/${movieData.second}")
+                } else {
+                    painterResource(id = R.drawable.emptylog)
+                }
+
                 Card(
                     modifier = Modifier
                         .size(175.dp)
@@ -71,9 +88,10 @@ fun DisplayPublicLogs(navController: NavController, allLogs: List<LogData>?) {
                             .fillMaxSize()
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.creator),
+                            painter = painter!!,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                         Box(
                             modifier = Modifier
