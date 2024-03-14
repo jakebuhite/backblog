@@ -85,6 +85,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -244,6 +245,9 @@ fun LogDetailsScreen(
 
     Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")
     ShowAlertDialog(alertDialogState, setAlertDialogState)
+    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+        BackButton(navController = navController, visible = true)
+    }
 }
 
 
@@ -500,7 +504,7 @@ fun LogButtons(
                                 setAlertDialogState(
                                     AlertDialog(
                                         isVisible = true,
-                                        header = "Shuffle",
+                                        header = "Shuffle?",
                                         message = "Are you sure you want to shuffle the movies?",
                                         dismiss = Dismiss(text = "Cancel"),
                                         accept = Accept(
@@ -786,7 +790,9 @@ fun MovieEntry(
                 text = movie.title ?: "",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -1127,7 +1133,7 @@ fun EditSheetContent(
                         setAlertDialogState(
                             AlertDialog(
                                 isVisible = true,
-                                header = "Save Changes to Log",
+                                header = "Save Log?",
                                 message = "Are you sure you want to save changes to this log?",
                                 dismiss = Dismiss(text = "Cancel"),
                                 accept = Accept(
@@ -1185,7 +1191,7 @@ fun EditSheetContent(
                                     dismiss = Dismiss(text = "Cancel"),
                                     accept = Accept(
                                         text = "Delete",
-                                        textColor = Color.Red,
+                                        textColor = Color(0xFFDC3545),
                                         action = {
                                             CoroutineScope(Dispatchers.Main).launch {
                                                 val asyncJob =

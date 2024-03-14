@@ -58,22 +58,25 @@ fun CustomAlertDialog(header: String?, message: String?, dismissText: String?, d
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(Color(0xFF232323))
             ) {
                 Text(
                     text = header ?: "",
-                    modifier = Modifier.padding(8.dp, 16.dp, 8.dp, 2.dp)
+                    modifier = Modifier.padding(12.dp, 25.dp, 12.dp, 12.dp)
                         .align(Alignment.CenterHorizontally).fillMaxWidth(), fontSize = 20.sp,
+                    color = Color.White,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = message ?: "",
-                    modifier = Modifier.padding(8.dp, 2.dp, 8.dp, 16.dp)
+                    modifier = Modifier.padding(12.dp, 2.dp, 12.dp, 25.dp)
                         .align(Alignment.CenterHorizontally).fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    fontSize = 15.sp,
+                    color = Color.White
                 )
-                Divider(color = Color.Gray, modifier = Modifier.fillMaxWidth().width(1.dp))
+                Divider(color = Color(0xFF303437), modifier = Modifier.fillMaxWidth().width(1.dp))
                 Row(Modifier.padding(top = 0.dp)) {
                     CompositionLocalProvider(
                         LocalMinimumTouchTargetEnforcement provides false,
@@ -90,10 +93,10 @@ fun CustomAlertDialog(header: String?, message: String?, dismissText: String?, d
                             shape = RoundedCornerShape(0.dp),
                             contentPadding = PaddingValues(0.dp)
                         ) {
-                            Text(text = dismissText ?: "", color = dismissTextColor ?: Color.DarkGray)
+                            Text(text = dismissText ?: "", color = dismissTextColor ?: Color.LightGray, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                    Divider(color = Color.Gray, modifier =
+                    Divider(color = Color(0xFF303437), modifier =
                     Modifier.fillMaxHeight().width(1.dp))
                     CompositionLocalProvider(
                         LocalMinimumTouchTargetEnforcement provides false,
@@ -113,7 +116,7 @@ fun CustomAlertDialog(header: String?, message: String?, dismissText: String?, d
                             shape = RoundedCornerShape(0.dp),
                             contentPadding = PaddingValues()
                         ) {
-                            Text(text = acceptText ?: "", color = acceptTextColor ?: Color.Blue)
+                            Text(text = acceptText ?: "", color = acceptTextColor ?: Color(0xFF3891E1), fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
