@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -71,6 +72,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -94,6 +96,9 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBar(navController, logViewModel, isLogMenu, logId)
+    }
+    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+        BackButton(navController = navController, visible = true)
     }
 }
 @OptIn(ExperimentalComposeUiApi::class)
@@ -238,6 +243,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                 modifier = Modifier
                     .width(140.dp)
                     .height(70.dp)
+                    .clip(RoundedCornerShape(5.dp))
             ) {
 
                 val imageBaseURL = if (halfSheet != "") {
@@ -247,9 +253,10 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                 }
 
                 Image(
-                    painter = rememberAsyncImagePainter(imageBaseURL),
+                    painter = rememberAsyncImagePainter(imageBaseURL, error = painterResource(R.drawable.nophoto)),
                     contentDescription = null,
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
@@ -263,7 +270,8 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
             .clickable { navController.navigate("search_movie_details_${movie.id}") }
             .testTag("MOVIE_RESULT"),
             verticalArrangement = Arrangement.Center){
-            Text("${movie.title}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("${movie.title}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 3,
+                overflow = TextOverflow.Ellipsis)
         }
 
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
@@ -403,6 +411,9 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
+                        var isAnyChecked by remember { mutableStateOf(false) }
+                        isAnyChecked = checkedStates.any { it }
+                        val buttonText = if (isAnyChecked) "Add to Log" else "Create New Log"
                         // Add Button
                         androidx.compose.material3.Button(
                             modifier = Modifier
@@ -436,7 +447,8 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                             )
                         ) {
                             Text(
-                                "Add",
+                                /*"Add"*/
+                                buttonText,
                                 color = Color.White,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold

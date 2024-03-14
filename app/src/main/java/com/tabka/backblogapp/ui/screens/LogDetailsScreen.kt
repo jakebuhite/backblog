@@ -85,6 +85,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -211,10 +212,31 @@ fun LogDetailsScreen(
                 false -> {
                     Column {
                         if (logId != null) {
-                            LogButtons(navController, pageTitle, movies, isOwner, isCollaborator, collaborators, logDetailsViewModel, logViewModel, friendsViewModel, alertDialogState, setAlertDialogState, logId)
+                            LogButtons(
+                                navController,
+                                pageTitle,
+                                movies,
+                                isOwner,
+                                isCollaborator,
+                                collaborators,
+                                logDetailsViewModel,
+                                logViewModel,
+                                friendsViewModel,
+                                alertDialogState,
+                                setAlertDialogState,
+                                logId
+                            )
                         }
                         Spacer(modifier = Modifier.height(20.dp))
-                        LogList(navController, logId!!, movies, watchedMovies, logDetailsViewModel, logViewModel, collaborators)
+                        LogList(
+                            navController,
+                            logId!!,
+                            movies,
+                            watchedMovies,
+                            logDetailsViewModel,
+                            logViewModel,
+                            collaborators
+                        )
                     }
                 }
             }
@@ -223,13 +245,18 @@ fun LogDetailsScreen(
 
     Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")
     ShowAlertDialog(alertDialogState, setAlertDialogState)
+    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+        BackButton(navController = navController, visible = true)
+    }
 }
 
 
 @Composable
 fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
-    Row(modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
 
         val isOwnerVisible = owner.userId?.isNotEmpty() ?: false
 
@@ -239,10 +266,16 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
             enter = fadeIn(animationSpec = tween(300)),
             exit = fadeOut(animationSpec = tween(1000))
         ) {
-            Column(modifier = Modifier.padding(end = 5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.padding(end = 5.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Image(
-                    painter = painterResource(id = getAvatarResourceId(owner.avatarPreset ?: 1).second),
+                    painter = painterResource(
+                        id = getAvatarResourceId(
+                            owner.avatarPreset ?: 1
+                        ).second
+                    ),
                     contentDescription = null,
                     modifier = Modifier
                         .size(35.dp)
@@ -256,7 +289,7 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
         AnimatedVisibility(
             visible = isVisible,
             enter = //slideInVertically(initialOffsetY = { -it })
-                    slideInHorizontally(initialOffsetX = { -it })
+            slideInHorizontally(initialOffsetX = { -it })
                     + fadeIn(animationSpec = tween(1000)),
             exit = fadeOut(animationSpec = tween(1000))
         ) {
@@ -290,21 +323,21 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
         }
 
         // Number of Movies with Slide Animation
-/*        AnimatedVisibility(
-            visible = isOwnerVisible,
-            enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
-            fadeIn(animationSpec = tween(1000)),
-            exit = fadeOut(animationSpec = tween(
-                durationMillis = 3000,
-                //easing = LinearOutSlowInEasing
-                )
-            )
-        ) {
-            Column(modifier = Modifier.padding(start = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-            }
-        }*/
+        /*        AnimatedVisibility(
+                    visible = isOwnerVisible,
+                    enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
+                    fadeIn(animationSpec = tween(1000)),
+                    exit = fadeOut(animationSpec = tween(
+                        durationMillis = 3000,
+                        //easing = LinearOutSlowInEasing
+                        )
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(start = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    }
+                }*/
 
         Crossfade(
             targetState = if (isOwnerVisible) movieCount else null,
@@ -325,26 +358,26 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
                 }
             }
         }
-/*        AnimatedVisibility(
-            visible = isOwnerVisible,
-            enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
-                    fadeIn(animationSpec = tween(1000)),
-            exit = fadeOut(animationSpec = tween(
-                durationMillis = 3000))
-        ) {
-            Crossfade(targetState = movieCount, label = "") { targetCount ->
-                Column(
-                    modifier = Modifier.padding(start = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+        /*        AnimatedVisibility(
+                    visible = isOwnerVisible,
+                    enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
+                            fadeIn(animationSpec = tween(1000)),
+                    exit = fadeOut(animationSpec = tween(
+                        durationMillis = 3000))
                 ) {
-                    Text(
-                        "$targetCount Movies",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }*/
+                    Crossfade(targetState = movieCount, label = "") { targetCount ->
+                        Column(
+                            modifier = Modifier.padding(start = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "$targetCount Movies",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }*/
     }
 }
 
@@ -367,6 +400,9 @@ fun LogButtons(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
     var isSheetOpen by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var isAddSheetOpen by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -468,7 +504,7 @@ fun LogButtons(
                                 setAlertDialogState(
                                     AlertDialog(
                                         isVisible = true,
-                                        header = "Shuffle",
+                                        header = "Shuffle?",
                                         message = "Are you sure you want to shuffle the movies?",
                                         dismiss = Dismiss(text = "Cancel"),
                                         accept = Accept(
@@ -503,40 +539,64 @@ fun LogButtons(
                             .size(50.dp)
                             .testTag("ADD_MOVIE_ICON")
                             .clickable(onClick = {
-                                sheetContent = { AddMovieMenu(navController, logViewModel, logId) }
-                                isSheetOpen = true
+                                isAddSheetOpen = true
                             })
                     )
+                    if (isAddSheetOpen) {
+                        ModalBottomSheet(
+                            sheetState = sheetState,
+                            onDismissRequest = { isAddSheetOpen = false },
+                            containerColor = colorResource(id = R.color.bottomnav),
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(
+                                    top = 40.dp,
+                                    start = 12.dp,
+                                    end = 12.dp
+                                )
+                            ) {
+                                SearchBar(navController, logViewModel, isLogMenu = true, logId)
+                            }
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    LaunchedEffect(isSheetOpen) {
-        if (!isSheetOpen) {
-            logDetailsViewModel.getLogData(logId)
-        }
-    }
+            LaunchedEffect(isSheetOpen, isAddSheetOpen) {
+                if (!isSheetOpen || !isAddSheetOpen) {
+                    logDetailsViewModel.getLogData(logId)
+                }
+            }
 
-    if (isSheetOpen) {
-        ModalBottomSheet(
-            sheetState = sheetState,
-            content = sheetContent,
-            tonalElevation = 10.dp,
-            onDismissRequest = { isSheetOpen = false },
-            containerColor = colorResource(id = R.color.bottomnav),
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("SHEET_CONTENT")
-        )
+            if (isSheetOpen) {
+                ModalBottomSheet(
+                    sheetState = sheetState,
+                    content = sheetContent,
+                    tonalElevation = 10.dp,
+                    onDismissRequest = { isSheetOpen = false },
+                    containerColor = colorResource(id = R.color.bottomnav),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("SHEET_CONTENT")
+                )
+            }
+        }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LogList(
-    navController: NavHostController, logId: String, movies: Map<String, MinimalMovieData>, watchedMovies: Map<String, MinimalMovieData>,
-    logDetailsViewModel: LogDetailsViewModel, logViewModel: LogViewModel, collaboratorsList: List<UserData>) {
+    navController: NavHostController,
+    logId: String,
+    movies: Map<String, MinimalMovieData>,
+    watchedMovies: Map<String, MinimalMovieData>,
+    logDetailsViewModel: LogDetailsViewModel,
+    logViewModel: LogViewModel,
+    collaboratorsList: List<UserData>
+) {
 
     val moviesList = movies.values.toList()
     val watchedMoviesList = watchedMovies.values.toList()
@@ -558,20 +618,29 @@ fun LogList(
 
                 val addToWatched = SwipeAction(
                     background = colorResource(R.color.sky_blue),
-                    icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.padding(start = 40.dp)
+                        )
+                    },
                     onSwipe = {
                         val movieId = movie.id.toString()
 
-                        val removedMovieData = logDetailsViewModel.movies.value?.let { movies ->
-                            val updatedMovies = movies.toMutableMap().apply {
-                                remove(movieId)
+                        val removedMovieData =
+                            logDetailsViewModel.movies.value?.let { movies ->
+                                val updatedMovies = movies.toMutableMap().apply {
+                                    remove(movieId)
+                                }
+                                logDetailsViewModel.movies.value = updatedMovies
+                                movies[movieId] // Get the removed movie data to add it to movies
                             }
-                            logDetailsViewModel.movies.value = updatedMovies
-                            movies[movieId] // Get the removed movie data to add it to movies
-                        }
 
                         removedMovieData?.let { movieData ->
-                            val currentMovies = logDetailsViewModel.watchedMovies.value ?: mapOf()
+                            val currentMovies =
+                                logDetailsViewModel.watchedMovies.value ?: mapOf()
                             val updatedMovies = currentMovies.toMutableMap().apply {
                                 this[movieId] = movieData
                             }
@@ -590,7 +659,7 @@ fun LogList(
                             )
                         )
                 ) {
-                    MovieEntry(navController,movie,logId, collaboratorsList)
+                    MovieEntry(navController, movie, logId, collaboratorsList)
                 }
             }
         }
@@ -605,17 +674,27 @@ fun LogList(
 
                 val addToMovies = SwipeAction(
                     background = colorResource(R.color.sky_blue),
-                    icon = { Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.padding(start = 40.dp)) },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.padding(start = 40.dp)
+                        )
+                    },
                     onSwipe = {
                         val watchedMovieId = watchedMovie.id.toString()
 
-                        val removedMovieData = logDetailsViewModel.watchedMovies.value?.let { watchedMovies ->
-                            val updatedWatchedMovies = watchedMovies.toMutableMap().apply {
-                                remove(watchedMovieId)
+                        val removedMovieData =
+                            logDetailsViewModel.watchedMovies.value?.let { watchedMovies ->
+                                val updatedWatchedMovies =
+                                    watchedMovies.toMutableMap().apply {
+                                        remove(watchedMovieId)
+                                    }
+                                logDetailsViewModel.watchedMovies.value =
+                                    updatedWatchedMovies
+                                watchedMovies[watchedMovieId] // Get the removed movie data to add it to movies
                             }
-                            logDetailsViewModel.watchedMovies.value = updatedWatchedMovies
-                            watchedMovies[watchedMovieId] // Get the removed movie data to add it to movies
-                        }
 
                         removedMovieData?.let { movieData ->
                             val currentMovies = logDetailsViewModel.movies.value ?: mapOf()
@@ -625,7 +704,10 @@ fun LogList(
                             logDetailsViewModel.movies.value = updatedMovies
                         }
 
-                        Log.d(TAG, "Watched movies after swipe: ${logDetailsViewModel.watchedMovies.value}")
+                        Log.d(
+                            TAG,
+                            "Watched movies after swipe: ${logDetailsViewModel.watchedMovies.value}"
+                        )
                         logViewModel.unmarkMovieAsWatched(logId, watchedMovie.id.toString())
                     },
                 )
@@ -647,7 +729,12 @@ fun LogList(
 }
 
 @Composable
-fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId: String, collaboratorsList: List<UserData>) {
+fun MovieEntry(
+    navController: NavHostController,
+    movie: MinimalMovieData,
+    logId: String,
+    collaboratorsList: List<UserData>
+) {
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -665,17 +752,28 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId:
         ) {
             Box(
                 modifier = Modifier
-                    .width(130.dp)
+                    .width(140.dp)
                     .height(70.dp)
                     .clip(RoundedCornerShape(5.dp))
             ) {
-                val imageBaseURL =
-                    "https://image.tmdb.org/t/p/w500/${movie.image}"
-                Image(
-                    painter = rememberAsyncImagePainter(imageBaseURL),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
-                )
+                if(movie.image != null) {
+                    val imageBaseURL = "https://image.tmdb.org/t/p/w500/${movie.image}"
+                    Image(
+                        painter = rememberAsyncImagePainter(imageBaseURL),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else {
+                    Box(modifier = Modifier.border(width = 2.dp, color = Color(0xFF9F9F9F)),
+                        contentAlignment = Alignment.Center) {
+                        Image(
+                            painter = painterResource(id = R.drawable.nophoto),
+                            contentDescription = "no photo"
+                        )
+                    }
+                }
             }
         }
 
@@ -692,7 +790,9 @@ fun MovieEntry(navController: NavHostController, movie: MinimalMovieData, logId:
                 text = movie.title ?: "",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -863,7 +963,10 @@ fun CollaboratorsSheetContent(
             Button(
                 onClick = {
                     CoroutineScope(Dispatchers.Main).launch {
-                        logDetailsViewModel.updateLogCollaborators(addCollabs, removeCollabs)
+                        logDetailsViewModel.updateLogCollaborators(
+                            addCollabs,
+                            removeCollabs
+                        )
                         onDismiss()
                     }
                 },
@@ -1006,7 +1109,7 @@ fun EditSheetContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth(),
-                //.weight(1f),
+            //.weight(1f),
             verticalArrangement = Arrangement.Bottom
         ) {
             Row(
@@ -1030,7 +1133,7 @@ fun EditSheetContent(
                         setAlertDialogState(
                             AlertDialog(
                                 isVisible = true,
-                                header = "Save Changes to Log",
+                                header = "Save Log?",
                                 message = "Are you sure you want to save changes to this log?",
                                 dismiss = Dismiss(text = "Cancel"),
                                 accept = Accept(
@@ -1088,16 +1191,18 @@ fun EditSheetContent(
                                     dismiss = Dismiss(text = "Cancel"),
                                     accept = Accept(
                                         text = "Delete",
-                                        textColor = Color.Red,
+                                        textColor = Color(0xFFDC3545),
                                         action = {
                                             CoroutineScope(Dispatchers.Main).launch {
-                                                val asyncJob = logDetailsViewModel.deleteLog()
+                                                val asyncJob =
+                                                    logDetailsViewModel.deleteLog()
                                                 asyncJob?.join()
 
                                                 logViewModel.loadLogs()
                                                 navController.navigate("home")
                                                 Toast.makeText(
-                                                    context, "Successfully deleted $logName!",
+                                                    context,
+                                                    "Successfully deleted $logName!",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             }
@@ -1111,7 +1216,11 @@ fun EditSheetContent(
                             .height(55.dp)
                             .padding(horizontal = 24.dp)
                             .background(color = Color.Transparent)
-                            .border(1.dp, Color(0xFFDC3545), shape = RoundedCornerShape(30.dp))
+                            .border(
+                                1.dp,
+                                Color(0xFFDC3545),
+                                shape = RoundedCornerShape(30.dp)
+                            )
                             .testTag("EDIT_DELETE_BUTTON"),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent,
@@ -1170,14 +1279,18 @@ fun EditLogEntry(movie: MinimalMovieData) {
         horizontalArrangement = Arrangement.Center
     ) {
         // Remove Icon
-        Column(modifier = Modifier.weight(1F),
+        Column(
+            modifier = Modifier.weight(1F),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
+            verticalArrangement = Arrangement.Center
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.remove),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp).testTag("REMOVE_MOVIE_ICON"),
+                modifier = Modifier
+                    .size(35.dp)
+                    .testTag("REMOVE_MOVIE_ICON"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
@@ -1211,16 +1324,19 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 imageVector = Icons.Default.DragHandle,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(35.dp).testTag("DRAG_ICON"),
+                modifier = Modifier
+                    .size(35.dp)
+                    .testTag("DRAG_ICON"),
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
     }
 }
 
+/*
 @Composable
 fun AddMovieMenu(navController: NavHostController, logViewModel: LogViewModel, logId: String) {
     Column(modifier = Modifier.padding(top = 40.dp, start = 12.dp, end = 12.dp)) {
         SearchBar(navController, logViewModel, isLogMenu = true, logId)
     }
-}
+}*/

@@ -153,7 +153,7 @@ fun RequestActions(requestData: LogRequestData, updateRequest: (String, String, 
                 .testTag("ACCEPT_LOG_REQUEST_ICON")
         )
         Image(
-            painter = painterResource(id = R.drawable.delete_icon),
+            painter = painterResource(id = R.drawable.delete),
             contentDescription = "Delete request",
             modifier = Modifier
                 .size(30.dp)
