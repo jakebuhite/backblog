@@ -138,7 +138,7 @@ fun HomeScreen(
         if (!allLogs.isNullOrEmpty()) {
             WatchNextCard(navController, allLogs!![0], logViewModel)
         }
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(40.dp))
         MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
     }
 }

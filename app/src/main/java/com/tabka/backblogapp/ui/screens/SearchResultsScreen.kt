@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -238,6 +239,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                 modifier = Modifier
                     .width(140.dp)
                     .height(70.dp)
+                    .clip(RoundedCornerShape(5.dp))
             ) {
 
                 val imageBaseURL = if (halfSheet != "") {
@@ -247,9 +249,10 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                 }
 
                 Image(
-                    painter = rememberAsyncImagePainter(imageBaseURL),
+                    painter = rememberAsyncImagePainter(imageBaseURL, error = painterResource(R.drawable.nophoto)),
                     contentDescription = null,
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
