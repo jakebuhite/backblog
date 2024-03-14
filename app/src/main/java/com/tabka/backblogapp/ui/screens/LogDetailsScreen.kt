@@ -564,8 +564,8 @@ fun LogButtons(
                 }
             }
 
-            LaunchedEffect(isSheetOpen) {
-                if (!isSheetOpen) {
+            LaunchedEffect(isSheetOpen, isAddSheetOpen) {
+                if (!isSheetOpen || !isAddSheetOpen) {
                     logDetailsViewModel.getLogData(logId)
                 }
             }
