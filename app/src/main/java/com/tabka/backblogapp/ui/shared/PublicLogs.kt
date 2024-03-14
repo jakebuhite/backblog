@@ -36,7 +36,7 @@ import kotlin.math.ceil
 fun PublicLogs(navController: NavHostController, publicLogs: List<LogData>, logViewModel: LogViewModel) {
     Text("Public Logs", style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier
-            .padding(bottom = 8.dp)
+            .padding(bottom = 16.dp)
             .testTag("PAGE_SUB_TITLE"))
     DisplayPublicLogs(navController = navController, allLogs = publicLogs, logViewModel = logViewModel)
 }

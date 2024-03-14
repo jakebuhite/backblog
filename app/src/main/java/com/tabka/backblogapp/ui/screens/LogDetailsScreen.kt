@@ -1307,7 +1307,9 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 movie.title ?: "",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.testTag("EDIT_LOG_MOVIE_TITLE")
+                modifier = Modifier.testTag("EDIT_LOG_MOVIE_TITLE"),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 

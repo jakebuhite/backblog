@@ -25,6 +25,7 @@ fun RequestHeader(title: String) {
         Text(
             title,
             style = MaterialTheme.typography.titleSmall,
+            color = Color.LightGray,
             modifier = Modifier.padding(end = 10.dp)
         )
         Box(
