@@ -142,16 +142,18 @@ fun FriendsContent(
                 verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .height(50.dp)
-                .fillMaxWidth()) {
+                .fillMaxWidth()
+                .padding(top = 14.dp)) {
                 FriendHeader(navController)
             }
+            Spacer(modifier = Modifier.height(26.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = getAvatarResourceId(userAvatar).second),
                     contentDescription = "Avatar",
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                 )
                 PageTitle(pageTitle)
             }
