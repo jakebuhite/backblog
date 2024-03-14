@@ -90,6 +90,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -192,7 +193,8 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
 @Composable
 fun PriorityLogTitle(logName: String) {
     Row() {
-        Text("From $logName", style = MaterialTheme.typography.titleSmall, color = Color.LightGray,
+        Text("From $logName", style = MaterialTheme.typography.titleSmall, color = Color.LightGray, maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag("PRIORITY_LOG_TITLE"))
     }
 }
@@ -503,7 +505,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             }
 
             if (currentCollab.isEmpty()) {
-                Spacer(modifier = Modifier.height(75.dp))
+                Spacer(modifier = Modifier.height(85.dp))
             } else {
                 Spacer(modifier = Modifier.height(15.dp))
                 // Current collaborators sections
@@ -512,7 +514,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                         val userId = collaboratorsList[index]
                         val friend = userList.value.find { it.userId == userId }
 
-                        Column() {
+                        /*Column() {*/
                             Image(
                                 painter = painterResource(
                                     id = getAvatarResourceId(
@@ -520,9 +522,11 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                                     ).second
                                 ),
                                 contentDescription = null,
-                                modifier = Modifier.size(60.dp),
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .padding(end = 10.dp),
                             )
-                        }
+                        /*}*/
                     }
                 }
             }
@@ -589,7 +593,9 @@ fun NewLogCollaborator(
             Image(
                 painter = painterResource(id = getAvatarResourceId(friend.avatarPreset ?: 1).second),
                 contentDescription = null,
-                modifier = Modifier.size(60.dp).testTag("NEW_LOG_COLLABORATOR_AVATAR"),
+                modifier = Modifier
+                    .size(60.dp)
+                    .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
             )
         }
 
@@ -625,7 +631,9 @@ fun NewLogCollaborator(
                     imageVector = Icons.Default.RemoveCircle,
                     contentDescription = "Add Icon",
                     colorFilter = tint(color = Color.Red),
-                    modifier = Modifier.size(25.dp).testTag("REMOVE_COLLABORATOR_ICON")
+                    modifier = Modifier
+                        .size(30.dp)
+                        .testTag("REMOVE_COLLABORATOR_ICON")
                 )
             }
         } else {
@@ -647,7 +655,9 @@ fun NewLogCollaborator(
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(25.dp).testTag("ADD_COLLABORATOR_ICON")
+                    modifier = Modifier
+                        .size(25.dp)
+                        .testTag("ADD_COLLABORATOR_ICON")
                 )
             }
         }
@@ -834,9 +844,11 @@ fun LogEntry(navController: NavHostController, logId: String, logName: String, p
             // Text overlay
             Text(
                 text = logName,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = Color.White,
                 textAlign = TextAlign.Center,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)

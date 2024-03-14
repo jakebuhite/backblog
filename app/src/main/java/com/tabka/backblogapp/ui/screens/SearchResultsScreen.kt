@@ -72,6 +72,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -95,6 +96,9 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBar(navController, logViewModel, isLogMenu, logId)
+    }
+    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+        BackButton(navController = navController, visible = true)
     }
 }
 @OptIn(ExperimentalComposeUiApi::class)
@@ -266,7 +270,8 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
             .clickable { navController.navigate("search_movie_details_${movie.id}") }
             .testTag("MOVIE_RESULT"),
             verticalArrangement = Arrangement.Center){
-            Text("${movie.title}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("${movie.title}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 3,
+                overflow = TextOverflow.Ellipsis)
         }
 
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
