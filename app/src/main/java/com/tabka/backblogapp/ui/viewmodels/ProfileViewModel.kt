@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
@@ -18,20 +19,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-open class ProfileViewModel : ViewModel() {
+open class ProfileViewModel(
+    val auth: FirebaseAuth = Firebase.auth,
+    val userRepository: UserRepository = UserRepository(),
+    val logRepository: LogRepository = LogRepository(),
+    val friendRepository: FriendRepository = FriendRepository()
+) : ViewModel() {
     private val tag = "ProfileViewModel"
-    private val auth = Firebase.auth
 
     // User Info
-    private val userRepository = UserRepository()
     open val userData: MutableLiveData<UserData> = MutableLiveData()
 
     // Log Info
-    private val logRepository = LogRepository()
     open val publicLogData: MutableLiveData<List<LogData>> = MutableLiveData()
 
     // Friend Info
-    private val friendRepository = FriendRepository()
     private val _friendsData = MutableStateFlow<List<UserData>>(emptyList())
     open val friendsData = _friendsData.asStateFlow()
 

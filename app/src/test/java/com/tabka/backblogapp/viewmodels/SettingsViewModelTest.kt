@@ -1,4 +1,4 @@
-package com.tabka.backblogapp
+package com.tabka.backblogapp.viewmodels
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
