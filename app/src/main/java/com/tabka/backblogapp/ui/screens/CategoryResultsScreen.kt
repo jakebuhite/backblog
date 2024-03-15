@@ -81,7 +81,7 @@ fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogVie
             }
             }
     }
-    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+    Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
 }

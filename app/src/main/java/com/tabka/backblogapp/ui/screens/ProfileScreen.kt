@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -117,6 +118,9 @@ fun ProfileScreen(navController: NavHostController, friendId: String?, profileVi
         blockUser,
         composableScope
     )
+    Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
+        BackButton(navController = navController, visible = true)
+    }
 }
 
 @Composable
@@ -147,6 +151,7 @@ fun FriendsPageContent(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(scrollState)
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -154,13 +159,14 @@ fun FriendsPageContent(
                     .fillMaxWidth()) {
                 FriendsPageHeader(navController) { showBottomSheet = true }
             }
+            Spacer(modifier = Modifier.height(5.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = getAvatarResourceId(userAvatar).second),
                     contentDescription = "Avatar",
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                 )
                 PageTitle(pageTitle)
             }
@@ -191,14 +197,13 @@ fun FriendsPageContent(
 @Composable
 fun FriendsPageHeader(navController: NavHostController, showBottomSheet: () -> Unit) {
     Row {
-        BackButton(navController = navController, visible = true)
         Spacer(Modifier.weight(1f))
         Icon(Icons.Rounded.Person,
             contentDescription = "Add Friend icon",
             modifier = Modifier
                 .height(45.dp)
                 .width(45.dp)
-                .padding(top = 8.dp)
+                .offset(x = (-10).dp)
                 .clickable { showBottomSheet() }
                 .testTag("USER_FRIEND_ICON"),
             tint = Color.White
@@ -346,6 +351,7 @@ fun AddFriendOrBlockDialog(
             }) {
                 Text("Block User", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, color = Color.Red))
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
