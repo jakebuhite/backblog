@@ -81,7 +81,7 @@ fun BaseScreen(
 
 @Composable
 fun BackButton(navController: NavController, visible: Boolean) {
-    val icon = painterResource(R.drawable.button_back_arrow)
+    val icon = painterResource(R.drawable.backbutton)
 
     val alpha = if (visible) 1f else 0f
 
@@ -109,7 +109,7 @@ fun BackButton(navController: NavController, visible: Boolean) {
         ) {
             Image(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .alpha(alpha)
                     .testTag("BACK_BUTTON"),

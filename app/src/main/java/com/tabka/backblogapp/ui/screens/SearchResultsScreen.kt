@@ -97,7 +97,7 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBar(navController, logViewModel, isLogMenu, logId)
     }
-    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+    Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
 }

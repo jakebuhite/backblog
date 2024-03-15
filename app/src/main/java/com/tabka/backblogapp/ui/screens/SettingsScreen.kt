@@ -83,7 +83,7 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
                 settingsViewModel::getLogCount)
         }
     }
-    Box(modifier = Modifier.offset(x = 20.dp, y = 20.dp)) {
+    Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController, true)
     }
 }
