@@ -375,19 +375,25 @@ class ProfileViewModelTest {
         try {
             // Arrange
             val userId = "fakeUserId"
+            val username = "fakeUsername"
 
             profileViewModel.notificationMsg.observeForever(strObserver)
+            profileViewModel.userData.observeForever(observer)
             whenever(auth.currentUser?.uid).thenReturn(userId)
             whenever(userRepository.getUserByUsername(anyString())).thenReturn(
                 DataResult.Failure(Exception("Failed to get user by username"))
             )
-            profileViewModel.userData.value = null
+
+            profileViewModel.userData.value = UserData(
+                userId = userId,
+                username = username
+            )
 
             // Act
             profileViewModel.sendFriendRequest()
 
             // Assert
-            assertEquals(profileViewModel.notificationMsg.value, "User not found")
+            assertEquals(profileViewModel.notificationMsg.value, "There was an error sending a request")
         } finally {
             Dispatchers.resetMain()
         }
@@ -402,22 +408,71 @@ class ProfileViewModelTest {
         try {
             // Arrange
             val userId = "fakeUserId"
+            val username = "fakeUsername"
 
             profileViewModel.notificationMsg.observeForever(strObserver)
+            profileViewModel.userData.observeForever(observer)
             whenever(auth.currentUser?.uid).thenReturn(userId)
             whenever(userRepository.getUserByUsername(anyString())).thenReturn(
-                DataResult.Success(UserData(userId = userId))
+                DataResult.Success(
+                    UserData(
+                        userId = userId,
+                        username = username,
+                        friends = mapOf(userId to true) // User already a friend
+                    )
+                )
             )
             profileViewModel.userData.value = UserData(
                 userId = userId,
-                friends = mapOf(userId to true) // User already a friend
+                username = username,
             )
 
             // Act
             profileViewModel.sendFriendRequest()
 
             // Assert
-            assertEquals(profileViewModel.notificationMsg.value, "User not found")
+            assertEquals(profileViewModel.notificationMsg.value, "fakeUsername is already a friend!")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testSendFriendRequestException() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+            val friendUsername = "fakeFriend"
+            val targetId = "targetUserId"
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+            whenever(userRepository.getUserByUsername(anyString())).thenReturn(
+                DataResult.Success(
+                    UserData(
+                        userId = userId,
+                        username = friendUsername
+                    )
+                )
+            )
+            profileViewModel.userData.value = UserData(
+                userId = userId,
+                username = friendUsername
+            )
+            whenever(friendRepository.getFriendRequests(targetId)).thenReturn(
+                DataResult.Failure(Exception("Simulated exception"))
+            )
+
+            // Act
+            profileViewModel.sendFriendRequest()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "There was an error sending a request")
         } finally {
             Dispatchers.resetMain()
         }
@@ -426,6 +481,53 @@ class ProfileViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testSendFriendRequestAlreadySentRequestToUser() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+            val friendUsername = "fakeFriend"
+            val userRequests = listOf(
+                FriendRequestData(
+                    requestId = "req123",
+                    senderId = userId,
+                    targetId = userId,
+                    requestDate = "now",
+                    isComplete = false
+                )
+            )
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+            whenever(userRepository.getUserByUsername(anyString())).thenReturn(
+                DataResult.Success(
+                    UserData(
+                        userId = userId,
+                        username = friendUsername
+                    )
+                )
+            )
+            profileViewModel.userData.value = UserData(
+                userId = userId,
+                username = friendUsername
+            )
+            whenever(friendRepository.getFriendRequests(anyString())).thenReturn(DataResult.Success(userRequests))
+
+            // Act
+            profileViewModel.sendFriendRequest()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "You've already sent a request to $friendUsername!")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testSendFriendRequestReceivedException() = runTest {
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
@@ -444,16 +546,26 @@ class ProfileViewModelTest {
                 )
             )
 
+            profileViewModel.userData.observeForever(observer)
             profileViewModel.notificationMsg.observeForever(strObserver)
             whenever(auth.currentUser?.uid).thenReturn(userId)
             whenever(userRepository.getUserByUsername(anyString())).thenReturn(
-                DataResult.Success(UserData(userId = userId))
+                DataResult.Success(
+                    UserData(
+                        userId = targetId,
+                        username = friendUsername
+                    )
+                )
             )
             profileViewModel.userData.value = UserData(
-                userId = userId,
+                userId = targetId,
                 username = friendUsername
             )
-            whenever(friendRepository.getFriendRequests(targetId)).thenReturn(DataResult.Success(userRequests))
+
+            whenever(friendRepository.getFriendRequests(userId)).thenReturn(DataResult.Success(userRequests))
+            whenever(friendRepository.getFriendRequests(targetId)).thenReturn(
+                DataResult.Failure(Exception("Simulated exception"))
+            )
 
             // Act
             profileViewModel.sendFriendRequest()
@@ -479,29 +591,38 @@ class ProfileViewModelTest {
             val userRequests = listOf(
                 FriendRequestData(
                     requestId = "req123",
-                    senderId = targetId,
+                    senderId = userId,
                     targetId = userId,
                     requestDate = "now",
                     isComplete = false
                 )
             )
 
+            profileViewModel.userData.observeForever(observer)
             profileViewModel.notificationMsg.observeForever(strObserver)
             whenever(auth.currentUser?.uid).thenReturn(userId)
             whenever(userRepository.getUserByUsername(anyString())).thenReturn(
-                DataResult.Success(UserData(userId = userId))
+                DataResult.Success(
+                    UserData(
+                        userId = userId,
+                        username = friendUsername
+                    )
+                )
             )
             profileViewModel.userData.value = UserData(
                 userId = userId,
                 username = friendUsername
             )
+            whenever(friendRepository.getFriendRequests(targetId)).thenReturn(DataResult.Success(
+                listOf()
+            ))
             whenever(friendRepository.getFriendRequests(userId)).thenReturn(DataResult.Success(userRequests))
 
             // Act
             profileViewModel.sendFriendRequest()
 
             // Assert
-            assertEquals(profileViewModel.notificationMsg.value, "Friend request sent to $friendUsername!")
+            assertEquals(profileViewModel.notificationMsg.value, "You've already sent a request to $friendUsername!")
         } finally {
             Dispatchers.resetMain()
         }
@@ -576,6 +697,260 @@ class ProfileViewModelTest {
 
             // Assert
             assertEquals(profileViewModel.notificationMsg.value, "There was an error sending a request")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testRemoveFriendUserNotAuthenticated() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            profileViewModel.notificationMsg.observeForever(strObserver)
+            whenever(auth.currentUser?.uid).thenReturn(null)
+
+            // Act
+            profileViewModel.removeFriend()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "User not authenticated")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testRemoveFriendUserNotFound() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+
+            profileViewModel.userData.value = null
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+
+            // Act
+            profileViewModel.removeFriend()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "User not found")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testRemoveFriendSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+            val username = "fakeUsername"
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+
+            profileViewModel.userData.value = UserData(
+                userId = userId,
+                username = username
+            )
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+
+            whenever(friendRepository.removeFriend(anyString(), anyString())).thenReturn(
+                DataResult.Success(true)
+            )
+
+            // Act
+            profileViewModel.removeFriend()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "Removed fakeUsername as a friend!")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testRemoveFriendFailed() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+            val username = "fakeUsername"
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+
+            profileViewModel.userData.value = UserData(
+                userId = userId,
+                username = username
+            )
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+
+            whenever(friendRepository.removeFriend(anyString(), anyString())).thenReturn(
+                DataResult.Failure(Exception("Simulated exception"))
+            )
+
+            // Act
+            profileViewModel.removeFriend()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "Failed to remove user as a friend!")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testBlockUserNotAuthenticated() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            profileViewModel.notificationMsg.observeForever(strObserver)
+            whenever(auth.currentUser?.uid).thenReturn(null)
+
+            // Act
+            profileViewModel.blockUser()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "User not authenticated")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testBlockUserNotFound() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+
+            profileViewModel.userData.value = null
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+
+            // Act
+            profileViewModel.blockUser()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "User not found")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testBlockUserSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+            val username = "fakeUsername"
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+
+            profileViewModel.userData.value = UserData(
+                userId = userId,
+                username = username
+            )
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+
+            whenever(friendRepository.blockUser(anyString(), anyString(), anyBoolean())).thenReturn(
+                DataResult.Success(true)
+            )
+
+            // Act
+            profileViewModel.blockUser()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "Successfully blocked $username!")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testBlockUserFailed() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val userId = "fakeUserId"
+            val username = "fakeUsername"
+
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+
+            profileViewModel.userData.value = UserData(
+                userId = userId,
+                username = username,
+                friends = mapOf(username to true)
+            )
+            whenever(auth.currentUser?.uid).thenReturn(userId)
+
+            whenever(friendRepository.blockUser(anyString(), anyString(), anyBoolean())).thenReturn(
+                DataResult.Failure(Exception("Simulated exception"))
+            )
+
+            // Act
+            profileViewModel.blockUser()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "Failed to block user")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testClearMessage() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            profileViewModel.userData.observeForever(observer)
+            profileViewModel.notificationMsg.observeForever(strObserver)
+
+            profileViewModel.notificationMsg.value = "Test123"
+
+            // Act
+            profileViewModel.clearMessage()
+
+            // Assert
+            assertEquals(profileViewModel.notificationMsg.value, "")
         } finally {
             Dispatchers.resetMain()
         }
