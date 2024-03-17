@@ -9,14 +9,17 @@ package com.tabka.backblogapp.ui.screens
 import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -138,6 +141,7 @@ fun FriendsContent(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(scrollState)
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -145,13 +149,14 @@ fun FriendsContent(
                 .fillMaxWidth()) {
                 FriendHeader(navController)
             }
+            Spacer(modifier = Modifier.height(5.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = getAvatarResourceId(userAvatar).second),
                     contentDescription = "Avatar",
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                 )
                 PageTitle(pageTitle)
             }
@@ -167,8 +172,10 @@ fun FriendHeader(navController: NavController) {
         painter = painterResource(id = R.drawable.settings_icon),
         contentDescription = "Settings icon",
         modifier = Modifier
-            .height(35.dp)
-            .width(35.dp)
+            /*.size(48.dp)*/
+            .width(40.dp)
+            .height(40.dp)
+            .offset(x = (-10).dp)
             .clickable { navController.navigate("settings") }
             .testTag("SETTINGS_ICON")
     )

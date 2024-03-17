@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -78,25 +80,27 @@ fun FriendRequestsScreen(
 
     Row(horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()) {
+        modifier = Modifier.fillMaxWidth().offset(y = (-3).dp)) {
         Text("Friends", style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
-                .padding(bottom = 8.dp)
                 .testTag("PAGE_SUB_TITLE"))
         Button(onClick = { isSheetOpen = true },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF3891E1),
-            )
+            ),
+            modifier = Modifier.width(70.dp).height(40.dp)
             ) {
             Image(
                 painter = painterResource(id = R.drawable.user_add),
                 contentDescription = "Add Friend Request Icon",
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(40.dp)
                     .testTag("ADD_ICON")
             )
         }
     }
+
+    /*Spacer(modifier = Modifier.height(5.dp))*/
 
     SocialRequests(navController, friendRequests, logRequests, updateRequest)
     FriendsList(navController, friends)

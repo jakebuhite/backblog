@@ -97,13 +97,19 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         SearchBar(navController, logViewModel, isLogMenu, logId)
     }
-    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+    Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
 }
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?) {
+fun SearchBar(
+    navController: NavHostController,
+    logViewModel: LogViewModel,
+    isLogMenu: Boolean,
+    logId: String?
+) {
     var text by rememberSaveable { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -144,7 +150,12 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLo
                             keyboardController?.hide()
                         }
                     ),
-                    placeholder = { Text("Search for a movie", modifier = Modifier.testTag("SEARCH_BAR_LABEL")) },
+                    placeholder = {
+                        Text(
+                            "Search for a movie",
+                            modifier = Modifier.testTag("SEARCH_BAR_LABEL")
+                        )
+                    },
                     maxLines = 1,
                     leadingIcon = {
                         Icon(
@@ -183,7 +194,7 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLo
             )
         },
         modifier = Modifier.fillMaxSize()
-    ) {targetState ->
+    ) { targetState ->
         when (targetState) {
             true -> {
                 Box(
@@ -198,24 +209,34 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLo
                     )
                 }
             }
+
             false -> {
                 Log.d(TAG, "Movie results size: ${movieResults?.size}")
                 if (movieResults?.isNotEmpty() == true) {
-                    Box(modifier = Modifier.height(if (isLogMenu) 700.dp else 600.dp)) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(top = 20.dp)
-                                .testTag("MOVIE_RESULTS_LIST")
-                        ) {
-                            items(movieResults.size) { index ->
-                                val movie = movieResults[index]
-                                val halfSheet = halfSheets[movie.id.toString()] ?: ""
-                                MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId)
+                    Row() {
+                        Box(modifier = Modifier.height(if (isLogMenu) 650.dp else 570.dp)) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(top = 15.dp)
+                                    .testTag("MOVIE_RESULTS_LIST")
+                            ) {
+                                items(movieResults.size) { index ->
+                                    val movie = movieResults[index]
+                                    val halfSheet = halfSheets[movie.id.toString()] ?: ""
+                                    MovieResult(
+                                        navController,
+                                        movie,
+                                        halfSheet,
+                                        logViewModel,
+                                        isLogMenu,
+                                        logId
+                                    )
+                                }
                             }
                         }
                     }
-                } else if (text.isNotEmpty() && !isLoading){
+                } else if (text.isNotEmpty() && !isLoading) {
                     NoResults()
                 }
             }
@@ -225,19 +246,29 @@ fun SearchBar(navController: NavHostController, logViewModel: LogViewModel, isLo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieResult(navController: NavHostController, movie: MovieSearchResult, halfSheet: String, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?) {
+fun MovieResult(
+    navController: NavHostController,
+    movie: MovieSearchResult,
+    halfSheet: String,
+    logViewModel: LogViewModel,
+    isLogMenu: Boolean,
+    logId: String?
+) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val allLogs by logViewModel.allLogs.collectAsState()
 
-    Row(modifier = Modifier.padding(bottom = 10.dp),
+    Row(
+        modifier = Modifier.padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center) {
+        horizontalArrangement = Arrangement.Center
+    ) {
 
         // Movie Image
-        Column(modifier = Modifier
-            .weight(2F)
-            .fillMaxHeight()
-            .clickable { navController.navigate("search_movie_details_${movie.id}_${logId}") },
+        Column(
+            modifier = Modifier
+                .weight(2F)
+                .fillMaxHeight()
+                .clickable { navController.navigate("search_movie_details_${movie.id}_${logId}") },
         ) {
             Box(
                 modifier = Modifier
@@ -253,7 +284,10 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                 }
 
                 Image(
-                    painter = rememberAsyncImagePainter(imageBaseURL, error = painterResource(R.drawable.nophoto)),
+                    painter = rememberAsyncImagePainter(
+                        imageBaseURL,
+                        error = painterResource(R.drawable.nophoto)
+                    ),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -269,9 +303,15 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
             .padding(start = 8.dp)
             .clickable { navController.navigate("search_movie_details_${movie.id}") }
             .testTag("MOVIE_RESULT"),
-            verticalArrangement = Arrangement.Center){
-            Text("${movie.title}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 3,
-                overflow = TextOverflow.Ellipsis)
+            verticalArrangement = Arrangement.Center) {
+            Text(
+                "${movie.title}",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
         }
 
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
@@ -313,8 +353,7 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                     contentDescription = "Movie is added",
                     modifier = Modifier.size(25.dp)
                 )
-            }
-            else {
+            } else {
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
@@ -327,21 +366,28 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
         if (isSheetOpen) {
             ModalBottomSheet(
                 sheetState = sheetState,
-                onDismissRequest = {isSheetOpen = false },
+                onDismissRequest = { isSheetOpen = false },
                 containerColor = colorResource(id = R.color.bottomnav),
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("ADD_MOVIE_TO_LOG_POPUP")
-            ){
+            ) {
 
                 //val allLogs = logViewModel.allLogs.collectAsState().value
                 if (allLogs != null) {
-                    val checkedStates = remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
+                    val checkedStates =
+                        remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
 
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp)) {
-                        Text("Add to Log", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp)
+                    ) {
+                        Text(
+                            "Add to Log",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(5.dp))
@@ -362,7 +408,10 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
-                                    Column(modifier = Modifier.weight(1F), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Column(
+                                        modifier = Modifier.weight(1F),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
                                         Checkbox(
                                             checked = checkedStates[index],
                                             onCheckedChange = { isChecked ->
@@ -496,10 +545,11 @@ fun MovieResult(navController: NavHostController, movie: MovieSearchResult, half
 
 @Composable
 fun NoResults() {
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .padding(top = 100.dp)
-        .testTag("NO_RESULTS_ROW"),
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 100.dp)
+            .testTag("NO_RESULTS_ROW"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {

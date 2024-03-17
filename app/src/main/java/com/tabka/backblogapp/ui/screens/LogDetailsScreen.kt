@@ -178,6 +178,7 @@ fun LogDetailsScreen(
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
 
+        Spacer(modifier = Modifier.height(3.dp))
         DetailBar(movies.size, owner, collaborators)
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -245,7 +246,7 @@ fun LogDetailsScreen(
 
     Log.d(TAG, "Is visible screen? ${alertDialogState.isVisible}")
     ShowAlertDialog(alertDialogState, setAlertDialogState)
-    Box(modifier = Modifier.offset(x = 15.dp, y = 20.dp)) {
+    Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
 }
@@ -759,7 +760,7 @@ fun MovieEntry(
                 if(movie.image != null) {
                     val imageBaseURL = "https://image.tmdb.org/t/p/w500/${movie.image}"
                     Image(
-                        painter = rememberAsyncImagePainter(imageBaseURL),
+                        painter = rememberAsyncImagePainter(imageBaseURL, error = painterResource(R.drawable.nophoto)),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -1307,7 +1308,9 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 movie.title ?: "",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.testTag("EDIT_LOG_MOVIE_TITLE")
+                modifier = Modifier.testTag("EDIT_LOG_MOVIE_TITLE"),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
