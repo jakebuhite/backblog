@@ -286,7 +286,7 @@ fun MovieResult(
                 Image(
                     painter = rememberAsyncImagePainter(
                         imageBaseURL,
-                        error = painterResource(R.drawable.nophoto)
+                        error = painterResource(R.drawable.nophoto1)
                     ),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
