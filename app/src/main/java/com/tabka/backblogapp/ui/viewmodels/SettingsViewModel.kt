@@ -11,6 +11,8 @@ import com.tabka.backblogapp.network.repository.LogLocalRepository
 import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
+import com.tabka.backblogapp.util.FirebaseError
+import com.tabka.backblogapp.util.FirebaseExceptionType
 import com.tabka.backblogapp.util.NetworkError
 import com.tabka.backblogapp.util.NetworkExceptionType
 import kotlinx.coroutines.Dispatchers
@@ -28,44 +30,38 @@ open class SettingsViewModel(
     private val tag = "SettingsViewModel"
 
     open suspend fun getUserData(): DataResult<UserData?> {
-        return try {
-            val userId = auth.currentUser!!.uid
-            when(val userData = userRepository.getUser(userId)) {
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            return when(val userData = userRepository.getUser(userId)) {
                 is DataResult.Success -> {
-                    return DataResult.Success(userData.item)
+                    DataResult.Success(userData.item)
                 }
+
                 is DataResult.Failure -> {
-                    return DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+                    DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
                 }
             }
-        } catch (e: Exception) {
-            Log.d(tag, "Error: $e")
-            DataResult.Failure(e)
         }
+        return DataResult.Failure(FirebaseError(FirebaseExceptionType.NOT_FOUND))
     }
 
     open suspend fun updateUserData(updates: Map<String, Any?>, password: String): DataResult<Boolean> {
-        return try {
-            when (isCorrectPassword(password)) {
-                is DataResult.Success -> {
-                    val userId = auth.currentUser!!.uid
-                    return when(userRepository.updateUser(userId, updates)) {
-                        is DataResult.Success -> {
-                            DataResult.Success(true)
-                        }
+        when (isCorrectPassword(password)) {
+            is DataResult.Success -> {
+                val userId = auth.currentUser!!.uid
+                return when(userRepository.updateUser(userId, updates)) {
+                    is DataResult.Success -> {
+                        DataResult.Success(true)
+                    }
 
-                        is DataResult.Failure -> {
-                            DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
-                        }
+                    is DataResult.Failure -> {
+                        DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
                     }
                 }
-                is DataResult.Failure -> {
-                    return DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
-                }
             }
-        } catch (e: Exception) {
-            Log.d(tag, "Error: $e")
-            DataResult.Failure(e)
+            is DataResult.Failure -> {
+                return DataResult.Failure(NetworkError(NetworkExceptionType.REQUEST_FAILED))
+            }
         }
     }
 

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.Owner
@@ -39,7 +40,7 @@ open class LogViewModel : ViewModel() {
 
     // Movie Data
     private val apiService = ApiClient.movieApiService
-    private val movieRepository = MovieRepository(apiService)
+    private val movieRepository = MovieRepository(Firebase.firestore, apiService)
 
     private val logRepository = LogRepository()
 
@@ -47,7 +48,7 @@ open class LogViewModel : ViewModel() {
     private val _movie = MutableStateFlow<Pair<MovieData?, String>>(null to "")
     open val movie = _movie.asStateFlow()
 
-    private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+    private val authListener = FirebaseAuth.AuthStateListener { _ ->
         Log.d(TAG, "We are here")
         viewModelScope.launch {
             loadLogs()

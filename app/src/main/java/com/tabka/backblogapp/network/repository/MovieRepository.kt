@@ -9,24 +9,20 @@ package com.tabka.backblogapp.network.repository
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.BuildConfig
 import com.tabka.backblogapp.network.ApiService
-import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.network.models.tmdb.MovieImageData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.util.DataResult
-import com.tabka.backblogapp.util.FirebaseError
-import com.tabka.backblogapp.util.FirebaseExceptionType
 import kotlinx.coroutines.tasks.await
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class MovieRepository(private val movieApiService: ApiService) {
-
-    private val db = Firebase.firestore
+class MovieRepository(private val db: FirebaseFirestore = Firebase.firestore, private val movieApiService: ApiService) {
     private val tag = "MoviesRepo"
 
     suspend fun addMovie(logId: String, movieId: String): DataResult<Boolean> {

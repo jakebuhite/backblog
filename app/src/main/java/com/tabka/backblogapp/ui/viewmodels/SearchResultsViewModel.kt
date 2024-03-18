@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
@@ -23,7 +25,7 @@ class SearchResultsViewModel : ViewModel() {
     private val TAG = "SearchResultsViewModel"
     private val apiService = ApiClient.movieApiService
 
-    private val movieRepository = MovieRepository(apiService)
+    private val movieRepository = MovieRepository(Firebase.firestore, apiService)
 
     private val _movieResults: MutableStateFlow<List<MovieSearchResult>?> = MutableStateFlow(mutableListOf())
     val movieResults = _movieResults.asStateFlow()
@@ -72,7 +74,7 @@ class SearchResultsViewModel : ViewModel() {
                         val movieId = movie.id?.toString() ?: ""
                         withContext(Dispatchers.IO) {
                             val backdropPath =
-                                suspendCancellableCoroutine<String?> { continuation ->
+                                suspendCancellableCoroutine { continuation ->
                                     movieRepository.getMovieHalfSheet(movieId,
                                         onResponse = { backdropPath ->
                                             Log.d(TAG, "Backdrop exists")
@@ -122,7 +124,7 @@ class SearchResultsViewModel : ViewModel() {
                     val movieId = movie.id?.toString() ?: ""
                     withContext(Dispatchers.IO) {
                         val backdropPath =
-                            suspendCancellableCoroutine<String?> { continuation ->
+                            suspendCancellableCoroutine { continuation ->
                                 movieRepository.getMovieHalfSheet(movieId,
                                     onResponse = { backdropPath ->
                                         Log.d(TAG, "Backdrop exists")

@@ -148,7 +148,6 @@ class FriendRepository(
             updates["is_complete"] = true
             reqRef.update(updates).await()
 
-            Log.d(tag, "isAccepted: $isAccepted")
             if (isAccepted) {
                 // Perform operations sequentially without async
                 val reqData = reqRef.get().await()
