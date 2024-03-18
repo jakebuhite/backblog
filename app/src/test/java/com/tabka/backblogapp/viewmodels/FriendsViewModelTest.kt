@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogData
+import com.tabka.backblogapp.network.models.LogRequestData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.repository.FriendRepository
 import com.tabka.backblogapp.network.repository.LogRepository
@@ -55,6 +56,12 @@ class FriendsViewModelTest {
 
     @Mock
     private lateinit var logObserver: Observer<List<LogData>>
+
+    @Mock
+    private lateinit var friendReqObserver: Observer<List<Pair<FriendRequestData, UserData>>>
+
+    @Mock
+    private lateinit var logReqObserver: Observer<List<Pair<LogRequestData, UserData>>>
 
     private lateinit var friendsViewModel: FriendsViewModel
 
@@ -721,6 +728,279 @@ class FriendsViewModelTest {
 
             // Assert
             assertEquals(friendsViewModel.notificationMsg.value, "")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetFriendRequestsShouldReturnSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val friendRequests = listOf(
+                FriendRequestData(
+                    requestId = "req123",
+                    senderId = "sender123",
+                    targetId = "target123",
+                    requestDate = "now",
+                    isComplete = false
+                )
+            )
+            val userData = UserData(
+                userId = "target123",
+                username = "fakeUsername"
+            )
+
+            friendsViewModel.friendReqData.observeForever(friendReqObserver)
+            whenever(friendRepository.getFriendRequests(anyString())).thenReturn(DataResult.Success(
+                friendRequests
+            ))
+            whenever(userRepository.getUser(anyString())).thenReturn(
+                DataResult.Success(userData)
+            )
+
+            // Act
+            friendsViewModel.getFriendRequests()
+
+            // Assert
+            assertEquals(friendsViewModel.friendReqData.value?.size, 1)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetFriendRequestsNullUserIdShouldReturnSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            friendsViewModel.friendReqData.observeForever(friendReqObserver)
+            whenever(auth.currentUser).thenReturn(null)
+
+            // Act
+            friendsViewModel.getFriendRequests()
+
+            // Assert
+            assertEquals(friendsViewModel.friendReqData.value, null)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetFriendRequestsShouldReturnFailure() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val friendRequests = listOf(
+                FriendRequestData(
+                    requestId = "req123",
+                    senderId = "sender123",
+                    targetId = "target123",
+                    requestDate = "now",
+                    isComplete = false
+                )
+            )
+
+            friendsViewModel.friendReqData.observeForever(friendReqObserver)
+            whenever(friendRepository.getFriendRequests(anyString())).thenReturn(DataResult.Success(
+                friendRequests
+            ))
+
+            val exception = Exception("Error getting public logs")
+            whenever(userRepository.getUser(anyString())).thenReturn(DataResult.Failure(exception))
+
+            // Act
+            friendsViewModel.getFriendRequests()
+
+            // Assert
+            assertEquals(friendsViewModel.friendReqData.value?.size, 0)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetLogRequestsShouldReturnSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val logRequests = listOf(
+                LogRequestData(
+                    requestId = "req123",
+                    senderId = "sender123",
+                    logId = "log123",
+                    targetId = "target123",
+                    requestDate = "now",
+                    isComplete = false
+                )
+            )
+            val userData = UserData(
+                userId = "target123",
+                username = "fakeUsername"
+            )
+
+            friendsViewModel.logReqData.observeForever(logReqObserver)
+            whenever(friendRepository.getLogRequests(anyString())).thenReturn(DataResult.Success(
+                logRequests
+            ))
+            whenever(userRepository.getUser(anyString())).thenReturn(
+                DataResult.Success(userData)
+            )
+
+            // Act
+            friendsViewModel.getLogRequests()
+
+            // Assert
+            assertEquals(friendsViewModel.logReqData.value?.size, 1)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetLogRequestsNullUserIdShouldReturnSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            friendsViewModel.logReqData.observeForever(logReqObserver)
+            whenever(auth.currentUser).thenReturn(null)
+
+            // Act
+            friendsViewModel.getLogRequests()
+
+            // Assert
+            assertEquals(friendsViewModel.logReqData.value, null)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetLogRequestsShouldReturnFailure() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val logRequests = listOf(
+                LogRequestData(
+                    requestId = "req123",
+                    senderId = "sender123",
+                    logId = "log123",
+                    targetId = "target123",
+                    requestDate = "now",
+                    isComplete = false
+                )
+            )
+
+            friendsViewModel.logReqData.observeForever(logReqObserver)
+            whenever(friendRepository.getLogRequests(anyString())).thenReturn(DataResult.Success(
+                logRequests
+            ))
+
+            val exception = Exception("Error getting log requests")
+            whenever(userRepository.getUser(anyString())).thenReturn(DataResult.Failure(exception))
+
+            // Act
+            friendsViewModel.getLogRequests()
+
+            // Assert
+            assertEquals(friendsViewModel.logReqData.value?.size, 0)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testUpdateRequestUserNotAuthenticated() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            friendsViewModel.notificationMsg.observeForever(strObserver)
+            whenever(auth.currentUser).thenReturn(null)
+
+            // Act
+            friendsViewModel.updateRequest("", "", false)
+
+            // Assert
+            assertEquals(friendsViewModel.notificationMsg.value, "User not authenticated")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testUpdateRequestShouldReturnSuccessForLogs() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val reqId = "req123"
+            val reqType = "LOG"
+            val accepted = true
+
+            friendsViewModel.notificationMsg.observeForever(strObserver)
+
+            whenever(friendRepository.updateLogRequest(reqId, accepted)).thenReturn(
+                DataResult.Success(true)
+            )
+
+            // Act
+            friendsViewModel.updateRequest(reqId, reqType, accepted)
+
+            // Assert
+            assertEquals(friendsViewModel.notificationMsg.value, "Successfully updated request!")
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testUpdateRequestShouldFail() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        try {
+            // Arrange
+            val reqId = "req123"
+            val reqType = "friend"
+            val accepted = true
+
+            friendsViewModel.notificationMsg.observeForever(strObserver)
+
+            whenever(friendRepository.updateFriendRequest(reqId, accepted)).thenReturn(
+                DataResult.Failure(Exception())
+            )
+
+            // Act
+            friendsViewModel.updateRequest(reqId, reqType, accepted)
+
+            // Assert
+            assertEquals(friendsViewModel.notificationMsg.value, "There was an error sending a request")
         } finally {
             Dispatchers.resetMain()
         }

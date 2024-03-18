@@ -219,7 +219,7 @@ open class FriendsViewModel(
                 }
 
                 when (result) {
-                    is DataResult.Failure -> result.throwable
+                    is DataResult.Failure -> throw result.throwable
                     is DataResult.Success -> {
                         updateMessage("Successfully updated request!")
                     }
