@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -40,6 +39,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -77,9 +77,13 @@ private val TAG = "MovieDetailsScreen"
 
 
 @Composable
-fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean) {
-    val movieDetailsViewModel: MovieDetailsViewModel = viewModel()
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean, movieDetailsViewModel: MovieDetailsViewModel = viewModel()) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
+
+    Log.d(TAG, "Here")
+    LaunchedEffect(Unit) {
+        movieDetailsViewModel.setMovie(movieId ?: "")
+    }
 
     val hasBackButton = true
 
@@ -123,9 +127,9 @@ fun Foundation(
                         .fillMaxSize()
                         .blur(
                             radius = (scrollState.value / 80).dp,
-                        ),
+                        )
+                        .testTag("IMAGE_BACKGROUND"),
                     contentScale = ContentScale.FillWidth,
-
                     )
             }
 

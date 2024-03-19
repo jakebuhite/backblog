@@ -1,7 +1,6 @@
 package com.tabka.backblogapp.ui.viewmodels
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -11,14 +10,18 @@ import com.tabka.backblogapp.network.repository.MovieRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class MovieDetailsViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
+
+class MovieDetailsViewModel: ViewModel() {
     private val TAG = "MovieDetailsViewModel"
-    private val movieId: String = checkNotNull(savedStateHandle["movieId"])
+    private val apiService = ApiClient.movieApiService
+    #private val movieRepository = MovieRepository(apiService)
+
+    //private val movieId: String = checkNotNull(savedStateHandle["movieId"])
     private val _movie = MutableStateFlow<MovieData?>(null)
     private val movieRepository = MovieRepository(Firebase.firestore, ApiClient.movieApiService)
     val movie = _movie.asStateFlow()
 
-    init {
+    fun setMovie(movieId: String) {
         Log.d(TAG, "Movie ID: $movieId")
         getMovie()
     }
