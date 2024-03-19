@@ -2,31 +2,24 @@ package com.tabka.backblogapp.ui.screens
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,11 +32,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -60,61 +53,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
-import com.tabka.backblogapp.network.models.tmdb.Genre
 import com.tabka.backblogapp.network.models.tmdb.MovieData
-import com.tabka.backblogapp.network.models.tmdb.Credits
-import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
 private val TAG = "MovieDetailsScreen"
 
 
 @Composable
-fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean) {
-    val movieDetailsViewModel: MovieDetailsViewModel = viewModel()
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean, movieDetailsViewModel: MovieDetailsViewModel = viewModel()) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
+    Log.d(TAG, "Here")
+    LaunchedEffect(Unit) {
+        movieDetailsViewModel.setMovie(movieId ?: "")
+    }
+
     val hasBackButton = true
-    val isMovieDetails = true
-    // Empty bc the BaseScreen placeholder is in the wrong spot for this screen's title
-    val pageTitle = ""
 
-
-    /*   BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
-           if (movie != null) {
-               Text(movie.title!!, modifier = Modifier.testTag("MOVIE_DETAILS_MOVIE"))
-               movie.releaseDate?.let { it1 -> Text(it1) }
-               if ((movie.watchProviders != null) && (movie.watchProviders.results != null)) {
-                   Column(
-                       modifier = Modifier.fillMaxSize()
-                   ) {
-                       movie.watchProviders.results.forEach { provider ->
-                           Text(
-                               "${provider.key}"
-                           )
-                       }
-                   }
-               }
-           }
-       }*/
 
     Foundation(navController, hasBackButton, movie, logViewModel, isFromLog, logId)
 }
@@ -162,9 +130,9 @@ fun Foundation(
                         .fillMaxSize()
                         .blur(
                             radius = (scrollState.value / 80).dp,
-                        ),
+                        )
+                        .testTag("IMAGE_BACKGROUND"),
                     contentScale = ContentScale.FillWidth,
-
                     )
             }
 
