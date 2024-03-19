@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogData
@@ -20,20 +21,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-open class FriendsViewModel : ViewModel() {
+open class FriendsViewModel(
+    val auth: FirebaseAuth = Firebase.auth,
+    val userRepository: UserRepository = UserRepository(),
+    val logRepository: LogRepository = LogRepository(),
+    val friendRepository: FriendRepository = FriendRepository()
+) : ViewModel() {
     private val tag = "FriendsViewModel"
-    private val auth = Firebase.auth
 
     // User Info
-    private val userRepository = UserRepository()
     val userData: MutableLiveData<UserData> = MutableLiveData()
 
     // Log Info
-    private val logRepository = LogRepository()
     val publicLogData: MutableLiveData<List<LogData>> = MutableLiveData()
 
     // Request Info
-    private val friendRepository = FriendRepository()
     val friendReqData: MutableLiveData<List<Pair<FriendRequestData, UserData>>> = MutableLiveData()
     val logReqData: MutableLiveData<List<Pair<LogRequestData, UserData>>> = MutableLiveData()
 
@@ -217,7 +219,7 @@ open class FriendsViewModel : ViewModel() {
                 }
 
                 when (result) {
-                    is DataResult.Failure -> result.throwable
+                    is DataResult.Failure -> throw result.throwable
                     is DataResult.Success -> {
                         updateMessage("Successfully updated request!")
                     }

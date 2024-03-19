@@ -24,6 +24,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Checkbox
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -34,6 +36,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -83,7 +87,6 @@ fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: St
 
     val hasBackButton = true
 
-
     Foundation(navController, hasBackButton, movie, logViewModel, isFromLog, logId)
 }
 
@@ -102,7 +105,7 @@ fun Foundation(
     /*val gradientColors = listOf(lightGrey, darkGrey)*/
     val gradientColors = listOf(lightGrey, darkGrey)
 
-    var scrollState = rememberScrollState()
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -115,16 +118,10 @@ fun Foundation(
                     .fillMaxWidth()
                     .height(200.dp)
             ) {
-                /*  Image(
-        painter = painterResource(id = R.drawable.tenetdefault),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.FillWidth
-    )*/
                 val imageBaseURL =
                     "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
                 Image(
-                    painter = rememberAsyncImagePainter(imageBaseURL),
+                    painter = rememberAsyncImagePainter(imageBaseURL, error = painterResource(id = R.drawable.backplaceholder)),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
@@ -160,7 +157,7 @@ fun Foundation(
                 }
             }
         }
-        Box(modifier = Modifier.offset(x = 20.dp, y = 20.dp)) {
+        Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
             BackButton(navController, isBackButtonVisible)
         }
         /*backButton(navController, isBackButtonVisible)*/
@@ -168,7 +165,7 @@ fun Foundation(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean, logId: String?) {
     Column(
@@ -225,12 +222,12 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         .weight(4F)
                         .padding(start = 15.dp)
                 ) {
-                    Row() {
+                    Row {
                         Text(movie.title!!, style = MaterialTheme.typography.headlineMedium)
                     }
-                    Row() {
+                    Row {
                         // Rating
-                        Column() {
+                        Column {
                             /* androidx.compose.material3.Text(
                                 }, style = MaterialTheme.typography.bodySmall,
                             )*/
@@ -247,8 +244,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         Spacer(modifier = Modifier.width(5.dp))
 
                         // Release Date
-                        Column(
-                        ) {
+                        Column {
                             movie.releaseDate?.let { releaseDate ->
                                 val year = releaseDate.substring(0, 4)
                                 Text(
@@ -260,7 +256,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         }
                     }
 
-                    Row() {
+                    Row {
                         val runtime = movie.runtime
 
                         Text("$runtime minutes", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
@@ -288,7 +284,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(10.dp))
 
             LazyRow {
-                movie?.genres?.let { genres ->
+                movie.genres?.let { genres ->
                     items(genres.size) { index ->
                         genres[index].name?.let { GenreContainer(it) }
                     }
@@ -299,7 +295,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
 
             val allLogs by logViewModel.allLogs.collectAsState()
             val scope = rememberCoroutineScope()
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+            val sheetState = rememberModalBottomSheetState(/*skipPartiallyExpanded = false*/)
             var isSheetOpen by rememberSaveable {
                 mutableStateOf(false)
             }
@@ -406,7 +402,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         Spacer(modifier = Modifier.height(5.dp))*/
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        Box(modifier = Modifier.weight(5f)) {
+                        Box(/*modifier = Modifier.weight(5f)*/ modifier = Modifier.heightIn(min = 50.dp, max = 150.dp)) {
                             LazyColumn(
                                 modifier = Modifier.padding(start = 20.dp)
                             ) {
@@ -461,18 +457,21 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                 }
                             }
                         }
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                        Spacer(modifier = Modifier.weight(1f))
+//                        Spacer(modifier = Modifier.weight(1f))
 
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .offset {
+                                /*.offset {
                                     IntOffset(
                                         x = 0,
-                                        y = -sheetState.requireOffset().toInt()
+                                        y = -sheetState
+                                            .requireOffset()
+                                            .toInt()
                                     )
-                                }
+                                }*/
                                 .background(color = Color(0xFF232323))
                         ) {
                             Column(modifier = Modifier.background(color = Color(0xFF232323))) {
@@ -481,7 +480,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                 Spacer(modifier = Modifier.height(15.dp))
 
                                 // Add Button
-                                androidx.compose.material3.Button(
+                                Button(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(60.dp)
@@ -519,7 +518,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 // Cancel Button
-                                androidx.compose.material3.Button(
+                                Button(
                                     onClick = {
                                         /*isSheetOpen = false*/
                                         scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -548,7 +547,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(20.dp))
+                                /*Spacer(modifier = Modifier.height(100.dp))*/
+                                /*Spacer(modifier = Modifier.weight(1f))*/
                             }
                         }
                     }
@@ -558,7 +558,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(30.dp))
 
             LazyRow(modifier = Modifier.fillMaxWidth()) {
-                val flatrateProviders = movie?.watchProviders?.results?.filter { it.key == "US" }
+                val flatrateProviders = movie.watchProviders?.results?.filter { it.key == "US" }
                     ?.flatMap { it.value.flatrate ?: emptyList() }
                     ?.map { it.logoPath.orEmpty() }
                     .orEmpty()
@@ -591,12 +591,14 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(30.dp))
 
             // Plot Summary
-            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 5.dp)) {
                 Text("Plot Summary", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
             }
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    movie?.overview!!,
+                    movie.overview!!,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -605,11 +607,13 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(30.dp))
 
             // Directors
-            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 5.dp)) {
                 Text("Directors", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
             }
             Row {
-                movie?.credits?.crew?.let { crew ->
+                movie.credits?.crew?.let { crew ->
                     val directors = crew.filter { it.job == "Director" }
                     Text(
                         directors.joinToString { it.name.orEmpty() },
@@ -622,12 +626,14 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Spacer(modifier = Modifier.height(20.dp))
 
             // Stars
-            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 5.dp)) {
                 Text("Stars", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
             }
 
             Row {
-                movie?.credits?.cast?.let { cast ->
+                movie.credits?.cast?.let { cast ->
                     Text(
                         cast.take(3).joinToString { it.name.orEmpty() },
                         style = MaterialTheme.typography.bodyMedium,

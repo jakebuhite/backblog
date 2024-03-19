@@ -90,6 +90,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -138,7 +139,7 @@ fun HomeScreen(
         if (!allLogs.isNullOrEmpty()) {
             WatchNextCard(navController, allLogs!![0], logViewModel)
         }
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(40.dp))
         MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
     }
 }
@@ -192,7 +193,8 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
 @Composable
 fun PriorityLogTitle(logName: String) {
     Row() {
-        Text("From $logName", style = MaterialTheme.typography.titleSmall, color = Color.LightGray,
+        Text("From $logName", style = MaterialTheme.typography.titleSmall, color = Color.LightGray, maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag("PRIORITY_LOG_TITLE"))
     }
 }
@@ -205,7 +207,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?, prior
     val painter = if (imageUrl != null) {
         rememberAsyncImagePainter(model = imageUrl)
     } else {
-        painterResource(id = R.drawable.icon_empty_log) // Placeholder image
+        painterResource(id = R.drawable.caughtup) // Placeholder image
     }
 
     var cardModifier = Modifier.fillMaxWidth()
@@ -503,7 +505,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
             }
 
             if (currentCollab.isEmpty()) {
-                Spacer(modifier = Modifier.height(75.dp))
+                Spacer(modifier = Modifier.height(85.dp))
             } else {
                 Spacer(modifier = Modifier.height(15.dp))
                 // Current collaborators sections
@@ -512,7 +514,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                         val userId = collaboratorsList[index]
                         val friend = userList.value.find { it.userId == userId }
 
-                        Column() {
+                        /*Column() {*/
                             Image(
                                 painter = painterResource(
                                     id = getAvatarResourceId(
@@ -520,9 +522,11 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                                     ).second
                                 ),
                                 contentDescription = null,
-                                modifier = Modifier.size(60.dp),
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .padding(end = 10.dp),
                             )
-                        }
+                        /*}*/
                     }
                 }
             }
@@ -589,7 +593,9 @@ fun NewLogCollaborator(
             Image(
                 painter = painterResource(id = getAvatarResourceId(friend.avatarPreset ?: 1).second),
                 contentDescription = null,
-                modifier = Modifier.size(60.dp).testTag("NEW_LOG_COLLABORATOR_AVATAR"),
+                modifier = Modifier
+                    .size(60.dp)
+                    .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
             )
         }
 
@@ -625,7 +631,9 @@ fun NewLogCollaborator(
                     imageVector = Icons.Default.RemoveCircle,
                     contentDescription = "Add Icon",
                     colorFilter = tint(color = Color.Red),
-                    modifier = Modifier.size(25.dp).testTag("REMOVE_COLLABORATOR_ICON")
+                    modifier = Modifier
+                        .size(30.dp)
+                        .testTag("REMOVE_COLLABORATOR_ICON")
                 )
             }
         } else {
@@ -647,7 +655,9 @@ fun NewLogCollaborator(
                 Image(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add Icon",
-                    modifier = Modifier.size(25.dp).testTag("ADD_COLLABORATOR_ICON")
+                    modifier = Modifier
+                        .size(25.dp)
+                        .testTag("ADD_COLLABORATOR_ICON")
                 )
             }
         }
@@ -749,13 +759,13 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
         })
 
     val multiplier = ceil(allLogs!!.size / 2.0).toInt()
-    val containerHeight: Dp = (185 * multiplier).dp
+    val containerHeight: Dp = (190 * multiplier).dp
 
     Log.d(TAG, "ALL LOGS: $allLogs")
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         state = state.gridState,
-        contentPadding = PaddingValues(top = 5.dp),
+        contentPadding = PaddingValues(top = 5.dp, bottom = 5.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         userScrollEnabled = false,
@@ -790,7 +800,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                     painter = if (movieData.first != null) {
                         rememberAsyncImagePainter("https://image.tmdb.org/t/p/w500/${movieData.second}")
                     } else {
-                        painterResource(id = R.drawable.icon_empty_log)
+                        painterResource(id = R.drawable.emptylog)
                     }
                     LogEntry(navController = navController, log.logId ?: "", log.name ?: "", painter!!)
                 }
@@ -804,7 +814,7 @@ fun LogEntry(navController: NavHostController, logId: String, logName: String, p
 
     Card(
         modifier = Modifier
-            .size(175.dp)
+            .size(180.dp)
             .clickable { navController.navigate("home_log_details_$logId") },
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
@@ -834,9 +844,11 @@ fun LogEntry(navController: NavHostController, logId: String, logName: String, p
             // Text overlay
             Text(
                 text = logName,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = Color.White,
                 textAlign = TextAlign.Center,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)

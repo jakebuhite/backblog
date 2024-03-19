@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
@@ -36,7 +37,7 @@ open class LogDetailsViewModel: ViewModel() {
 
     // Movie data
     private val apiService = ApiClient.movieApiService
-    private val movieRepository = MovieRepository(apiService)
+    private val movieRepository = MovieRepository(Firebase.firestore, apiService)
     private val userRepository = UserRepository()
 
     //val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
@@ -96,10 +97,6 @@ open class LogDetailsViewModel: ViewModel() {
 
     private fun updateIsOwner(userIsOwner: Boolean) {
         isOwner.postValue(userIsOwner)
-    }
-
-    private fun updateIsCollaborator(userIsCollaborator: Boolean) {
-        isCollaborator.postValue(userIsCollaborator)
     }
 
     private fun updateOwner(user: UserData) {
@@ -310,9 +307,7 @@ open class LogDetailsViewModel: ViewModel() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
             viewModelScope.launch(Dispatchers.IO) {
-                val result = logRepository.updateLog(logId, newLogData)
-
-                    when (result) {
+                when (val result = logRepository.updateLog(logId, newLogData)) {
                         is DataResult.Success -> getLogData(logId)
                         is DataResult.Failure -> result.throwable
                     }
@@ -330,14 +325,12 @@ open class LogDetailsViewModel: ViewModel() {
         Log.d(tag, "Shuffle now!")
         val logId = logData.value?.logId!!
 
-        val moviesIds = logData.value?.movieIds ?: emptyList()
         Log.d(tag, "Old Movie order: $movies")
 
         val currentMoviesMap = movies.value ?: mutableMapOf()
 
         val shuffledList = currentMoviesMap.toList().shuffled()
         //val shuffledMap = shuffledList.toMap().toMutableMap()
-        val shuffledMap = currentMoviesMap.toList().shuffled().toMap().toMutableMap()
 
         //val shuffledMovies = moviesIds.shuffled()
         val newMovies = mapOf("movie_ids" to shuffledList.map{ it.first})
@@ -346,8 +339,7 @@ open class LogDetailsViewModel: ViewModel() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
             viewModelScope.launch(Dispatchers.IO) {
-                val result = logRepository.updateLog(logId, newMovies)
-                    when (result) {
+                when (val result = logRepository.updateLog(logId, newMovies)) {
                         is DataResult.Success -> getLogData(logId)
                         is DataResult.Failure -> result.throwable
                     }

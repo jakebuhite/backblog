@@ -13,31 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="testMovieDetailsScreenInView()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="MovieDetailsScreenTest">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-03-11T16:53:20.931395800Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\chris\.android\avd\Pixel_2_API_UpsideDownCakePrivacySandbox.avd" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
-      <SelectionState runConfigName="HomeScreenTest">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-03-11T16:55:05.669383100Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=1070016023031283" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
     </selectionStates>
   </component>
 </project>

@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
@@ -18,20 +19,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-open class ProfileViewModel : ViewModel() {
+open class ProfileViewModel(
+    val auth: FirebaseAuth = Firebase.auth,
+    val userRepository: UserRepository = UserRepository(),
+    val logRepository: LogRepository = LogRepository(),
+    val friendRepository: FriendRepository = FriendRepository()
+) : ViewModel() {
     private val tag = "ProfileViewModel"
-    private val auth = Firebase.auth
 
     // User Info
-    private val userRepository = UserRepository()
     open val userData: MutableLiveData<UserData> = MutableLiveData()
 
     // Log Info
-    private val logRepository = LogRepository()
     open val publicLogData: MutableLiveData<List<LogData>> = MutableLiveData()
 
     // Friend Info
-    private val friendRepository = FriendRepository()
     private val _friendsData = MutableStateFlow<List<UserData>>(emptyList())
     open val friendsData = _friendsData.asStateFlow()
 
@@ -179,60 +181,53 @@ open class ProfileViewModel : ViewModel() {
 
     open fun removeFriend() {
         viewModelScope.launch {
-            try {
-                val userId = auth.currentUser?.uid
-                if (userId == null) {
-                    updateMessage("User not authenticated")
-                    return@launch
-                }
+            val userId = auth.currentUser?.uid
+            if (userId == null) {
+                updateMessage("User not authenticated")
+                return@launch
+            }
 
-                val friendId = userData.value?.userId
-                if (friendId == null) {
-                    updateMessage("User not found")
-                    return@launch
-                }
+            val friendId = userData.value?.userId
+            if (friendId == null) {
+                updateMessage("User not found")
+                return@launch
+            }
 
-                when(val result = friendRepository.removeFriend(userId, friendId)) {
-                    is DataResult.Failure -> throw result.throwable
-                    is DataResult.Success -> {
-                        val username = userData.value?.username ?: "Unknown"
-                        updateMessage("Removed $username as a friend!")
-                    }
+            when(friendRepository.removeFriend(userId, friendId)) {
+                is DataResult.Failure -> updateMessage("Failed to remove user as a friend!")
+                is DataResult.Success -> {
+                    val username = userData.value?.username ?: "Unknown"
+                    updateMessage("Removed $username as a friend!")
                 }
-            } catch (e: Exception) {
-                Log.d(tag, "Error: $e")
-                updateMessage("There was an error sending a request")
             }
         }
     }
 
     open fun blockUser() {
         viewModelScope.launch {
-            try {
-                val userId = auth.currentUser?.uid
-                if (userId == null) {
-                    updateMessage("User not authenticated")
-                    return@launch
-                }
+            val userId = auth.currentUser?.uid
+            if (userId == null) {
+                updateMessage("User not authenticated")
+                return@launch
+            }
 
-                val friendId = userData.value?.userId
-                if (friendId == null) {
-                    updateMessage("User not found")
-                    return@launch
-                }
+            val friendId = userData.value?.userId
+            if (friendId == null) {
+                updateMessage("User not found")
+                return@launch
+            }
 
-                val alreadyFriends = userData.value?.friends?.any { it.key == userId } ?: false
+            val alreadyFriends = userData.value?.friends?.any { it.key == userId } ?: false
 
-                when(val result = friendRepository.blockUser(userId, friendId, alreadyFriends )) {
-                    is DataResult.Failure -> throw result.throwable
-                    is DataResult.Success -> {
-                        val username = userData.value?.username ?: "Unknown"
-                        updateMessage("Successfully blocked $username!")
-                    }
+            when(val result = friendRepository.blockUser(userId, friendId, alreadyFriends )) {
+                is DataResult.Failure -> {
+                    Log.d(tag, "Error: ${result.throwable}")
+                    updateMessage("Failed to block user")
                 }
-            } catch (e: Exception) {
-                Log.d(tag, "Error: $e")
-                updateMessage("There was an error sending a request")
+                is DataResult.Success -> {
+                    val username = userData.value?.username ?: "Unknown"
+                    updateMessage("Successfully blocked $username!")
+                }
             }
         }
     }

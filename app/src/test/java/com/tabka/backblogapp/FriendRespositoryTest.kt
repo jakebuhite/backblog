@@ -3,12 +3,14 @@ package com.tabka.backblogapp
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.repository.FriendRepository
 import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.runBlocking
@@ -22,6 +24,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 class FriendRepositoryTest {
@@ -46,6 +49,9 @@ class FriendRepositoryTest {
 
     @Mock
     private lateinit var mockQuerySnapshot: QuerySnapshot
+
+    @Mock
+    private lateinit var mockUser: FirebaseUser
 
     private lateinit var friendRepo: FriendRepository
 
@@ -155,19 +161,29 @@ class FriendRepositoryTest {
     fun testGetFriendRequestsShouldReturnSuccess(): Unit = runBlocking {
         // Arrange
         val userId = "user123"
+        val friendRequest = mapOf(
+            "request_id" to "req123",
+            "sender_id" to "sender123",
+            "target_id" to "target456",
+            "request_date" to "now",
+            "is_complete" to false
+        )
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
         whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockQuery.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
-        whenever(mockQuerySnapshot.documents).thenReturn(emptyList())
+
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.data).thenReturn(friendRequest)
 
         // Act
         val result = friendRepo.getFriendRequests(userId)
 
         // Assert
         assert(result is DataResult.Success)
-        assertEquals((result as DataResult.Success).item.size, 0)
+        assertEquals((result as DataResult.Success).item.size, 1)
     }
 
     @Test
@@ -193,19 +209,29 @@ class FriendRepositoryTest {
     fun testGetLogRequestsShouldReturnSuccess(): Unit = runBlocking {
         // Arrange
         val userId = "user123"
+        val logRequest = mapOf(
+            "request_id" to "req123",
+            "sender_id" to "sender123",
+            "target_id" to "target456",
+            "log_id" to "log123",
+            "request_date" to "now",
+            "is_complete" to false
+        )
 
         whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
         whenever(mockCollection.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
+        whenever(mockQuery.whereEqualTo(anyString(), any())).thenReturn(mockQuery)
         val taskQuerySnapshot: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
         whenever(mockQuery.get()).thenReturn(taskQuerySnapshot)
-        whenever(mockQuerySnapshot.documents).thenReturn(emptyList())
+        whenever(mockQuerySnapshot.documents).thenReturn(mutableListOf(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.data).thenReturn(logRequest)
 
         // Act
         val result = friendRepo.getLogRequests(userId)
 
         // Assert
         assert(result is DataResult.Success)
-        assertEquals((result as DataResult.Success).item.size, 0)
+        assertEquals((result as DataResult.Success).item.size, 1)
     }
 
     @Test
@@ -290,6 +316,77 @@ class FriendRepositoryTest {
         whenever(mockDocument.update(anyMap())).thenReturn(updateTask)
         whenever(mockDocumentSnapshot.exists()).thenReturn(true)
         whenever(mockDocument.update(anyString(), any())).thenReturn(updateTask)
+
+        // Act
+        val result = friendRepo.updateFriendRequest(friendRequestId, isAccepted)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assertEquals((result as DataResult.Success).item, true)
+    }
+
+    @Test
+    fun testUpdateFriendRequestNotAcceptedShouldReturnSuccess(): Unit = runBlocking {
+        // Arrange
+        val friendRequestId = "friendReq123"
+        val isAccepted = false
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+
+        val updateTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockDocument.update(anyMap())).thenReturn(updateTask)
+
+        // Act
+        val result = friendRepo.updateFriendRequest(friendRequestId, isAccepted)
+
+        // Assert
+        assert(result is DataResult.Success)
+        assertEquals((result as DataResult.Success).item, true)
+    }
+
+    @Test
+    fun testUpdateFriendRequestShouldReturnFailureDoesNotExist(): Unit = runBlocking {
+        // Arrange
+        val friendRequestId = "friendReq123"
+        val isAccepted = true
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+
+        val updateTask: Task<Void> = Tasks.forResult(null)
+        val getTask: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
+        whenever(mockDocument.get()).thenReturn(getTask)
+        whenever(mockDocument.update(anyMap())).thenReturn(updateTask)
+        whenever(mockDocumentSnapshot.exists()).thenReturn(false)
+
+        // Act
+        val result = friendRepo.updateFriendRequest(friendRequestId, isAccepted)
+
+        // Assert
+        assert(result is DataResult.Failure)
+    }
+
+    @Test
+    fun testUpdateFriendRequestSenderIsUserShouldReturnSuccess(): Unit = runBlocking {
+        // Arrange
+        val friendRequestId = "friendReq123"
+        val isAccepted = true
+
+        whenever(mockDb.collection(anyString())).thenReturn(mockCollection)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+
+        val updateTask: Task<Void> = Tasks.forResult(null)
+        val getTask: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
+        whenever(mockDocument.get()).thenReturn(getTask)
+        whenever(mockDocumentSnapshot["sender_id"]).thenReturn("sender123")
+
+        whenever(mockDocument.update(anyMap())).thenReturn(updateTask)
+        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
+        whenever(mockDocument.update(anyString(), any())).thenReturn(updateTask)
+
+        whenever(mockAuth.currentUser).thenReturn(mockUser)
+        whenever(mockUser.uid).thenReturn("sender123")
 
         // Act
         val result = friendRepo.updateFriendRequest(friendRequestId, isAccepted)

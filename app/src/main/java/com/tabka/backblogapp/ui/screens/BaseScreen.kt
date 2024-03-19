@@ -67,9 +67,10 @@ fun BaseScreen(
                     .padding(horizontal = 16.dp)
                     .verticalScroll(scrollState)
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(76.dp))
+                /*Spacer(modifier = Modifier.height(36.dp))
                 BackButton(navController, isBackButtonVisible)
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))*/
                 PageTitle(title)
                 content(scrollState)
                 Spacer(modifier = Modifier.height(70.dp))
@@ -80,7 +81,7 @@ fun BaseScreen(
 
 @Composable
 fun BackButton(navController: NavController, visible: Boolean) {
-    val icon = painterResource(R.drawable.button_back_arrow)
+    val icon = painterResource(R.drawable.backbutton)
 
     val alpha = if (visible) 1f else 0f
 
@@ -108,7 +109,7 @@ fun BackButton(navController: NavController, visible: Boolean) {
         ) {
             Image(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .alpha(alpha)
                     .testTag("BACK_BUTTON"),

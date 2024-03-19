@@ -148,8 +148,8 @@ fun BrowseCategories(navController: NavController) {
 fun Category(navController: NavController, genre: Pair<String, Int>) {
     Card(
         modifier = Modifier
-            .height(100.dp)
-            .width(183.dp)
+            .height(70.dp)
+            .width(185.dp)
             .padding(end = 10.dp, bottom = 10.dp)
             .clickable { navController.navigate("category_results_${genre.second}_${genre.first}") },
         shape = RoundedCornerShape(20.dp),
@@ -160,8 +160,8 @@ fun Category(navController: NavController, genre: Pair<String, Int>) {
     ) {
         Box(
             modifier = Modifier
-                .height(100.dp)
-                .width(183.dp)
+                /*.height(100.dp)
+                .width(183.dp)*/
                 .fillMaxSize()
         ) {
             Image(
