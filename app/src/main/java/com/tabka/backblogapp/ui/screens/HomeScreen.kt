@@ -100,6 +100,7 @@ import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.shared.NewLogMenu
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
@@ -138,15 +139,24 @@ fun HomeScreen(
         // If logs exist
         if (!allLogs.isNullOrEmpty()) {
             WatchNextCard(navController, allLogs!![0], logViewModel)
+            Spacer(Modifier.height(40.dp))
+            MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
+        } else {
+            Spacer(modifier = Modifier.height(150.dp))
+            NoLogs(friendsViewModel, logViewModel)
         }
-        Spacer(Modifier.height(40.dp))
-        MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
+        /*Spacer(Modifier.height(40.dp))
+        MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)*/
     }
 }
 
 
 @Composable
-fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logViewModel: LogViewModel) {
+fun WatchNextCard(
+    navController: NavHostController,
+    priorityLog: LogData,
+    logViewModel: LogViewModel
+) {
 
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val movie = logViewModel.movie.collectAsState().value
@@ -181,7 +191,14 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
 
             NextMovie(navController, image, it.id, priorityLog.logId)
             Spacer(modifier = Modifier.height(5.dp))
-            NextMovieInfo(it.id, it.title, it.releaseDate, usRating, priorityLog.logId ?: "", logViewModel)
+            NextMovieInfo(
+                it.id,
+                it.title,
+                it.releaseDate,
+                usRating,
+                priorityLog.logId ?: "",
+                logViewModel
+            )
         } ?: run {
             NextMovie(navController, null, null, null)
             Spacer(modifier = Modifier.height(63.dp))
@@ -193,9 +210,14 @@ fun WatchNextCard(navController: NavHostController, priorityLog: LogData, logVie
 @Composable
 fun PriorityLogTitle(logName: String) {
     Row() {
-        Text("From $logName", style = MaterialTheme.typography.titleSmall, color = Color.LightGray, maxLines = 1,
+        Text(
+            "From $logName",
+            style = MaterialTheme.typography.titleSmall,
+            color = Color.LightGray,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.testTag("PRIORITY_LOG_TITLE"))
+            modifier = Modifier.testTag("PRIORITY_LOG_TITLE")
+        )
     }
 }
 
@@ -212,7 +234,8 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?, prior
 
     var cardModifier = Modifier.fillMaxWidth()
     movieId?.let {
-        cardModifier = cardModifier.clickable { navController.navigate("home_movie_details_${it}_$priorityLogId") }
+        cardModifier =
+            cardModifier.clickable { navController.navigate("home_movie_details_${it}_$priorityLogId") }
     }
 
     Card(
@@ -246,24 +269,28 @@ fun NextMovieInfo(
     logViewModel: LogViewModel,
 ) {
 
-    Row(modifier = Modifier.fillMaxWidth(),
+    Row(
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
-    ){
+    ) {
         // Movie information
-        Column(modifier = Modifier
-            .weight(4f)
-            .fillMaxHeight()
+        Column(
+            modifier = Modifier
+                .weight(4f)
+                .fillMaxHeight()
         )
         {
             // Title
             Row() {
-                Text(text = title ?: "", style = MaterialTheme.typography.headlineMedium,
+                Text(
+                    text = title ?: "", style = MaterialTheme.typography.headlineMedium,
                     maxLines = 1,
                     modifier = Modifier
                         .basicMarquee(
                             iterations = Int.MAX_VALUE
                         )
-                        .testTag("MOVIE_TITLE"))
+                        .testTag("MOVIE_TITLE")
+                )
             }
 
             Row() {
@@ -282,16 +309,21 @@ fun NextMovieInfo(
                 // Release Date
                 Column(
                 ) {
-                    Text(text = releaseDate?.substring(0, 4) ?: "", style = MaterialTheme.typography.bodySmall, color = Color.LightGray,
-                        modifier = Modifier.testTag("MOVIE_YEAR"))
+                    Text(
+                        text = releaseDate?.substring(0, 4) ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.LightGray,
+                        modifier = Modifier.testTag("MOVIE_YEAR")
+                    )
                 }
             }
         }
 
         // Complete button
-        Column(modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight(),
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
             horizontalAlignment = Alignment.End
         ) {
             val context = LocalContext.current
@@ -352,7 +384,13 @@ fun NextMovieInfo(
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scrollState: ScrollState, logViewModel: LogViewModel, friendsViewModel: FriendsViewModel) {
+fun MyLogsSection(
+    navController: NavHostController,
+    allLogs: List<LogData>?,
+    scrollState: ScrollState,
+    logViewModel: LogViewModel,
+    friendsViewModel: FriendsViewModel
+) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable {
@@ -369,7 +407,8 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                 .weight(1f)
                 .fillMaxHeight()
         ) {
-            Text("My Logs",
+            Text(
+                "My Logs",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.testTag("MY_LOGS_HEADER")
             )
@@ -407,9 +446,7 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
         }
     }
 
-    // Add Log Menu
-    var logName by remember { mutableStateOf("") }
-
+    // New Log Menu
     if (isSheetOpen) {
         ModalBottomSheet(
             sheetState = sheetState,
@@ -419,153 +456,12 @@ fun MyLogsSection(navController: NavHostController, allLogs: List<LogData>?, scr
                 .fillMaxSize()
                 .testTag("ADD_LOG_POPUP")
         ) {
-            val focusManager = LocalFocusManager.current
-            var logIsVisible by remember { mutableStateOf(false) }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "New Log",
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.padding(start = 50.dp, end = 15.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Log Name
-                TextField(
-                    value = logName,
-                    onValueChange = { logName = it },
-                    label = { Text(
-                        "Log Name",
-                        modifier = Modifier.testTag("ADD_LOG_POPUP_LOG_NAME_LABEL")
-                    ) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .testTag("LOG_NAME_INPUT"),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            focusManager.clearFocus()
-                        }
-                    ),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Color(0xFF373737),
-                        focusedLabelColor = Color(0xFF979C9E),
-                        unfocusedLabelColor = Color(0xFF979C9E),
-                        unfocusedBorderColor = Color(0xFF373737),
-                        backgroundColor = Color(0xFF373737),
-                        cursorColor = Color.White,
-                        textColor = Color.White
-                    ),
-                )
-                val icon = if (logIsVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                IconButton(
-                    onClick = {
-                        logIsVisible = !logIsVisible },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp)
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-
-            val userList = friendsViewModel.friendsData.collectAsState()
-            val collaboratorsList = remember { mutableStateListOf<String?>() }
-
-            val currentCollab = userList.value.filter { user ->
-                collaboratorsList.contains(user.userId.toString())
-            }.map { user ->
-                user.userId.toString()
-            }
-
-            val sortedUserList = userList.value.sortedByDescending { user ->
-                currentCollab.contains(user.userId.toString())
-            }
-
-            // Collaborators Heading
-            Row(modifier = Modifier.padding(start = 14.dp)) {
-                Text("Collaborators", style = MaterialTheme.typography.headlineMedium)
-            }
-
-            if (currentCollab.isEmpty()) {
-                Spacer(modifier = Modifier.height(85.dp))
-            } else {
-                Spacer(modifier = Modifier.height(15.dp))
-                // Current collaborators sections
-                LazyRow(modifier = Modifier.padding(start = 24.dp)) {
-                    items(collaboratorsList.size) { index ->
-                        val userId = collaboratorsList[index]
-                        val friend = userList.value.find { it.userId == userId }
-
-                        /*Column() {*/
-                            Image(
-                                painter = painterResource(
-                                    id = getAvatarResourceId(
-                                        friend?.avatarPreset ?: 1
-                                    ).second
-                                ),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(70.dp)
-                                    .padding(end = 10.dp),
-                            )
-                        /*}*/
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Add Collaborators Heading
-            Row(modifier = Modifier.padding(start = 14.dp)) {
-                Text("Add Collaborators", style = MaterialTheme.typography.headlineMedium)
-            }
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            // Add collaborators section
-            Box(modifier = Modifier.weight(1f)) {
-                LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    items(sortedUserList.size) { index ->
-                        val friend = sortedUserList[index]
-                        if (currentCollab.contains(friend.userId)) {
-                            NewLogCollaborator(friend, collaboratorsList, true)
-                        } else {
-                            NewLogCollaborator(friend, collaboratorsList, false)
-                        }
-                    }
-                }
-            }
-
-            // Create Button tab
-            NewLogBottomSection(navController, logName, onCreateClick = { createdLogName ->
-                CoroutineScope(Dispatchers.Main).launch {
-                    logViewModel.createLog(createdLogName, currentCollab, logIsVisible)
+            NewLogMenu(friendsViewModel = friendsViewModel, logViewModel, onCreateClick = {
                     isSheetOpen = false
-                    logName = ""
                     logViewModel.loadLogs()
-                }
             }, onCloseClick = {
                 isSheetOpen = false
             })
-            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 
@@ -591,7 +487,11 @@ fun NewLogCollaborator(
         // User Icon
         Column(modifier = Modifier.weight(1F)) {
             Image(
-                painter = painterResource(id = getAvatarResourceId(friend.avatarPreset ?: 1).second),
+                painter = painterResource(
+                    id = getAvatarResourceId(
+                        friend.avatarPreset ?: 1
+                    ).second
+                ),
                 contentDescription = null,
                 modifier = Modifier
                     .size(60.dp)
@@ -606,7 +506,8 @@ fun NewLogCollaborator(
                 .height(60.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(friend.username ?: "",
+            Text(
+                friend.username ?: "",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.testTag("NEW_LOG_COLLABORATOR_USERNAME")
             )
@@ -665,98 +566,19 @@ fun NewLogCollaborator(
 }
 
 @Composable
-fun NewLogBottomSection(navController: NavController, logName: String, onCreateClick: (String) -> Unit, onCloseClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Divider(thickness = 1.dp, color = Color(0xFF303437))
-    }
+fun DisplayLogsWithDrag(
+    navController: NavHostController,
+    scrollState: ScrollState,
+    allLogs: List<LogData>?,
+    logViewModel: LogViewModel
+) {
+    val state =
+        rememberReorderableLazyGridState(dragCancelledAnimation = NoDragCancelledAnimation(),
+            onMove = { from, to ->
+                Log.d(TAG, "Gotta move $from to $to!")
 
-    Spacer(modifier = Modifier.height(10.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        val context = LocalContext.current
-        val haptic = LocalHapticFeedback.current
-        // Create Button
-        Button(
-            onClick = {
-                if (logName.isNotEmpty()) {
-                    onCreateClick(logName)
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    Toast
-                        .makeText(
-                            context,
-                            "New Log Created!",
-                            Toast.LENGTH_SHORT
-                        )
-                        .show()
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(horizontal = 24.dp)
-                .testTag("CREATE_LOG_BUTTON"),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.sky_blue),
-                disabledContainerColor = Color.LightGray
-            ),
-            enabled = logName.isNotEmpty()
-        ) {
-            Text(
-                "Create",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-
-    Spacer(modifier = Modifier.height(20.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        // Cancel Button
-        Button(
-            onClick = {
-                onCloseClick()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(horizontal = 24.dp)
-                .background(color = Color.Transparent)
-                .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-        ) {
-            Text(
-                "Cancel",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-
-@Composable
-fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollState, allLogs: List<LogData>?, logViewModel: LogViewModel) {
-    val state = rememberReorderableLazyGridState(dragCancelledAnimation = NoDragCancelledAnimation(),
-        onMove = { from, to ->
-            Log.d(TAG, "Gotta move $from to $to!")
-
-            logViewModel.onMove(from.index, to.index)
-        })
+                logViewModel.onMove(from.index, to.index)
+            })
 
     val multiplier = ceil(allLogs!!.size / 2.0).toInt()
     val containerHeight: Dp = (190 * multiplier).dp
@@ -781,7 +603,7 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                     modifier = Modifier
                         .shadow(elevation.value)
                         .aspectRatio(1f)
-                        //.background(Color.White)
+                    //.background(Color.White)
                 ) {
                     var painter by remember { mutableStateOf<Painter?>(null) }
                     var movieData by remember { mutableStateOf<Pair<MovieData?, String>>(null to "") }
@@ -802,7 +624,12 @@ fun DisplayLogsWithDrag(navController: NavHostController, scrollState: ScrollSta
                     } else {
                         painterResource(id = R.drawable.emptylog)
                     }
-                    LogEntry(navController = navController, log.logId ?: "", log.name ?: "", painter!!)
+                    LogEntry(
+                        navController = navController,
+                        log.logId ?: "",
+                        log.name ?: "",
+                        painter!!
+                    )
                 }
             }
         }
@@ -854,6 +681,85 @@ fun LogEntry(navController: NavHostController, logId: String, logName: String, p
                     .padding(16.dp)
                     .align(Alignment.Center)
                     .wrapContentHeight(align = Alignment.CenterVertically)
+            )
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel) {
+    Column(
+        modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.weight(1F))
+        Row() {
+            Image(
+                painter = painterResource(id = R.drawable.nologs),
+                contentDescription = "No logs",
+                modifier = Modifier.size(100.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(40.dp))
+        Row() {
+            Text(
+                "You have no logs",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.height(5.dp))
+        Row() {
+            Text(
+                "Create one below to get started.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.LightGray
+            )
+        }
+        Spacer(modifier = Modifier.height(150.dp))
+
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        var isSheetOpen by rememberSaveable {
+            mutableStateOf(false)
+        }
+
+        if (isSheetOpen) {
+            ModalBottomSheet(
+                sheetState = sheetState,
+                onDismissRequest = { isSheetOpen = false },
+                containerColor = colorResource(id = R.color.bottomnav),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("ADD_LOG_POPUP")
+            ) {
+                NewLogMenu(friendsViewModel, logViewModel, onCreateClick = {  {
+                    isSheetOpen = false
+                    logViewModel.loadLogs()
+                }
+                }, onCloseClick = {
+                    isSheetOpen = false
+                })
+            }
+        }
+
+        Button(
+            onClick = {
+                isSheetOpen = true
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp)
+                .padding(horizontal = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.sky_blue)
+            )
+        ) {
+            androidx.compose.material3.Text(
+                "CREATE NEW LOG",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
         }
     }

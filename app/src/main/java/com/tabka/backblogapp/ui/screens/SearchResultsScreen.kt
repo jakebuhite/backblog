@@ -472,23 +472,26 @@ fun MovieResult(
                                 .testTag("ADD_TO_LOG_BUTTON"),
                             onClick = {
                                 // Use the checkedStates list to find out which checkboxes are checked
-                                val checkedItems = allLogs!!.indices.filter { checkedStates[it] }
-                                Log.d(TAG, "Checked Items: $checkedItems")
-                                for (checkedItem in checkedItems) {
-                                    val log = allLogs!![checkedItem]
+                                if (isAnyChecked) {
+                                    val checkedItems =
+                                        allLogs!!.indices.filter { checkedStates[it] }
+                                    Log.d(TAG, "Checked Items: $checkedItems")
+                                    for (checkedItem in checkedItems) {
+                                        val log = allLogs!![checkedItem]
 
-                                    logViewModel.addMovieToLog(log.logId, movie.id.toString())
-                                    /*Log.d(TAG, allLogs)*/
+                                        logViewModel.addMovieToLog(log.logId, movie.id.toString())
+                                        /*Log.d(TAG, allLogs)*/
+                                    }
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "Movie added to log!",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                    isSheetOpen = false
                                 }
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                Toast
-                                    .makeText(
-                                        context,
-                                        "Movie added to log!",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                    .show()
-                                isSheetOpen = false
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = colorResource(id = R.color.sky_blue),

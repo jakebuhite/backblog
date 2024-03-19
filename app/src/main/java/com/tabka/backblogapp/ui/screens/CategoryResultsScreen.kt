@@ -92,7 +92,7 @@ fun MovieResults(navController: NavHostController, logViewModel: LogViewModel, i
     val halfSheets = searchResultsViewModel.halfSheet.collectAsState().value
 
     if (movieResults?.isNotEmpty() == true) {
-        Box(modifier = Modifier.height(if (isLogMenu) 700.dp else 600.dp)) {
+        Box(modifier = Modifier.height(if (isLogMenu) 700.dp else 630.dp)) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()

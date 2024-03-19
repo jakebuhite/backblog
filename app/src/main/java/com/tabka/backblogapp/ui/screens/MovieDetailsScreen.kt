@@ -204,9 +204,10 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                             val imageBaseURL =
                                 "https://image.tmdb.org/t/p/w500/${movie.posterPath}"
                             Image(
-                                painter = rememberAsyncImagePainter(imageBaseURL),
+                                painter = rememberAsyncImagePainter(imageBaseURL, error = painterResource(R.drawable.noposter1)),
                                 contentDescription = null,
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
                     }
@@ -243,11 +244,13 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         Column {
                             movie.releaseDate?.let { releaseDate ->
                                 val year = releaseDate.substring(0, 4)
-                                Text(
-                                    year,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.LightGray
-                                )
+                                if (year.isNotEmpty()) {
+                                    Text(
+                                        year,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.LightGray
+                                    )
+                                }
                             }
                         }
                     }
@@ -255,7 +258,17 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                     Row {
                         val runtime = movie.runtime
 
-                        Text("$runtime minutes", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
+                     /*   if (runtime == 0) {
+                            Text("Runtime unknown", style = MaterialTheme.typography.bodySmall,
+                                color = Color.LightGray)
+                        }*/
+                        if (runtime != 0) {
+                            Text(
+                                "$runtime minutes".ifEmpty { "Unknown" },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.LightGray
+                            )
+                        }
                     }
 
                     // Genres
@@ -594,7 +607,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             }
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    movie.overview!!,
+                    movie.overview!!.ifEmpty { "Unknown" },
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -612,7 +625,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                 movie.credits?.crew?.let { crew ->
                     val directors = crew.filter { it.job == "Director" }
                     Text(
-                        directors.joinToString { it.name.orEmpty() },
+                        directors.joinToString { it.name.orEmpty() }.ifEmpty { "Unknown" },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -631,7 +644,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
             Row {
                 movie.credits?.cast?.let { cast ->
                     Text(
-                        cast.take(3).joinToString { it.name.orEmpty() },
+                        cast.take(3).joinToString { it.name.orEmpty() }.ifEmpty { "Unknown" },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
