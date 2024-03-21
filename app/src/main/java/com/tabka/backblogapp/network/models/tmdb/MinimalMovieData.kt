@@ -33,7 +33,7 @@ data class MinimalMovieDataResult(
     @SerialName("production_companies") val productionCompanies: List<ProductionCompany>?,
     @SerialName("production_countries") val productionCountries: List<Map<String, String?>>?,
     @SerialName("release_date") val releaseDate: String?,
-    val revenue: Int?,
+    val revenue: Long?,
     val runtime: Int?,
     @SerialName("spoken_languages") val spokenLanguages: List<Map<String, String?>>?,
     val status: String?,
