@@ -348,8 +348,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         )
                     ) {
                         androidx.compose.material3.Text(
-                            "Add to Watched",
-                            style = MaterialTheme.typography.titleLarge,
+                            "ADD TO WATCHED",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -368,8 +368,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         )
                     ) {
                         androidx.compose.material3.Text(
-                            "Add to Log",
-                            style = MaterialTheme.typography.titleLarge,
+                            "ADD TO LOG",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
