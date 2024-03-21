@@ -260,8 +260,8 @@ fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, o
             enabled = logName.isNotEmpty()
         ) {
             Text(
-                "Create",
-                style = MaterialTheme.typography.headlineSmall,
+                "CREATE",
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -290,8 +290,8 @@ fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, o
             ),
         ) {
             Text(
-                "Cancel",
-                style = MaterialTheme.typography.headlineSmall,
+                "CANCEL",
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
         }

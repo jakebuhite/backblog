@@ -981,7 +981,7 @@ fun CollaboratorsSheetContent(
                 ),
             ) {
                 androidx.compose.material3.Text(
-                    "Save",
+                    "SAVE",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -1011,7 +1011,7 @@ fun CollaboratorsSheetContent(
                 ),
             ) {
                 Text(
-                    "Cancel",
+                    "CANCEL",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -1165,8 +1165,8 @@ fun EditSheetContent(
                     ),
                 ) {
                     Text(
-                        "Save",
-                        style = MaterialTheme.typography.titleLarge,
+                        "SAVE",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -1229,8 +1229,8 @@ fun EditSheetContent(
                         ),
                     ) {
                         Text(
-                            "Delete Log",
-                            style = MaterialTheme.typography.titleLarge,
+                            "DELETE",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFDC3545)
                         )
@@ -1259,8 +1259,8 @@ fun EditSheetContent(
                     ),
                 ) {
                     Text(
-                        "Cancel",
-                        style = MaterialTheme.typography.titleLarge,
+                        "CANCEL",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
