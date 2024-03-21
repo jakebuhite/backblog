@@ -248,8 +248,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                         // Release Date
                         Column {
                             movie.releaseDate?.let { releaseDate ->
-                                val year = releaseDate.substring(0, 4)
-                                if (year.isNotEmpty()) {
+                                if (releaseDate.isNotEmpty()) {
+                                    val year = releaseDate.substring(0, 4)
                                     Text(
                                         year,
                                         style = MaterialTheme.typography.bodySmall,
