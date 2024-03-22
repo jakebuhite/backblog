@@ -24,10 +24,10 @@ class MovieDetailsViewModel(private val savedStateHandle: SavedStateHandle): Vie
 
     fun setMovie(movieId: String) {
         Log.d(TAG, "Movie ID: $movieId")
-        getMovie()
+        getMovie(movieId)
     }
 
-    private fun getMovie() {
+    private fun getMovie(movieId: String) {
         movieRepository.getMovieById(
             movieId = movieId,
             onResponse = { movie ->
