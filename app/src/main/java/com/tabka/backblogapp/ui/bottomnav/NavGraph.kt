@@ -73,10 +73,10 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(
-                route = "home_movie_details_{movieId}_{logId}",
-                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("logId") { type = NavType.StringType })
+                route = "home_movie_details_{movieId}_{logId}_{movieIsWatched}",
+                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("logId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType})
             ) { backStackEntry ->
-                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), backStackEntry.arguments?.getString("logId"), logViewModel, isFromLog = true)
+                backStackEntry.arguments?.let { MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), backStackEntry.arguments?.getString("logId"), logViewModel, it.getInt("movieIsWatched")) }
             }
         }
 
@@ -100,10 +100,14 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(
-                route = "search_movie_details_{movieId}",
-                arguments = listOf(navArgument("movieId") { type = NavType.StringType })
+                route = "search_movie_details_{movieId}_{movieIsWatched}",
+                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType})
             ) { backStackEntry ->
-                MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel, isFromLog = false)
+                backStackEntry.arguments?.getInt("movieIsWatched")?.let {
+                    MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel,
+                        it
+                    )
+                }
             }
         }
 
