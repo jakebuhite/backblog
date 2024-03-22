@@ -149,6 +149,8 @@ fun LogDetailsScreen(
     val isCollaboratorState = logDetailsViewModel.isCollaborator.observeAsState()
     val isCollaborator = isCollaboratorState.value ?: false
 
+    val isRando = !(isCollaborator || isOwner)
+
     val isLoadingState = logDetailsViewModel.isLoading.observeAsState()
     val isLoading = isLoadingState.value ?: true
 
@@ -236,7 +238,8 @@ fun LogDetailsScreen(
                             watchedMovies,
                             logDetailsViewModel,
                             logViewModel,
-                            collaborators
+                            collaborators,
+                            isRando
                         )
                     }
                 }
@@ -349,13 +352,23 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        "$targetCount Movies",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.LightGray,
-                        modifier = Modifier.testTag("MOVIE_COUNT")
-                    )
+                    if (targetCount == 1) {
+                        Text(
+                            "$targetCount Movie",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.LightGray,
+                            modifier = Modifier.testTag("MOVIE_COUNT")
+                        )
+                    } else {
+                        Text(
+                            "$targetCount Movies",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.LightGray,
+                            modifier = Modifier.testTag("MOVIE_COUNT")
+                        )
+                    }
                 }
             }
         }
@@ -596,7 +609,8 @@ fun LogList(
     watchedMovies: Map<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel,
-    collaboratorsList: List<UserData>
+    collaboratorsList: List<UserData>,
+    isRando: Boolean
 ) {
 
     val moviesList = movies.values.toList()
@@ -651,16 +665,21 @@ fun LogList(
                     },
                 )
 
-                SwipeableActionsBox(
-                    endActions = listOf(addToWatched),
-                    modifier = Modifier
-                        .animateItemPlacement(
-                            animationSpec = tween(
-                                durationMillis = 1000
+                if (!isRando) {
+                    SwipeableActionsBox(
+                        endActions = listOf(addToWatched),
+                        modifier = Modifier
+                            .animateItemPlacement(
+                                animationSpec = tween(
+                                    durationMillis = 1000
+                                )
                             )
-                        )
-                ) {
-                    MovieEntry(navController, movie, logId, collaboratorsList)
+                    ) {
+                        MovieEntry(navController, movie, logId, collaboratorsList, false)
+                    }
+                }
+                else {
+                    MovieEntry(navController, movie, logId, collaboratorsList, false)
                 }
             }
         }
@@ -713,16 +732,22 @@ fun LogList(
                     },
                 )
 
-                SwipeableActionsBox(
-                    endActions = listOf(addToMovies),
-                    modifier = Modifier
-                        .animateItemPlacement(
-                            animationSpec = tween(
-                                durationMillis = 1000
+                if(!isRando) {
+                    SwipeableActionsBox(
+                        endActions = listOf(addToMovies),
+                        modifier = Modifier
+                            .animateItemPlacement(
+                                animationSpec = tween(
+                                    durationMillis = 1000
+                                )
                             )
-                        )
-                ) {
-                    MovieEntry(navController, watchedMovie, logId, collaboratorsList)
+                    ) {
+                        MovieEntry(navController, watchedMovie, logId, collaboratorsList, true)
+                    }
+                }
+                else {
+                    MovieEntry(navController, watchedMovie, logId, collaboratorsList, true)
+
                 }
             }
         }
@@ -734,13 +759,17 @@ fun MovieEntry(
     navController: NavHostController,
     movie: MinimalMovieData,
     logId: String,
-    collaboratorsList: List<UserData>
+    collaboratorsList: List<UserData>,
+    isWatched: Boolean
 ) {
 
     Row(modifier = Modifier
         .fillMaxWidth()
         .padding(top = 5.dp, bottom = 5.dp)
-        .clickable { navController.navigate("home_movie_details_${movie.id}_${logId}") }
+        .clickable {
+            val movieIsWatched = if (isWatched) { 2 } else { 1 }
+            navController.navigate("home_movie_details_${movie.id}_${logId}_${movieIsWatched}")
+        }
         .testTag("MOVIE_ENTRY"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
@@ -798,7 +827,7 @@ fun MovieEntry(
         }
 
         // Collaborator icon
-        Column(
+        /*Column(
             modifier = Modifier
                 .weight(1F)
                 .height(70.dp)
@@ -814,7 +843,7 @@ fun MovieEntry(
                     colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
                 )
             }
-        }
+        }*/
     }
 }
 

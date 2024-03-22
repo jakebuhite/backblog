@@ -78,7 +78,7 @@ private val TAG = "MovieDetailsScreen"
 
 
 @Composable
-fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, isFromLog: Boolean, movieDetailsViewModel: MovieDetailsViewModel = viewModel()) {
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel()) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
     Log.d(TAG, "Here")
@@ -88,7 +88,7 @@ fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: St
 
     val hasBackButton = true
 
-    Foundation(navController, hasBackButton, movie, logViewModel, isFromLog, logId)
+    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId)
 }
 
 @Composable
@@ -97,7 +97,7 @@ fun Foundation(
     isBackButtonVisible: Boolean,
     movie: MovieData?,
     logViewModel: LogViewModel,
-    isFromLog: Boolean,
+    movieIsWatched: Int,
     logId: String?
 ) {
     val lightGrey = Color(0xFF37414A)
@@ -110,7 +110,7 @@ fun Foundation(
 
     Box(
         modifier = Modifier
-            .fillMaxWidth() // Ensure the Box takes up the full width
+            .fillMaxWidth()
             .fillMaxHeight()
     ) {
         if (movie != null) {
@@ -153,7 +153,7 @@ fun Foundation(
                             .fillMaxHeight()
                             .background(Brush.verticalGradient(gradientColors)),
                     ) {
-                        MovieInfo(movie, logViewModel, isFromLog, logId)
+                        MovieInfo(movie, logViewModel, movieIsWatched, logId)
                     }
                 }
             }
@@ -168,7 +168,7 @@ fun Foundation(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean, logId: String?) {
+fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -320,7 +320,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                 horizontalArrangement = Arrangement.Center
             ) {
                 var isClicked by remember { mutableStateOf(false) }
-                if (isFromLog && !isClicked) {
+                if (movieIsWatched == 1 && !isClicked) {
                     val context = LocalContext.current
                     val haptic = LocalHapticFeedback.current
                     Button(
@@ -349,6 +349,40 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, isFromLog: Boolean,
                     ) {
                         androidx.compose.material3.Text(
                             "ADD TO WATCHED",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                else if (movieIsWatched == 2 && !isClicked) {
+                    val context = LocalContext.current
+                    val haptic = LocalHapticFeedback.current
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Successfully marked movie as unwatched!",
+                                    Toast.LENGTH_SHORT
+                                )
+                                .show()
+                            if (logId != null) {
+                                Log.d("THIS IS THE LOG ID:", logId.toString())
+                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                            }
+                            isClicked = true
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(id = R.color.sky_blue),
+                            disabledContainerColor = Color.LightGray
+                        )
+                    ) {
+                        androidx.compose.material3.Text(
+                            "ADD TO UNWATCHED",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )

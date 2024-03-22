@@ -268,7 +268,7 @@ fun MovieResult(
             modifier = Modifier
                 .weight(2F)
                 .fillMaxHeight()
-                .clickable { navController.navigate("search_movie_details_${movie.id}_${logId}") },
+                .clickable { navController.navigate("search_movie_details_${movie.id}_${logId}_${0}") },
         ) {
             Box(
                 modifier = Modifier
@@ -301,7 +301,7 @@ fun MovieResult(
             .fillMaxHeight()
             .height(70.dp)
             .padding(start = 8.dp)
-            .clickable { navController.navigate("search_movie_details_${movie.id}") }
+            .clickable { navController.navigate("search_movie_details_${movie.id}_${0}") }
             .testTag("MOVIE_RESULT"),
             verticalArrangement = Arrangement.Center) {
             Text(
