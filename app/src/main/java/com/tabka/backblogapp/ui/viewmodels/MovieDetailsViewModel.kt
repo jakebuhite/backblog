@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class MovieDetailsViewModel: ViewModel() {
     private val TAG = "MovieDetailsViewModel"
     private val apiService = ApiClient.movieApiService
-    #private val movieRepository = MovieRepository(apiService)
+    //private val movieRepository = MovieRepository(apiService)
 
     //private val movieId: String = checkNotNull(savedStateHandle["movieId"])
     private val _movie = MutableStateFlow<MovieData?>(null)
@@ -23,10 +23,10 @@ class MovieDetailsViewModel: ViewModel() {
 
     fun setMovie(movieId: String) {
         Log.d(TAG, "Movie ID: $movieId")
-        getMovie()
+        getMovie(movieId)
     }
 
-    private fun getMovie() {
+    private fun getMovie(movieId: String) {
         movieRepository.getMovieById(
             movieId = movieId,
             onResponse = { movie ->
