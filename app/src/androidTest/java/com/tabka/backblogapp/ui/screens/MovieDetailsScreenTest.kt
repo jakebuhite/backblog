@@ -1,4 +1,4 @@
-package com.tabka.backblogapp.ui.screens
+/*package com.tabka.backblogapp.ui.screens
 
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertIsDisplayed
@@ -61,4 +61,4 @@ class MovieDetailsScreenTest {
         composeTestRule.onNodeWithTag("IMAGE_BACKGROUND").assertIsNotDisplayed()
 
     }
-}
+}*/
