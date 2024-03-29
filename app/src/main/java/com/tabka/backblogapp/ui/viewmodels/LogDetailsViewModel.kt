@@ -103,6 +103,10 @@ open class LogDetailsViewModel: ViewModel() {
         owner.postValue(user)
     }
 
+    private fun updateIsCollaborator(userIsCollaborator: Boolean) {
+        isCollaborator.postValue(userIsCollaborator)
+    }
+
     private fun updateCollaboratorsList(collaborators: List<UserData>) {
         collaboratorsList.postValue(collaborators)
     }
@@ -166,6 +170,7 @@ open class LogDetailsViewModel: ViewModel() {
                                     updateIsOwner(true)
                                 } else {
                                     updateIsOwner(false)
+                                    updateIsCollaborator(isCollaborator())
                                 }
                             }
 
