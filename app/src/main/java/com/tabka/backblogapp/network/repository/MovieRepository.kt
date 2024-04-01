@@ -22,7 +22,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class MovieRepository(private val db: FirebaseFirestore = Firebase.firestore, private val movieApiService: ApiService) {
+open class MovieRepository(private val db: FirebaseFirestore = Firebase.firestore, private val movieApiService: ApiService) {
     private val tag = "MoviesRepo"
 
     suspend fun addMovie(logId: String, movieId: String): DataResult<Boolean> {
@@ -70,7 +70,7 @@ class MovieRepository(private val db: FirebaseFirestore = Firebase.firestore, pr
         }
     }
 
-    fun getMovieById(movieId: String, onResponse: (MovieData?) -> Unit, onFailure: (String) -> Unit) {
+    open fun getMovieById(movieId: String, onResponse: (MovieData?) -> Unit, onFailure: (String) -> Unit) {
         val call = movieApiService.getMovieDetails(
             movieId = movieId,
             appendToResponse = "images,release_dates,watch/providers,credits",
@@ -94,7 +94,7 @@ class MovieRepository(private val db: FirebaseFirestore = Firebase.firestore, pr
         })
     }
 
-    fun searchMovie(query: String, page: Int, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {
+    open fun searchMovie(query: String, page: Int, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {
         val includeAdult = false
         val language = "en-US"
 
@@ -122,7 +122,7 @@ class MovieRepository(private val db: FirebaseFirestore = Firebase.firestore, pr
         })
     }
 
-    fun searchMoviesByGenre(page: Int, genreId: String, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {
+    open fun searchMoviesByGenre(page: Int, genreId: String, onResponse: (MovieSearchData?) -> Unit, onFailure: (String) -> Unit) {
         val includeAdult = false
         val includeVideo = false
         val language = "en-US"
@@ -150,7 +150,7 @@ class MovieRepository(private val db: FirebaseFirestore = Firebase.firestore, pr
         })
     }
 
-    fun getMovieHalfSheet(
+    open fun getMovieHalfSheet(
         movieId: String,
         onResponse: (String) -> Unit,
         onFailure: (String) -> Unit
