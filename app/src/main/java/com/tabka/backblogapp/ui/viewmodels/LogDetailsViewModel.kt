@@ -60,11 +60,14 @@ open class LogDetailsViewModel: ViewModel() {
             Log.d(tag, "New Log: ${logData.value} - $newLog")
         }
         coroutineScope {
-
             Log.d(tag, "Updated logData: ${logData.value}")
 
-            getUserData(isOwner = true)
-            getUserData(isOwner = false)
+            if (auth.currentUser != null) {
+                getUserData(isOwner = true)
+                getUserData(isOwner = false)
+            } else {
+                updateIsOwner(true)
+            }
 
             val moviesDeferred = getMovies()
             val watchedMoviesDeferred = getWatchedMovies()
@@ -156,12 +159,9 @@ open class LogDetailsViewModel: ViewModel() {
     open fun getLogData(logId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                //val user = auth.currentUser?.uid
                 val currentUser = auth.currentUser
                 if (currentUser != null) {
                     val result: DataResult<LogData> = logRepository.getLog(logId)
-                    Log.d(tag, "In dispatchers")
-                    Log.d(tag, "We have the result $result")
                     withContext(Dispatchers.Main) {
                         when (result) {
                             is DataResult.Success -> {
