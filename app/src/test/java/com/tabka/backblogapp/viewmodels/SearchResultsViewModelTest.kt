@@ -1,15 +1,16 @@
 package com.tabka.backblogapp.viewmodels
-/*
+
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.firebase.firestore.FirebaseFirestore
 import com.tabka.backblogapp.mocks.FakeMovieRepository
 import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.*
-import org.junit.After
-import org.junit.Assert.assertEquals
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -18,84 +19,157 @@ import org.mockito.MockitoAnnotations
 
 @ExperimentalCoroutinesApi
 class SearchResultsViewModelTest {
-
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Mock
     private lateinit var firestore: FirebaseFirestore
 
-    private lateinit var viewModel: SearchResultsViewModel
+    private lateinit var searchResultsViewModel: SearchResultsViewModel
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
-    // This is used to test coroutines
-    private val testScope = TestCoroutineScope(testDispatcher)
+    private lateinit var movieRepository: FakeMovieRepository
 
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
+        movieRepository = FakeMovieRepository(firestore)
+    }
 
-        val movieRepository = FakeMovieRepository(firestore)
-        viewModel = SearchResultsViewModel(movieRepository)
-
-        // Use TestCoroutineDispatcher for testing coroutines
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetMovieResultsShouldReturnSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
+
+        searchResultsViewModel = SearchResultsViewModel(
+            movieRepository,
+            testDispatcher
+        )
+
+        try {
+            // Act
+            searchResultsViewModel.getMovieResults("Star Wars")
+
+            // Assert
+            Assert.assertEquals(searchResultsViewModel.movieResults.value?.size, 1)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testScope.cleanupTestCoroutines()
-    }
-
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `test getMovieResults`() = testScope.runBlockingTest {
-        val query = "Action"
-        val job = launch {
-            viewModel.getMovieResults(query)
-        }
+    fun testGetMovieResultsShouldReturnSuccessAndFailOnGetMovieHalfSheet() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
 
-        // Advance the coroutine until it's completed
-        advanceUntilIdle()
+        movieRepository.shouldGetMovieHalfSheetNotSucceed()
+        searchResultsViewModel = SearchResultsViewModel(
+            movieRepository,
+            testDispatcher
+        )
 
-        // Verify the results
-        viewModel.movieResults.collect { movieResults ->
-            assertEquals(1, movieResults?.size)
+        try {
+            // Act
+            searchResultsViewModel.getMovieResults("Star Wars")
 
-            viewModel.halfSheet.collect { halfSheet ->
-                assertEquals(1, halfSheet.size)
-
-                assertEquals(false, viewModel.isLoading.value)
-
-                // Cancel the job to ensure it's completed
-                job.cancel()
-            }
+            // Assert
+            Assert.assertEquals(searchResultsViewModel.movieResults.value?.size, 1)
+            Assert.assertEquals(searchResultsViewModel.halfSheet.value.size, 0)
+        } finally {
+            Dispatchers.resetMain()
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `test getMovieResultsByGenre`() = testScope.runBlockingTest {
-        val genreId = "28"
-        val job = launch {
-            viewModel.getMovieResultsByGenre(genreId)
-        }
+    fun testGetMovieResultsShouldReturnFailure() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
 
-        // Advance the coroutine until it's completed
-        advanceUntilIdle()
+        movieRepository.shouldSearchMovieNotSucceed()
+        searchResultsViewModel = SearchResultsViewModel(
+            movieRepository,
+            testDispatcher
+        )
 
-        // Verify the results
-        viewModel.movieResults.collect { movieResults ->
-            assertEquals(1, movieResults?.size)
+        try {
+            // Act
+            searchResultsViewModel.getMovieResults("Star Wars")
 
-            viewModel.halfSheet.collect { halfSheet ->
-                assertEquals(1, halfSheet.size)
-
-                assertEquals(false, viewModel.isLoading.value)
-
-                // Cancel the job to ensure it's completed
-                job.cancel()
-            }
+            // Assert
+            Assert.assertEquals(searchResultsViewModel.movieResults.value, null)
+        } finally {
+            Dispatchers.resetMain()
         }
     }
-}*/
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetMovieResultsByGenreShouldReturnSuccess() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        searchResultsViewModel = SearchResultsViewModel(
+            movieRepository,
+            testDispatcher
+        )
+
+        try {
+            // Act
+            searchResultsViewModel.getMovieResultsByGenre("11")
+
+            // Assert
+            Assert.assertEquals(searchResultsViewModel.movieResults.value?.size, 1)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetMovieResultsByGenreShouldReturnSuccessAndFailOnGetMovieHalfSheet() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        movieRepository.shouldGetMovieHalfSheetNotSucceed()
+        searchResultsViewModel = SearchResultsViewModel(
+            movieRepository,
+            testDispatcher
+        )
+
+        try {
+            // Act
+            searchResultsViewModel.getMovieResultsByGenre("11")
+
+            // Assert
+            Assert.assertEquals(searchResultsViewModel.movieResults.value?.size, 1)
+            Assert.assertEquals(searchResultsViewModel.halfSheet.value.size, 0)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testGetMovieResultsByGenreShouldReturnFailure() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        movieRepository.shouldSearchMovieNotSucceed()
+        searchResultsViewModel = SearchResultsViewModel(
+            movieRepository,
+            testDispatcher
+        )
+
+        try {
+            // Act
+            searchResultsViewModel.getMovieResultsByGenre("11")
+
+            // Assert
+            Assert.assertEquals(searchResultsViewModel.movieResults.value, null)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+}

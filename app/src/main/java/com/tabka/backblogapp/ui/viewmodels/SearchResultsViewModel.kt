@@ -10,6 +10,7 @@ import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
 import com.tabka.backblogapp.network.repository.MovieRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-class SearchResultsViewModel(val movieRepository: MovieRepository = MovieRepository(Firebase.firestore, ApiClient.movieApiService)) : ViewModel() {
+class SearchResultsViewModel(
+    val movieRepository: MovieRepository = MovieRepository(Firebase.firestore, ApiClient.movieApiService),
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ViewModel() {
     private val TAG = "SearchResultsViewModel"
 
     private val _movieResults: MutableStateFlow<List<MovieSearchResult>?> = MutableStateFlow(mutableListOf())
@@ -48,7 +52,7 @@ class SearchResultsViewModel(val movieRepository: MovieRepository = MovieReposit
             currentJob?.cancel()
             currentJob = viewModelScope.launch {
                 try {
-                    val searchData: MovieSearchData? = withContext(Dispatchers.IO) {
+                    val searchData: MovieSearchData? = withContext(dispatcher) {
                         suspendCancellableCoroutine { continuation ->
                             movieRepository.searchMovie(query, 1,
                                 onResponse = { searchData ->
@@ -65,7 +69,7 @@ class SearchResultsViewModel(val movieRepository: MovieRepository = MovieReposit
 
                     searchData?.results?.forEach { movie ->
                         val movieId = movie.id?.toString() ?: ""
-                        withContext(Dispatchers.IO) {
+                        withContext(dispatcher) {
                             val backdropPath =
                                 suspendCancellableCoroutine { continuation ->
                                     movieRepository.getMovieHalfSheet(movieId,
@@ -99,7 +103,7 @@ class SearchResultsViewModel(val movieRepository: MovieRepository = MovieReposit
         isLoading.value = true
         viewModelScope.launch {
             try {
-                val searchData: MovieSearchData? = withContext(Dispatchers.IO) {
+                val searchData: MovieSearchData? = withContext(dispatcher) {
                     suspendCancellableCoroutine { continuation ->
                         movieRepository.searchMoviesByGenre(1, genreId,
                             onResponse = { searchData ->
@@ -115,7 +119,7 @@ class SearchResultsViewModel(val movieRepository: MovieRepository = MovieReposit
                 }
                 searchData?.results?.forEach { movie ->
                     val movieId = movie.id?.toString() ?: ""
-                    withContext(Dispatchers.IO) {
+                    withContext(dispatcher) {
                         val backdropPath =
                             suspendCancellableCoroutine { continuation ->
                                 movieRepository.getMovieHalfSheet(movieId,
