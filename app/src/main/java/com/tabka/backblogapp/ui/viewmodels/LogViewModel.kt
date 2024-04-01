@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
@@ -28,21 +29,19 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 
-open class LogViewModel : ViewModel() {
+open class LogViewModel(
+    val db: FirebaseFirestore = Firebase.firestore,
+    val auth: FirebaseAuth = Firebase.auth,
+    val movieRepository: MovieRepository = MovieRepository(db, ApiClient.movieApiService),
+    val logRepository: LogRepository = LogRepository(db, auth),
+    val localLogRepository: LogLocalRepository = LogLocalRepository()
+) : ViewModel() {
     private val TAG = "LogViewModel"
-    private val localLogRepository = LogLocalRepository()
     val singleThreadContext: CoroutineDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
     // Log Data
     private val _allLogs = MutableStateFlow<List<LogData>?>(emptyList())
     open var allLogs = _allLogs.asStateFlow()
-
-
-    // Movie Data
-    private val apiService = ApiClient.movieApiService
-    private val movieRepository = MovieRepository(Firebase.firestore, apiService)
-
-    private val logRepository = LogRepository()
 
     // Up Next Movie
     private val _movie = MutableStateFlow<Pair<MovieData?, String>>(null to "")
@@ -55,18 +54,21 @@ open class LogViewModel : ViewModel() {
         }
     }
     init {
-        Firebase.auth.addAuthStateListener(authListener)
+        auth.addAuthStateListener(authListener)
     }
 
     fun loadLogs() {
-        val currentUser = Firebase.auth.currentUser
+        val currentUser = auth.currentUser
         if (currentUser != null) {
             Log.d(TAG, "Getting the logs from DB: ${currentUser.uid}")
             viewModelScope.launch {
                 val result = logRepository.getLogs(currentUser.uid, private = true)
                 when (result) {
                     is DataResult.Success -> _allLogs.value = result.item
-                    is DataResult.Failure -> throw result.throwable
+                    is DataResult.Failure -> {
+                        Log.d(TAG, "Error getting logs from DB: ${result.throwable}")
+                        //throw result.throwable
+                    }
                 }
                 Log.d(TAG, "Here are the results from DB: $result")
             }
@@ -82,7 +84,7 @@ open class LogViewModel : ViewModel() {
         }
 
         Log.d(TAG, "New order: ${_allLogs.value}")
-        val currentUser = Firebase.auth.currentUser
+        val currentUser = auth.currentUser
         if (currentUser != null) {
             val logIds = allLogs.value?.map { log ->
                 if (log.owner!!.userId == currentUser.uid) {
@@ -102,7 +104,7 @@ open class LogViewModel : ViewModel() {
     }
 
     fun addMovieToLog(logId: String?, movieId: String?) {
-        val currentUser = Firebase.auth.currentUser
+        val currentUser = auth.currentUser
         if (currentUser != null) {
             viewModelScope.launch {
                 movieRepository.addMovie(logId ?: "", movieId ?: "")
@@ -134,7 +136,7 @@ open class LogViewModel : ViewModel() {
     }
 
     fun markMovieAsWatched(logId: String, movieId: String) {
-        val currentUser = Firebase.auth.currentUser
+        val currentUser = auth.currentUser
         if (currentUser != null) {
             viewModelScope.launch {
                 movieRepository.markMovie(logId, movieId, watched = true)
@@ -146,7 +148,7 @@ open class LogViewModel : ViewModel() {
     }
 
     fun unmarkMovieAsWatched(logId: String, movieId: String) {
-        val currentUser = Firebase.auth.currentUser
+        val currentUser = auth.currentUser
         if (currentUser != null) {
             viewModelScope.launch {
                 movieRepository.markMovie(logId, movieId, watched = false)
@@ -163,27 +165,23 @@ open class LogViewModel : ViewModel() {
     )
     fun fetchMovieDetails(movieId: String, onResponse: (MovieResult<Pair<MovieData, String>>) -> Unit) {
         viewModelScope.launch {
-            try {
-                movieRepository.getMovieById(movieId, { movieData ->
-                    // Success response
-                    if (movieData != null) {
-                        movieRepository.getMovieHalfSheet(movieId,
-                            onResponse = { halfSheet ->
-                                onResponse(MovieResult(movieData to halfSheet))
-                            },
-                            onFailure = {
-                                onResponse(MovieResult(movieData to ""))
-                            })
-                    } else {
-                        onResponse(MovieResult(error = "No data received"))
-                    }
-                }, { errorMsg ->
-                    // Error response
-                    onResponse(MovieResult(error = errorMsg))
-                })
-            } catch (e: Exception) {
-                onResponse(MovieResult(error = e.message ?: "An unknown error occurred"))
-            }
+            movieRepository.getMovieById(movieId, { movieData ->
+                // Success response
+                if (movieData != null) {
+                    movieRepository.getMovieHalfSheet(movieId,
+                        onResponse = { halfSheet ->
+                            onResponse(MovieResult(movieData to halfSheet))
+                        },
+                        onFailure = {
+                            onResponse(MovieResult(movieData to ""))
+                        })
+                } else {
+                    onResponse(MovieResult(error = "No data received"))
+                }
+            }, { errorMsg ->
+                // Error response
+                onResponse(MovieResult(error = errorMsg))
+            })
         }
     }
 
@@ -193,7 +191,7 @@ open class LogViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun createLog(logName: String, collaborators: List<String>, isVisible: Boolean) {
-        val currentUser = Firebase.auth.currentUser
+        val currentUser = auth.currentUser
 
         // If logged in
         if (currentUser != null) {
@@ -206,7 +204,9 @@ open class LogViewModel : ViewModel() {
                         logRepository.addCollaborators(logId, collaborators)
                         loadLogs()
                     }
-                    is DataResult.Failure -> throw result.throwable
+                    is DataResult.Failure -> {
+                        Log.d(TAG, "There was an error creating a log: ${result.throwable}")
+                    }
                 }
             }
         } else {
