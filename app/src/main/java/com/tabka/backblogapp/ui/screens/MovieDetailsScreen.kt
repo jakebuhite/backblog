@@ -70,6 +70,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import kotlinx.coroutines.launch
@@ -78,7 +79,7 @@ private val TAG = "MovieDetailsScreen"
 
 
 @Composable
-fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel()) {
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel(), logDetailsViewModel: LogDetailsViewModel) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
     Log.d(TAG, "Here")
@@ -88,7 +89,7 @@ fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: St
 
     val hasBackButton = true
 
-    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId)
+    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId, logDetailsViewModel)
 }
 
 @Composable
@@ -98,7 +99,8 @@ fun Foundation(
     movie: MovieData?,
     logViewModel: LogViewModel,
     movieIsWatched: Int,
-    logId: String?
+    logId: String?,
+    logDetailsViewModel: LogDetailsViewModel
 ) {
     val lightGrey = Color(0xFF37414A)
     val darkGrey = Color(0xFF191919)
@@ -153,7 +155,7 @@ fun Foundation(
                             .fillMaxHeight()
                             .background(Brush.verticalGradient(gradientColors)),
                     ) {
-                        MovieInfo(movie, logViewModel, movieIsWatched, logId)
+                        MovieInfo(movie, logViewModel, movieIsWatched, logId, logDetailsViewModel)
                     }
                 }
             }
@@ -168,7 +170,7 @@ fun Foundation(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?) {
+fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, logDetailsViewModel: LogDetailsViewModel) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -333,6 +335,30 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                     Toast.LENGTH_SHORT
                                 )
                                 .show()
+
+                            val movieId = movie.id.toString()
+
+                            val removedMovieData =
+                                logDetailsViewModel.movies.value?.let { movies ->
+                                    val updatedMovies = movies.toMutableMap().apply {
+                                        remove(movieId)
+                                    }
+                                    logDetailsViewModel.movies.value = updatedMovies
+                                    movies[movieId] // Get the removed movie data to add it to movies
+                                }
+
+                            removedMovieData?.let { movieData ->
+                                val currentMovies =
+                                    logDetailsViewModel.watchedMovies.value ?: mapOf()
+                                val updatedMovies = currentMovies.toMutableMap().apply {
+                                    this[movieId] = movieData
+                                }
+                                logDetailsViewModel.watchedMovies.value = updatedMovies
+                            }
+                            if (logId != null) {
+                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                            }
+
                             if (logId != null) {
                                 Log.d("THIS IS THE LOG ID:", logId.toString())
                                 logViewModel.markMovieAsWatched(logId, movie.id.toString())
@@ -370,6 +396,26 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                             if (logId != null) {
                                 Log.d("THIS IS THE LOG ID:", logId.toString())
                                 logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                                val watchedMovieId = movie.id.toString()
+
+                                val removedMovieData =
+                                    logDetailsViewModel.watchedMovies.value?.let { watchedMovies ->
+                                        val updatedWatchedMovies =
+                                            watchedMovies.toMutableMap().apply {
+                                                remove(watchedMovieId)
+                                            }
+                                        logDetailsViewModel.watchedMovies.value =
+                                            updatedWatchedMovies
+                                        watchedMovies[watchedMovieId] // Get the removed movie data to add it to movies
+                                    }
+
+                                removedMovieData?.let { movieData ->
+                                    val currentMovies = logDetailsViewModel.movies.value ?: mapOf()
+                                    val updatedMovies = currentMovies.toMutableMap().apply {
+                                        this[watchedMovieId] = movieData
+                                    }
+                                    logDetailsViewModel.movies.value = updatedMovies
+                                }
                             }
                             isClicked = true
                         },
