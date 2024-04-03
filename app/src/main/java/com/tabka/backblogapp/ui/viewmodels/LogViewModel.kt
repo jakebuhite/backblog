@@ -43,6 +43,10 @@ open class LogViewModel(
     private val _allLogs = MutableStateFlow<List<LogData>?>(emptyList())
     open var allLogs = _allLogs.asStateFlow()
 
+    // User logged in?
+    private val _isLoggedIn = MutableStateFlow<Boolean>(false)
+    var isLoggedIn = _isLoggedIn.asStateFlow()
+
     // Up Next Movie
     private val _movie = MutableStateFlow<Pair<MovieData?, String>>(null to "")
     open val movie = _movie.asStateFlow()
@@ -60,6 +64,7 @@ open class LogViewModel(
     fun loadLogs() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
+            _isLoggedIn.value = true
             Log.d(TAG, "Getting the logs from DB: ${currentUser.uid}")
             viewModelScope.launch {
                 val result = logRepository.getLogs(currentUser.uid, private = true)
@@ -73,6 +78,7 @@ open class LogViewModel(
                 Log.d(TAG, "Here are the results from DB: $result")
             }
         } else {
+            _isLoggedIn.value = false
             _allLogs.value = localLogRepository.getLogs()
         }
     }

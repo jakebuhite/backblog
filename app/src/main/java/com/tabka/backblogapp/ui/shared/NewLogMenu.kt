@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,7 +22,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
@@ -34,7 +32,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -69,7 +66,7 @@ import kotlinx.coroutines.launch
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, onCreateClick: () -> Unit,
+fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLoggedIn: Boolean, onCreateClick: () -> Unit,
                onCloseClick: () -> Unit) {
     var logName by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
@@ -124,24 +121,27 @@ fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, o
                 textColor = Color.White
             ),
         )
-        val icon =
-            if (logIsVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-        IconButton(
-            onClick = {
-                logIsVisible = !logIsVisible
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = Color.White
-            )
+        if (isLoggedIn) {
+            val icon =
+                if (logIsVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+            IconButton(
+                onClick = {
+                    logIsVisible = !logIsVisible
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White
+                )
+            }
         }
     }
     Spacer(modifier = Modifier.height(20.dp))
+
 
     val userList = friendsViewModel.friendsData.collectAsState()
     val collaboratorsList = remember { mutableStateListOf<String?>() }
@@ -156,61 +156,62 @@ fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, o
         currentCollab.contains(user.userId.toString())
     }
 
-    // Collaborators Heading
-    Row(modifier = Modifier.padding(start = 14.dp)) {
-        Text("Collaborators", style = MaterialTheme.typography.headlineMedium)
-    }
+    if (isLoggedIn) {
+        // Collaborators Heading
+        Row(modifier = Modifier.padding(start = 14.dp)) {
+            Text("Collaborators", style = MaterialTheme.typography.headlineMedium)
+        }
 
-    if (currentCollab.isEmpty()) {
-        Spacer(modifier = Modifier.height(85.dp))
-    } else {
-        Spacer(modifier = Modifier.height(15.dp))
-        // Current collaborators sections
-        LazyRow(modifier = Modifier.padding(start = 24.dp)) {
-            items(collaboratorsList.size) { index ->
-                val userId = collaboratorsList[index]
-                val friend = userList.value.find { it.userId == userId }
+        if (currentCollab.isEmpty()) {
+            Spacer(modifier = Modifier.height(85.dp))
+        } else {
+            Spacer(modifier = Modifier.height(15.dp))
+            // Current collaborators sections
+            LazyRow(modifier = Modifier.padding(start = 24.dp)) {
+                items(collaboratorsList.size) { index ->
+                    val userId = collaboratorsList[index]
+                    val friend = userList.value.find { it.userId == userId }
 
-                /*Column() {*/
-                Image(
-                    painter = painterResource(
-                        id = getAvatarResourceId(
-                            friend?.avatarPreset ?: 1
-                        ).second
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(end = 10.dp),
-                )
-                /*}*/
+                    /*Column() {*/
+                    Image(
+                        painter = painterResource(
+                            id = getAvatarResourceId(
+                                friend?.avatarPreset ?: 1
+                            ).second
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(70.dp)
+                            .padding(end = 10.dp),
+                    )
+                    /*}*/
+                }
             }
         }
-    }
 
-    Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-    // Add Collaborators Heading
-    Row(modifier = Modifier.padding(start = 14.dp)) {
-        Text("Add Collaborators", style = MaterialTheme.typography.headlineMedium)
-    }
+        // Add Collaborators Heading
+        Row(modifier = Modifier.padding(start = 14.dp)) {
+            Text("Add Collaborators", style = MaterialTheme.typography.headlineMedium)
+        }
 
-    Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(15.dp))
 
-    // Add collaborators section
-    Box(modifier = Modifier.height(290.dp)) {
-        LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-            items(sortedUserList.size) { index ->
-                val friend = sortedUserList[index]
-                if (currentCollab.contains(friend.userId)) {
-                    NewLogCollaborator(friend, collaboratorsList, true)
-                } else {
-                    NewLogCollaborator(friend, collaboratorsList, false)
+        // Add collaborators section
+        Box(modifier = Modifier.height(290.dp)) {
+            LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
+                items(sortedUserList.size) { index ->
+                    val friend = sortedUserList[index]
+                    if (currentCollab.contains(friend.userId)) {
+                        NewLogCollaborator(friend, collaboratorsList, true)
+                    } else {
+                        NewLogCollaborator(friend, collaboratorsList, false)
+                    }
                 }
             }
         }
     }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
