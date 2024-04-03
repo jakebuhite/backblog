@@ -140,7 +140,7 @@ fun SettingsForm(userData: UserData?,
         TextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Username") },
+            label = { Text("Display Name") },
             placeholder = { Text(userData?.username ?: "") },
             modifier = Modifier
                 .padding(12.dp)
