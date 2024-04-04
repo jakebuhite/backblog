@@ -221,7 +221,7 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?, prior
     var cardModifier = Modifier.fillMaxWidth()
     movieId?.let {
         cardModifier =
-            cardModifier.clickable { navController.navigate("home_movie_details_${it}_$priorityLogId") }
+            cardModifier.clickable { navController.navigate("home_movie_details_${it}_${priorityLogId}_${1}") }
     }
 
     Card(

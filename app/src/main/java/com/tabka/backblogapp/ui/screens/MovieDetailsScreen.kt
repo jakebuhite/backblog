@@ -67,6 +67,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import kotlinx.coroutines.launch
@@ -330,10 +331,34 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                     Toast.LENGTH_SHORT
                                 )
                                 .show()
+
+                            /*val movieId = movie.id.toString()
+
+                            val removedMovieData =
+                                logDetailsViewModel.movies.value?.let { movies ->
+                                    val updatedMovies = movies.toMutableMap().apply {
+                                        remove(movieId)
+                                    }
+                                    logDetailsViewModel.movies.value = updatedMovies
+                                    movies[movieId] // Get the removed movie data to add it to movies
+                                }
+
+                            removedMovieData?.let { movieData ->
+                                val currentMovies =
+                                    logDetailsViewModel.watchedMovies.value ?: mapOf()
+                                val updatedMovies = currentMovies.toMutableMap().apply {
+                                    this[movieId] = movieData
+                                }
+                                logDetailsViewModel.watchedMovies.value = updatedMovies
+                            }
+                            if (logId != null) {
+                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                            }
+
                             if (logId != null) {
                                 Log.d("THIS IS THE LOG ID:", logId.toString())
                                 logViewModel.markMovieAsWatched(logId, movie.id.toString())
-                            }
+                            }*/
                             isClicked = true
                         },
                         modifier = Modifier
@@ -366,7 +391,27 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                 .show()
                             if (logId != null) {
                                 Log.d("THIS IS THE LOG ID:", logId.toString())
-                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                                /*logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                                val watchedMovieId = movie.id.toString()
+*/
+                              /*  val removedMovieData =
+                                    logDetailsViewModel.watchedMovies.value?.let { watchedMovies ->
+                                        val updatedWatchedMovies =
+                                            watchedMovies.toMutableMap().apply {
+                                                remove(watchedMovieId)
+                                            }
+                                        logDetailsViewModel.watchedMovies.value =
+                                            updatedWatchedMovies
+                                        watchedMovies[watchedMovieId] // Get the removed movie data to add it to movies
+                                    }
+
+                                removedMovieData?.let { movieData ->
+                                    val currentMovies = logDetailsViewModel.movies.value ?: mapOf()
+                                    val updatedMovies = currentMovies.toMutableMap().apply {
+                                        this[watchedMovieId] = movieData
+                                    }
+                                    logDetailsViewModel.movies.value = updatedMovies
+                                }*/
                             }
                             isClicked = true
                         },
