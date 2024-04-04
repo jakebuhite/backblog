@@ -53,7 +53,7 @@ fun BottomNavGraph(navController: NavHostController) {
 
     Log.d("Something", "PLEASE LOG SOMETHING")
     val auth = Firebase.auth
-    auth.signOut()
+    //auth.signOut()
 
     NavHost(
         navController = navController,

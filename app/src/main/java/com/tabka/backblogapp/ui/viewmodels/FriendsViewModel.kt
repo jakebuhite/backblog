@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.LogRequestData
@@ -25,8 +27,9 @@ open class FriendsViewModel(
     val auth: FirebaseAuth = Firebase.auth,
     val userRepository: UserRepository = UserRepository(),
     val logRepository: LogRepository = LogRepository(),
-    val friendRepository: FriendRepository = FriendRepository()
-) : ViewModel() {
+    private val friendRepository: FriendRepository = FriendRepository(),
+    val db: FirebaseFirestore = Firebase.firestore,
+    ) : ViewModel() {
     private val tag = "FriendsViewModel"
 
     // User Info
@@ -45,6 +48,40 @@ open class FriendsViewModel(
 
     // Status Message
     val notificationMsg: MutableLiveData<String> = MutableLiveData("")
+
+    init {
+        friendRequestListener()
+        logRequestListener()
+    }
+
+    private fun friendRequestListener() {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("friend_requests").whereEqualTo("target_id", auth.currentUser?.uid)
+            .addSnapshotListener { _, e ->
+                if (e != null) {
+                    //onResult(DataResult.Failure(e))
+                    return@addSnapshotListener
+                }
+                Log.d("FRTEST", "SOMETHING HAPPENED")
+                viewModelScope.launch {
+                    getFriendRequests()
+                }
+            }
+    }
+
+    private fun logRequestListener() {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("log_requests").whereEqualTo("target_id", auth.currentUser?.uid)
+            .addSnapshotListener { _, e ->
+                if (e != null) {
+                    return@addSnapshotListener
+                }
+                Log.d("FRTEST", "SOMETHING HAPPENED to LOG REQUESTS")
+                viewModelScope.launch {
+                    getLogRequests()
+                }
+            }
+    }
 
     private fun updateMessage(message: String) {
         notificationMsg.value = message
