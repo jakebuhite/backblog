@@ -120,11 +120,11 @@ class SearchResultsScreenTest {
 
         // Wait for navigation to occur
         composeTestRule.waitUntil(10000) {
-            mockNavController.currentDestination?.route == "search_movie_details_{movieId}"
+            mockNavController.currentDestination?.route?.contains("search_movie_details") == true
         }
 
         // Assert navigation destination
-        assertThat(mockNavController.currentDestination?.route).isEqualTo("search_movie_details_{movieId}")
+        assertThat( mockNavController.currentDestination?.route?.contains("search_movie_details")).isEqualTo(true)
     }
 
     @Test

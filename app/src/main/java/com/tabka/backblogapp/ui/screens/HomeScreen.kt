@@ -17,7 +17,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,28 +33,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.RemoveCircle
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -65,7 +53,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -82,13 +69,11 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -127,6 +112,7 @@ fun HomeScreen(
     friendsViewModel: FriendsViewModel
 ) {
     val allLogs by logViewModel.allLogs.collectAsState()
+    val isLoggedIn by logViewModel.isLoggedIn.collectAsState()
 
 
     val hasBackButton = false
@@ -140,10 +126,10 @@ fun HomeScreen(
         if (!allLogs.isNullOrEmpty()) {
             WatchNextCard(navController, allLogs!![0], logViewModel)
             Spacer(Modifier.height(40.dp))
-            MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)
+            MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel, isLoggedIn)
         } else {
             Spacer(modifier = Modifier.height(150.dp))
-            NoLogs(friendsViewModel, logViewModel)
+            NoLogs(friendsViewModel, logViewModel, isLoggedIn)
         }
         /*Spacer(Modifier.height(40.dp))
         MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)*/
@@ -389,7 +375,8 @@ fun MyLogsSection(
     allLogs: List<LogData>?,
     scrollState: ScrollState,
     logViewModel: LogViewModel,
-    friendsViewModel: FriendsViewModel
+    friendsViewModel: FriendsViewModel,
+    isLoggedIn: Boolean
 ) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -456,7 +443,7 @@ fun MyLogsSection(
                 .fillMaxSize()
                 .testTag("ADD_LOG_POPUP")
         ) {
-            NewLogMenu(friendsViewModel = friendsViewModel, logViewModel, onCreateClick = {
+            NewLogMenu(friendsViewModel = friendsViewModel, logViewModel, isLoggedIn, onCreateClick = {
                     isSheetOpen = false
                     logViewModel.loadLogs()
             }, onCloseClick = {
@@ -689,7 +676,7 @@ fun LogEntry(navController: NavHostController, logId: String, logName: String, p
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel) {
+fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLoggedIn: Boolean) {
     Column(
         modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -734,7 +721,7 @@ fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel) {
                     .fillMaxSize()
                     .testTag("ADD_LOG_POPUP")
             ) {
-                NewLogMenu(friendsViewModel, logViewModel, onCreateClick = {  {
+                NewLogMenu(friendsViewModel, logViewModel, isLoggedIn, onCreateClick = {  {
                     isSheetOpen = false
                     logViewModel.loadLogs()
                 }

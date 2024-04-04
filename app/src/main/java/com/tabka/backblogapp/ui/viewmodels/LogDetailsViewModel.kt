@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
@@ -17,6 +19,7 @@ import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,19 +29,19 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-open class LogDetailsViewModel: ViewModel() {
+open class LogDetailsViewModel(
+    private val db: FirebaseFirestore = Firebase.firestore,
+    val auth: FirebaseAuth = Firebase.auth,
+    private val localRepository: LogLocalRepository = LogLocalRepository(),
+    val logRepository: LogRepository = LogRepository(db, auth),
+    private val movieRepository: MovieRepository = MovieRepository(db, ApiClient.movieApiService),
+    val userRepository: UserRepository = UserRepository(db, auth),
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Main
+): ViewModel() {
     private val tag = "LogDetailsViewModel"
-    private val auth = Firebase.auth
 
     // Log data
-    private val localRepository = LogLocalRepository()
-    private val logRepository = LogRepository()
     open val logData: MutableLiveData<LogData> = MutableLiveData()
-
-    // Movie data
-    private val apiService = ApiClient.movieApiService
-    private val movieRepository = MovieRepository(Firebase.firestore, apiService)
-    private val userRepository = UserRepository()
 
     //val movies: MutableLiveData<MutableMap<String, MinimalMovieData>> = MutableLiveData(mutableMapOf())
     open var movies: MutableLiveData<Map<String, MinimalMovieData>> = MutableLiveData(mapOf())
@@ -54,17 +57,20 @@ open class LogDetailsViewModel: ViewModel() {
     open val isLoading: MutableLiveData<Boolean> = MutableLiveData()
 
     private suspend fun updateLogData(newLog: LogData) {
-        withContext(Dispatchers.Main) {
+        withContext(dispatcher) {
             // Directly set value if called from a coroutine to ensure immediate update
             logData.value = newLog
             Log.d(tag, "New Log: ${logData.value} - $newLog")
         }
         coroutineScope {
-
             Log.d(tag, "Updated logData: ${logData.value}")
 
-            getUserData(isOwner = true)
-            getUserData(isOwner = false)
+            if (auth.currentUser != null) {
+                getUserData(isOwner = true)
+                getUserData(isOwner = false)
+            } else {
+                updateIsOwner(true)
+            }
 
             val moviesDeferred = getMovies()
             val watchedMoviesDeferred = getWatchedMovies()
@@ -73,7 +79,7 @@ open class LogDetailsViewModel: ViewModel() {
             watchedMoviesDeferred.await()
 
         }
-        withContext(Dispatchers.Main) {
+        withContext(dispatcher) {
             // Directly set value if called from a coroutine to ensure immediate update
             isLoading.value = false
         }
@@ -101,6 +107,10 @@ open class LogDetailsViewModel: ViewModel() {
 
     private fun updateOwner(user: UserData) {
         owner.postValue(user)
+    }
+
+    private fun updateIsCollaborator(userIsCollaborator: Boolean) {
+        isCollaborator.postValue(userIsCollaborator)
     }
 
     private fun updateCollaboratorsList(collaborators: List<UserData>) {
@@ -152,13 +162,10 @@ open class LogDetailsViewModel: ViewModel() {
     open fun getLogData(logId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                //val user = auth.currentUser?.uid
                 val currentUser = auth.currentUser
                 if (currentUser != null) {
                     val result: DataResult<LogData> = logRepository.getLog(logId)
-                    Log.d(tag, "In dispatchers")
-                    Log.d(tag, "We have the result $result")
-                    withContext(Dispatchers.Main) {
+                    withContext(dispatcher) {
                         when (result) {
                             is DataResult.Success -> {
                                 updateLogData(result.item)
@@ -166,6 +173,7 @@ open class LogDetailsViewModel: ViewModel() {
                                     updateIsOwner(true)
                                 } else {
                                     updateIsOwner(false)
+                                    updateIsCollaborator(isCollaborator())
                                 }
                             }
 
@@ -181,7 +189,7 @@ open class LogDetailsViewModel: ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
+                withContext(dispatcher) {
                     Log.d(tag, "Error: $e")
                 }
             }
@@ -231,11 +239,11 @@ open class LogDetailsViewModel: ViewModel() {
                 }
                 Log.d(tag, "Movie List: $movieDataList")
 
-                withContext(Dispatchers.Main) {
+                withContext(dispatcher) {
                     updateMovies(movieDataList)
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
+                withContext(dispatcher) {
                     Log.e(tag, "Failed to fetch movie details: $e")
                 }
             }
@@ -283,7 +291,7 @@ open class LogDetailsViewModel: ViewModel() {
                     movie.id?.let { movieDataList[it] = movie }
                 }
 
-                withContext(Dispatchers.Main) {
+                withContext(dispatcher) {
                     updateWatchedMovies(movieDataList)
                 }
             } catch (e: Exception) {

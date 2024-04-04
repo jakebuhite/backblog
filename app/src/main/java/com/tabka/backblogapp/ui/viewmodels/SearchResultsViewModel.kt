@@ -10,6 +10,7 @@ import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchData
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
 import com.tabka.backblogapp.network.repository.MovieRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,11 +22,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-class SearchResultsViewModel : ViewModel() {
+class SearchResultsViewModel(
+    val movieRepository: MovieRepository = MovieRepository(Firebase.firestore, ApiClient.movieApiService),
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ViewModel() {
     private val TAG = "SearchResultsViewModel"
-    private val apiService = ApiClient.movieApiService
-
-    private val movieRepository = MovieRepository(Firebase.firestore, apiService)
 
     private val _movieResults: MutableStateFlow<List<MovieSearchResult>?> = MutableStateFlow(mutableListOf())
     val movieResults = _movieResults.asStateFlow()
@@ -51,9 +52,7 @@ class SearchResultsViewModel : ViewModel() {
             currentJob?.cancel()
             currentJob = viewModelScope.launch {
                 try {
-                    Log.d(TAG, "Setting isLoading to true")
-
-                    val searchData: MovieSearchData? = withContext(Dispatchers.IO) {
+                    val searchData: MovieSearchData? = withContext(dispatcher) {
                         suspendCancellableCoroutine { continuation ->
                             movieRepository.searchMovie(query, 1,
                                 onResponse = { searchData ->
@@ -68,11 +67,9 @@ class SearchResultsViewModel : ViewModel() {
                         }
                     }
 
-                    Log.d(TAG, "Search results: $searchData")
-
                     searchData?.results?.forEach { movie ->
                         val movieId = movie.id?.toString() ?: ""
-                        withContext(Dispatchers.IO) {
+                        withContext(dispatcher) {
                             val backdropPath =
                                 suspendCancellableCoroutine { continuation ->
                                     movieRepository.getMovieHalfSheet(movieId,
@@ -106,7 +103,7 @@ class SearchResultsViewModel : ViewModel() {
         isLoading.value = true
         viewModelScope.launch {
             try {
-                val searchData: MovieSearchData? = withContext(Dispatchers.IO) {
+                val searchData: MovieSearchData? = withContext(dispatcher) {
                     suspendCancellableCoroutine { continuation ->
                         movieRepository.searchMoviesByGenre(1, genreId,
                             onResponse = { searchData ->
@@ -122,7 +119,7 @@ class SearchResultsViewModel : ViewModel() {
                 }
                 searchData?.results?.forEach { movie ->
                     val movieId = movie.id?.toString() ?: ""
-                    withContext(Dispatchers.IO) {
+                    withContext(dispatcher) {
                         val backdropPath =
                             suspendCancellableCoroutine { continuation ->
                                 movieRepository.getMovieHalfSheet(movieId,
@@ -139,29 +136,7 @@ class SearchResultsViewModel : ViewModel() {
                         backdropPath?.let { _halfSheets.value[movieId] = it }
                     }
                 }
-
-               /* val minimalMovieResults = searchData?.results?.map {
-                    MinimalMovieData(id = it.id, image = it.)
-                }*/
                 _movieResults.value = searchData?.results
-                /*movieRepository.searchMoviesByGenre(1, genreId,
-                    onResponse = { searchData ->
-                        searchData?.results?.forEach {
-                            val movieId = it.id?.toString() ?: ""
-                            movieRepository.getMovieHalfSheet(movieId,
-                                onResponse = { backdropPath ->
-                                    _halfSheets.value[movieId] = backdropPath
-                                },
-                                onFailure = { error ->
-                                    Log.d(TAG, error)
-                                })
-                        }
-                        _movieResults.value = searchData?.results
-                    },
-                    onFailure = { error ->
-                        Log.d(TAG, error)
-                    }
-                )*/
             } catch (error: Throwable) {
                 Log.e(TAG, "Error fetching movie results by genre: ${error.message}", error)
                 isLoading.value = false

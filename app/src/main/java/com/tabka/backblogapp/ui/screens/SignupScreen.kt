@@ -102,7 +102,7 @@ fun SignupScreen(navController: NavController) {
                 TextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Username") },
+                    label = { Text("Display Name") },
                     modifier = Modifier
                         .padding(12.dp)
                         .fillMaxWidth()
