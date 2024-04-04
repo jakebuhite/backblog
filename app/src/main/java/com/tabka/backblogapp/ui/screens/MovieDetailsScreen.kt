@@ -79,7 +79,7 @@ private val TAG = "MovieDetailsScreen"
 
 
 @Composable
-fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel(), logDetailsViewModel: LogDetailsViewModel) {
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel()) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
     Log.d(TAG, "Here")
@@ -89,7 +89,7 @@ fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: St
 
     val hasBackButton = true
 
-    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId, logDetailsViewModel)
+    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId)
 }
 
 @Composable
@@ -99,8 +99,7 @@ fun Foundation(
     movie: MovieData?,
     logViewModel: LogViewModel,
     movieIsWatched: Int,
-    logId: String?,
-    logDetailsViewModel: LogDetailsViewModel
+    logId: String?
 ) {
     val lightGrey = Color(0xFF37414A)
     val darkGrey = Color(0xFF191919)
@@ -155,7 +154,7 @@ fun Foundation(
                             .fillMaxHeight()
                             .background(Brush.verticalGradient(gradientColors)),
                     ) {
-                        MovieInfo(movie, logViewModel, movieIsWatched, logId, logDetailsViewModel)
+                        MovieInfo(movie, logViewModel, movieIsWatched, logId)
                     }
                 }
             }
@@ -170,7 +169,7 @@ fun Foundation(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, logDetailsViewModel: LogDetailsViewModel) {
+fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -336,7 +335,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                 )
                                 .show()
 
-                            val movieId = movie.id.toString()
+                            /*val movieId = movie.id.toString()
 
                             val removedMovieData =
                                 logDetailsViewModel.movies.value?.let { movies ->
@@ -362,7 +361,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                             if (logId != null) {
                                 Log.d("THIS IS THE LOG ID:", logId.toString())
                                 logViewModel.markMovieAsWatched(logId, movie.id.toString())
-                            }
+                            }*/
                             isClicked = true
                         },
                         modifier = Modifier
@@ -395,10 +394,10 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                 .show()
                             if (logId != null) {
                                 Log.d("THIS IS THE LOG ID:", logId.toString())
-                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                                /*logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
                                 val watchedMovieId = movie.id.toString()
-
-                                val removedMovieData =
+*/
+                              /*  val removedMovieData =
                                     logDetailsViewModel.watchedMovies.value?.let { watchedMovies ->
                                         val updatedWatchedMovies =
                                             watchedMovies.toMutableMap().apply {
@@ -415,7 +414,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                         this[watchedMovieId] = movieData
                                     }
                                     logDetailsViewModel.movies.value = updatedMovies
-                                }
+                                }*/
                             }
                             isClicked = true
                         },

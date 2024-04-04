@@ -56,7 +56,7 @@ fun SearchScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(30.dp))
         BrowseCategories(navController)
         Spacer(modifier = Modifier.height(75.dp))
-        FriendsAdded()
+        //FriendsAdded()
     }
 }
 

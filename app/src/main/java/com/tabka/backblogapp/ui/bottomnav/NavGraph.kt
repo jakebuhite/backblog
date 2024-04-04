@@ -101,11 +101,10 @@ fun BottomNavGraph(navController: NavHostController) {
 
             composable(
                 route = "search_movie_details_{movieId}_{movieIsWatched}",
-                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType})
+                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType })
             ) { backStackEntry ->
-                backStackEntry.arguments?.getInt("movieIsWatched")?.let {
-                    MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel,
-                        it
+                backStackEntry.arguments?.let {
+                    MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel, it.getInt("movieIsWatched")
                     )
                 }
             }
