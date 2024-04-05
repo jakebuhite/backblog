@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material.Surface
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
@@ -27,6 +30,7 @@ import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -305,7 +309,7 @@ fun AddFriendOrBlockDialog(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (alreadyFriend) {
-                TextButton(onClick = {
+                Button(onClick = {
                     composableScope.launch {
                         onRemoveFriendSelected()
                         sheetState.hide()
@@ -314,11 +318,26 @@ fun AddFriendOrBlockDialog(
                             dismissBottomSheet()
                         }
                     }
-                }) {
-                    Text("Remove Friend", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, color = Color(0xFFED4337)))
+                },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(35),
+                    modifier = Modifier
+                        .height(55.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .border(
+                            1.dp,
+                            Color(0xFFDC3545),
+                            shape = RoundedCornerShape(30.dp)
+                        )) {
+                    Text("REMOVE FRIEND", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
                 }
             } else {
-                TextButton(onClick = {
+                Button(onClick = {
                     composableScope.launch {
                         onAddFriendSelected()
                         sheetState.hide()
@@ -327,8 +346,13 @@ fun AddFriendOrBlockDialog(
                             dismissBottomSheet()
                         }
                     }
-                }) {
-                    Text("Add Friend", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, color = Color(0xFF3891E1)))
+                },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.sky_blue),
+                        disabledContainerColor = Color.Gray
+                    )) {
+                    Text("ADD FRIEND", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -339,7 +363,7 @@ fun AddFriendOrBlockDialog(
                     .background(Color(0xFF303437))
             )
 
-            TextButton(onClick = {
+            Button(onClick = {
                 composableScope.launch {
                     onBlockUserSelected()
                     sheetState.hide()
@@ -348,8 +372,22 @@ fun AddFriendOrBlockDialog(
                         dismissBottomSheet()
                     }
                 }
-            }) {
-                Text("Block User", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, color = Color.Red))
+            }, colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+                shape = RoundedCornerShape(35),
+                modifier = Modifier
+                    .height(55.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .border(
+                        1.dp,
+                        Color(0xFFDC3545),
+                        shape = RoundedCornerShape(30.dp)
+                    )) {
+                Text("BLOCK USER", style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
