@@ -1,7 +1,9 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -78,6 +80,8 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
+import com.tabka.backblogapp.ui.shared.NewLogMenu
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
 import kotlinx.coroutines.launch
@@ -86,8 +90,9 @@ private val TAG = "SearchResultsScreen"
 val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewModel) {
+fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewModel, friendsViewModel: FriendsViewModel) {
     val hasBackButton = true
     val isMovieDetails = false
     val pageTitle = "Results"
@@ -95,20 +100,22 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
     val logId = null
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
-        SearchBar(navController, logViewModel, isLogMenu, logId)
+        SearchBar(navController, logViewModel, isLogMenu, logId, friendsViewModel)
     }
     Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBar(
     navController: NavHostController,
     logViewModel: LogViewModel,
     isLogMenu: Boolean,
-    logId: String?
+    logId: String?,
+    friendsViewModel: FriendsViewModel
 ) {
     var text by rememberSaveable { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -230,7 +237,8 @@ fun SearchBar(
                                         halfSheet,
                                         logViewModel,
                                         isLogMenu,
-                                        logId
+                                        logId,
+                                        friendsViewModel
                                     )
                                 }
                             }
@@ -244,6 +252,7 @@ fun SearchBar(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieResult(
@@ -252,7 +261,8 @@ fun MovieResult(
     halfSheet: String,
     logViewModel: LogViewModel,
     isLogMenu: Boolean,
-    logId: String?
+    logId: String?,
+    friendsViewModel: FriendsViewModel
 ) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val allLogs by logViewModel.allLogs.collectAsState()
@@ -319,6 +329,11 @@ fun MovieResult(
             mutableStateOf(false)
         }
 
+        var isNewLogSheetOpen by rememberSaveable {
+            mutableStateOf(false)
+        }
+        val newLogSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
         val context = LocalContext.current
         var isClicked by remember { mutableStateOf(false) }
         val haptic = LocalHapticFeedback.current
@@ -361,7 +376,6 @@ fun MovieResult(
                 )
             }
         }
-
 
         if (isSheetOpen) {
             ModalBottomSheet(
@@ -462,49 +476,76 @@ fun MovieResult(
                     ) {
                         var isAnyChecked by remember { mutableStateOf(false) }
                         isAnyChecked = checkedStates.any { it }
-                        val buttonText = if (isAnyChecked) "Add to Log" else "Create New Log"
                         // Add Button
-                        androidx.compose.material3.Button(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(60.dp)
-                                .padding(horizontal = 24.dp)
-                                .testTag("ADD_TO_LOG_BUTTON"),
-                            onClick = {
-                                // Use the checkedStates list to find out which checkboxes are checked
-                                if (isAnyChecked) {
-                                    val checkedItems =
-                                        allLogs!!.indices.filter { checkedStates[it] }
-                                    Log.d(TAG, "Checked Items: $checkedItems")
-                                    for (checkedItem in checkedItems) {
-                                        val log = allLogs!![checkedItem]
+                        if (isAnyChecked) {
+                            androidx.compose.material3.Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(60.dp)
+                                    .padding(horizontal = 24.dp)
+                                    .testTag("ADD_TO_LOG_BUTTON"),
+                                onClick = {
+                                    // Use the checkedStates list to find out which checkboxes are checked
+                                    if (isAnyChecked) {
+                                        val checkedItems =
+                                            allLogs!!.indices.filter { checkedStates[it] }
+                                        Log.d(TAG, "Checked Items: $checkedItems")
+                                        for (checkedItem in checkedItems) {
+                                            val log = allLogs!![checkedItem]
 
-                                        logViewModel.addMovieToLog(log.logId, movie.id.toString())
-                                        /*Log.d(TAG, allLogs)*/
+                                            logViewModel.addMovieToLog(
+                                                log.logId,
+                                                movie.id.toString()
+                                            )
+                                            /*Log.d(TAG, allLogs)*/
+                                        }
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                "Movie added to log!",
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show()
+                                        isSheetOpen = false
                                     }
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            "Movie added to log!",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                        .show()
-                                    isSheetOpen = false
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(id = R.color.sky_blue),
-                                disabledContainerColor = Color.LightGray
-                            )
-                        ) {
-                            Text(
-                                /*"Add"*/
-                                buttonText,
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.sky_blue),
+                                    disabledContainerColor = Color.LightGray
+                                )
+                            ) {
+                                Text(
+                                    /*"Add"*/
+                                    "ADD TO LOG",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            androidx.compose.material3.Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(60.dp)
+                                    .padding(horizontal = 24.dp)
+                                    .testTag("CREATE_NEW_LOG_BUTTON"),
+                                onClick = {
+                                    isNewLogSheetOpen = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.sky_blue),
+                                    disabledContainerColor = Color.LightGray
+                                )
+                            ) {
+                                Text(
+                                    /*"Add"*/
+                                    "CREATE NEW LOG",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
 
@@ -531,8 +572,8 @@ fun MovieResult(
                             ),
                         ) {
                             androidx.compose.material3.Text(
-                                "Cancel",
-                                style = MaterialTheme.typography.titleLarge,
+                                "CANCEL",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -541,6 +582,31 @@ fun MovieResult(
                     Spacer(modifier = Modifier.height(10.dp))
 
                 }
+            }
+        }
+
+        val isLoggedIn by logViewModel.isLoggedIn.collectAsState()
+
+        if (isNewLogSheetOpen) {
+            ModalBottomSheet(
+                sheetState = newLogSheetState,
+                onDismissRequest = { isNewLogSheetOpen = false },
+                containerColor = colorResource(id = R.color.bottomnav),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("CREATE_NEW_LOG_SEARCH_POPUP")
+            ) {
+                NewLogMenu(friendsViewModel = friendsViewModel, logViewModel, isLoggedIn, onCreateClick = {
+                    isNewLogSheetOpen = false
+                    logViewModel.loadLogs()
+                }, onCloseClick = {
+                    isNewLogSheetOpen = false
+                })
+            }
+        }
+
+        LaunchedEffect(isSheetOpen, isNewLogSheetOpen) {
+            if (isSheetOpen && !isNewLogSheetOpen) {
             }
         }
     }

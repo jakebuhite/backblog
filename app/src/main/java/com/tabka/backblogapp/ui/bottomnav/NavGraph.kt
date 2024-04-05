@@ -87,7 +87,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(route = "search_results") {
-                SearchResultsScreen(navController, logViewModel)
+                SearchResultsScreen(navController, logViewModel, friendsViewModel)
             }
 
             composable(
@@ -96,7 +96,7 @@ fun BottomNavGraph(navController: NavHostController) {
                     navArgument("genreId") { type = NavType.StringType },
                     navArgument("name") { type = NavType.StringType })
             ) { backStackEntry ->
-                CategoryResultsScreen(navController, logViewModel, backStackEntry.arguments?.getString("genreId"), backStackEntry.arguments?.getString("name"))
+                CategoryResultsScreen(navController, logViewModel, backStackEntry.arguments?.getString("genreId"), backStackEntry.arguments?.getString("name"), friendsViewModel)
             }
 
             composable(
