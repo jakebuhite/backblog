@@ -23,6 +23,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.tabka.backblogapp.ui.screens.BlockedUsersScreen
 import com.tabka.backblogapp.ui.screens.CategoryResultsScreen
 import com.tabka.backblogapp.ui.screens.FriendsScreen
 import com.tabka.backblogapp.ui.screens.HomeScreen
@@ -125,6 +126,10 @@ fun BottomNavGraph(navController: NavHostController) {
 
             composable(route = "settings") {
                 SettingsScreen(navController, settingsViewModel)
+            }
+
+            composable(route = "blocked_users") {
+                BlockedUsersScreen(navController)
             }
 
             composable(
