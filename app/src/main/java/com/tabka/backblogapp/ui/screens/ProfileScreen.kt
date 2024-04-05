@@ -61,10 +61,14 @@ import androidx.navigation.NavHostController
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.Accept
+import com.tabka.backblogapp.network.models.AlertDialog
+import com.tabka.backblogapp.network.models.Dismiss
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.shared.FriendsList
 import com.tabka.backblogapp.ui.shared.PublicLogs
+import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.ProfileViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
@@ -98,6 +102,11 @@ fun ProfileScreen(navController: NavHostController, friendId: String?, profileVi
         profileViewModel.clearMessage()
     }
 
+    var alertDialogState by remember { mutableStateOf(AlertDialog()) }
+    val setAlertDialogState = { dialog: AlertDialog ->
+        alertDialogState = dialog
+    }
+
     // Get data
     composableScope.launch {
         profileViewModel.getUserData(friendId ?: "")
@@ -120,8 +129,13 @@ fun ProfileScreen(navController: NavHostController, friendId: String?, profileVi
         addFriend,
         removeFriend,
         blockUser,
-        composableScope
+        composableScope,
+        alertDialogState,
+        setAlertDialogState
     )
+
+    ShowAlertDialog(alertDialogState, setAlertDialogState)
+
     Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
@@ -139,7 +153,9 @@ fun FriendsPageContent(
     onAddFriendSelected: () -> Unit,
     onRemoveFriendSelected: () -> Unit,
     onBlockUserSelected: () -> Unit,
-    composableScope: CoroutineScope
+    composableScope: CoroutineScope,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit
 ) {
     val scrollState = rememberScrollState()
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -190,7 +206,8 @@ fun FriendsPageContent(
                                           },
                     dismissBottomSheet = { showBottomSheet = false },
                     alreadyFriend = alreadyFriend,
-                    composableScope = composableScope
+                    composableScope = composableScope, alertDialogState,
+                    setAlertDialogState
                 )
             }
             Spacer(modifier = Modifier.height(70.dp))
@@ -292,7 +309,9 @@ fun AddFriendOrBlockDialog(
     onBlockUserSelected: () -> Unit,
     dismissBottomSheet: () -> Unit,
     alreadyFriend: Boolean,
-    composableScope: CoroutineScope
+    composableScope: CoroutineScope,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -310,14 +329,28 @@ fun AddFriendOrBlockDialog(
         ) {
             if (alreadyFriend) {
                 Button(onClick = {
-                    composableScope.launch {
-                        onRemoveFriendSelected()
-                        sheetState.hide()
-                    }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            dismissBottomSheet()
-                        }
-                    }
+                    setAlertDialogState(
+                        AlertDialog(
+                            isVisible = true,
+                            header = "Remove Friend?",
+                            message = "Are you sure you want to remove this user?",
+                            dismiss = Dismiss(text = "Cancel"),
+                            accept = Accept(
+                                text = "Remove",
+                                textColor = Color(0xFFDC3545),
+                                action = {
+                                    composableScope.launch {
+                                        onRemoveFriendSelected()
+                                        sheetState.hide()
+                                    }.invokeOnCompletion {
+                                        if (!sheetState.isVisible) {
+                                            dismissBottomSheet()
+                                        }
+                                    }
+                                }
+                            )
+                        )
+                    )
                 },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
@@ -364,14 +397,28 @@ fun AddFriendOrBlockDialog(
             )
 
             Button(onClick = {
-                composableScope.launch {
-                    onBlockUserSelected()
-                    sheetState.hide()
-                }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        dismissBottomSheet()
-                    }
-                }
+                setAlertDialogState(
+                    AlertDialog(
+                        isVisible = true,
+                        header = "Block User?",
+                        message = "Are you sure you want to block this user?",
+                        dismiss = Dismiss(text = "Cancel"),
+                        accept = Accept(
+                            text = "Block",
+                            textColor = Color(0xFFDC3545),
+                            action = {
+                                composableScope.launch {
+                                    onBlockUserSelected()
+                                    sheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        dismissBottomSheet()
+                                    }
+                                }
+                            }
+                        )
+                    )
+                )
             }, colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
                 disabledContainerColor = Color.Transparent
