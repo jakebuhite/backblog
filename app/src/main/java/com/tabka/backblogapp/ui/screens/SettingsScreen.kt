@@ -133,12 +133,13 @@ fun SettingsForm(navController: NavController, userData: UserData?,
                 ),
                 modifier = Modifier
                     .height(55.dp)
-                    .width(200.dp)
+                    .width(220.dp)
                     .padding(horizontal = 12.dp)
                     .testTag("CHANGE_AVATAR_BUTTON")
             )
             {
-                Text("CHANGE AVATAR", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("CHANGE AVATAR", style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold)
             }
         }
 
@@ -249,7 +250,8 @@ fun SettingsForm(navController: NavController, userData: UserData?,
                 .testTag("UPDATE_SETTINGS_BUTTON")
         )
         {
-            Text("SAVE SETTINGS", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("SAVE SETTINGS", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -287,7 +289,8 @@ fun SettingsForm(navController: NavController, userData: UserData?,
             {
                 Text(
                     "SYNC LOGS TO DB",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.testTag("SYNC_LOGS_TEXT")
                 )
             }
@@ -313,10 +316,11 @@ fun SettingsForm(navController: NavController, userData: UserData?,
                     1.dp,
                     Color(0xFFDC3545),
                     shape = RoundedCornerShape(30.dp))
-                .testTag("UPDATE_SETTINGS_BUTTON")
+                .testTag("BLOCKED_USERS_BUTTON")
         )
         {
-            Text("VIEW BLOCKED USERS", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold), color = Color(0xFFDC3545))
+            Text("VIEW BLOCKED USERS", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -353,10 +357,11 @@ fun SettingsForm(navController: NavController, userData: UserData?,
                     1.dp,
                     Color(0xFFDC3545),
                     shape = RoundedCornerShape(30.dp))
-                .testTag("UPDATE_SETTINGS_BUTTON")
+                .testTag("LOG_OUT_BUTTON")
         )
         {
-            Text("LOG OUT", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold), color = Color(0xFFDC3545))
+            Text("LOG OUT", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
         }
     }
 }
