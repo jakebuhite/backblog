@@ -105,6 +105,7 @@ import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -118,6 +119,7 @@ import org.burnoutcrew.reorderable.reorderable
 
 private val TAG = "LogDetailsScreen"
 
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LogDetailsScreen(
@@ -125,7 +127,8 @@ fun LogDetailsScreen(
     logId: String?,
     friendsViewModel: FriendsViewModel,
     logViewModel: LogViewModel,
-    logDetailsViewModel: LogDetailsViewModel = viewModel()
+    logDetailsViewModel: LogDetailsViewModel = viewModel(),
+    movieDetailsViewModel: MovieDetailsViewModel
 ) {
     val hasBackButton = true
 
@@ -229,7 +232,8 @@ fun LogDetailsScreen(
                                 friendsViewModel,
                                 alertDialogState,
                                 setAlertDialogState,
-                                logId
+                                logId,
+                                movieDetailsViewModel
                             )
                         }
                         Spacer(modifier = Modifier.height(20.dp))
@@ -412,7 +416,8 @@ fun LogButtons(
     friendsViewModel: FriendsViewModel,
     alertDialogState: AlertDialog,
     setAlertDialogState: (AlertDialog) -> Unit,
-    logId: String
+    logId: String,
+    movieDetailsViewModel: MovieDetailsViewModel
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
@@ -575,7 +580,7 @@ fun LogButtons(
                                     end = 12.dp
                                 )
                             ) {
-                                SearchBar(navController, logViewModel, isLogMenu = true, logId, friendsViewModel)
+                                SearchBar(navController, logViewModel, isLogMenu = true, logId, friendsViewModel, movieDetailsViewModel)
                             }
                         }
                     }
