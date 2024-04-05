@@ -721,10 +721,9 @@ fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLog
                     .fillMaxSize()
                     .testTag("ADD_LOG_POPUP")
             ) {
-                NewLogMenu(friendsViewModel, logViewModel, isLoggedIn, onCreateClick = {  {
+                NewLogMenu(friendsViewModel, logViewModel, isLoggedIn, onCreateClick = {
                     isSheetOpen = false
                     logViewModel.loadLogs()
-                }
                 }, onCloseClick = {
                     isSheetOpen = false
                 })

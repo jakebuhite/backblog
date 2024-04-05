@@ -36,7 +36,9 @@ import com.tabka.backblogapp.ui.screens.SearchScreen
 import com.tabka.backblogapp.ui.screens.SettingsScreen
 import com.tabka.backblogapp.ui.screens.SignupScreen
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
+import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.ProfileViewModel
 import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 
@@ -44,6 +46,9 @@ import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
     val friendsViewModel = FriendsViewModel()
+    val movieDetailsViewModel = MovieDetailsViewModel()
+    val logDetailsViewModel = LogDetailsViewModel()
+
     LaunchedEffect(true) {
         friendsViewModel.getFriends()
     }
@@ -70,14 +75,14 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "home_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel)
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel, logDetailsViewModel, movieDetailsViewModel)
             }
 
             composable(
                 route = "home_movie_details_{movieId}_{logId}_{movieIsWatched}",
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("logId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType})
             ) { backStackEntry ->
-                backStackEntry.arguments?.let { MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), backStackEntry.arguments?.getString("logId"), logViewModel, it.getInt("movieIsWatched")) }
+                backStackEntry.arguments?.let { MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), backStackEntry.arguments?.getString("logId"), logViewModel, it.getInt("movieIsWatched"), movieDetailsViewModel, friendsViewModel) }
             }
         }
 
@@ -88,7 +93,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(route = "search_results") {
-                SearchResultsScreen(navController, logViewModel, friendsViewModel)
+                SearchResultsScreen(navController, logViewModel, friendsViewModel, movieDetailsViewModel)
             }
 
             composable(
@@ -97,7 +102,7 @@ fun BottomNavGraph(navController: NavHostController) {
                     navArgument("genreId") { type = NavType.StringType },
                     navArgument("name") { type = NavType.StringType })
             ) { backStackEntry ->
-                CategoryResultsScreen(navController, logViewModel, backStackEntry.arguments?.getString("genreId"), backStackEntry.arguments?.getString("name"), friendsViewModel)
+                CategoryResultsScreen(navController, logViewModel, backStackEntry.arguments?.getString("genreId"), backStackEntry.arguments?.getString("name"), friendsViewModel, movieDetailsViewModel)
             }
 
             composable(
@@ -105,7 +110,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType })
             ) { backStackEntry ->
                 backStackEntry.arguments?.let {
-                    MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel, it.getInt("movieIsWatched")
+                    MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel, it.getInt("movieIsWatched"), movieDetailsViewModel, friendsViewModel
                     )
                 }
             }
@@ -136,7 +141,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "public_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel)
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel, logDetailsViewModel, movieDetailsViewModel)
             }
 
             composable(
