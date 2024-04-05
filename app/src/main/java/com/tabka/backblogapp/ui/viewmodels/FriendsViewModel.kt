@@ -52,6 +52,7 @@ open class FriendsViewModel(
     init {
         friendRequestListener()
         logRequestListener()
+        friendListener()
     }
 
     private fun friendRequestListener() {
@@ -79,6 +80,20 @@ open class FriendsViewModel(
                 Log.d("FRTEST", "SOMETHING HAPPENED to LOG REQUESTS")
                 viewModelScope.launch {
                     getLogRequests()
+                }
+            }
+    }
+
+    private fun friendListener() {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("users").whereEqualTo("user_id", auth.currentUser?.uid)
+            .addSnapshotListener { _, e ->
+                if (e != null) {
+                    return@addSnapshotListener
+                }
+                Log.d("FRTEST", "SOMETHING HAPPENED to LOG REQUESTS")
+                viewModelScope.launch {
+                    getFriends()
                 }
             }
     }
