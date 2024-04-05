@@ -7,8 +7,10 @@
 package com.tabka.backblogapp.ui.screens
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -395,6 +397,7 @@ fun DetailBar(movieCount: Int, owner: UserData, collaborators: List<UserData>) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LogButtons(
@@ -486,6 +489,7 @@ fun LogButtons(
                                         alertDialogState,
                                         setAlertDialogState,
                                         isOwner,
+                                        isCollaborator,
                                         logName,
                                         movies,
                                         logDetailsViewModel,
@@ -571,7 +575,7 @@ fun LogButtons(
                                     end = 12.dp
                                 )
                             ) {
-                                SearchBar(navController, logViewModel, isLogMenu = true, logId)
+                                SearchBar(navController, logViewModel, isLogMenu = true, logId, friendsViewModel)
                             }
                         }
                     }
@@ -1011,7 +1015,7 @@ fun CollaboratorsSheetContent(
             ) {
                 androidx.compose.material3.Text(
                     "SAVE",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -1041,7 +1045,7 @@ fun CollaboratorsSheetContent(
             ) {
                 Text(
                     "CANCEL",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -1059,6 +1063,7 @@ fun EditSheetContent(
     alertDialogState: AlertDialog,
     setAlertDialogState: (AlertDialog) -> Unit,
     isOwner: Boolean,
+    isCollaborator: Boolean,
     logName: String,
     movies: Map<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel,
@@ -1259,6 +1264,61 @@ fun EditSheetContent(
                     ) {
                         Text(
                             "DELETE",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFDC3545)
+                        )
+                    }
+                }
+                else if (isCollaborator) {
+                    Button(
+                        onClick = {
+                            setAlertDialogState(
+                                AlertDialog(
+                                    isVisible = true,
+                                    header = "Leave log",
+                                    message = "Are you sure you want to permanently leave this log?",
+                                    dismiss = Dismiss(text = "Cancel"),
+                                    accept = Accept(
+                                        text = "Leave",
+                                        textColor = Color(0xFFDC3545),
+                                        action = {
+                                            /*CoroutineScope(Dispatchers.Main).launch {
+                                                val asyncJob =
+                                                    logDetailsViewModel.deleteLog()
+                                                asyncJob?.join()
+
+                                                logViewModel.loadLogs()
+                                                navController.navigate("home")
+                                                Toast.makeText(
+                                                    context,
+                                                    "Successfully deleted $logName!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }*/
+                                        }
+                                    )
+                                )
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp)
+                            .padding(horizontal = 24.dp)
+                            .background(color = Color.Transparent)
+                            .border(
+                                1.dp,
+                                Color(0xFFDC3545),
+                                shape = RoundedCornerShape(30.dp)
+                            )
+                            .testTag("LEAVE_BUTTON"),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        ),
+                    ) {
+                        Text(
+                            "LEAVE LOG",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFDC3545)

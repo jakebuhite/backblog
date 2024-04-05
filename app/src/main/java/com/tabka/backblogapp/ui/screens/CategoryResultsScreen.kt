@@ -30,10 +30,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 
 @Composable
-fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogViewModel, genreId: String?, genreName: String?) {
+fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogViewModel, genreId: String?, genreName: String?, friendsViewModel: FriendsViewModel) {
     val hasBackButton = true
     val isMovieDetails = false
     val pageTitle = "Results - $genreName"
@@ -76,7 +77,7 @@ fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogVie
                 }
 
                 false -> {
-                    MovieResults(navController, logViewModel, isLogMenu, logId)
+                    MovieResults(navController, logViewModel, isLogMenu, logId, friendsViewModel)
                 }
             }
             }
@@ -87,7 +88,7 @@ fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogVie
 }
 
 @Composable
-fun MovieResults(navController: NavHostController, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?) {
+fun MovieResults(navController: NavHostController, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?, friendsViewModel: FriendsViewModel) {
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
     val halfSheets = searchResultsViewModel.halfSheet.collectAsState().value
 
@@ -102,7 +103,7 @@ fun MovieResults(navController: NavHostController, logViewModel: LogViewModel, i
                 items(movieResults.size) { index ->
                     val movie = movieResults[index]
                     val halfSheet = halfSheets[movie.id.toString()] ?: ""
-                    MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId)
+                    MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId, friendsViewModel)
                 }
             }
         }
