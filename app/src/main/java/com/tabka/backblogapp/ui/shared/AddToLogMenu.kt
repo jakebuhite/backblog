@@ -1,9 +1,9 @@
 package com.tabka.backblogapp.ui.shared
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,24 +11,25 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Checkbox
-import androidx.compose.material3.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun AddToLogMenu(logViewModel: LogViewModel, movie: MovieData, onCreateNewLog: () -> Unit, onCloseAddMenu: () -> Unit) {
@@ -63,8 +63,12 @@ fun AddToLogMenu(logViewModel: LogViewModel, movie: MovieData, onCreateNewLog: (
             ) {
                 items(allLogs!!.size) { index ->
                     val log = allLogs!![index]
+
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            checkedStates[index] = !checkedStates[index]
+                        }
                     ) {
                         Column(modifier = Modifier.weight(3F)) {
                             androidx.compose.material.Text(
@@ -77,13 +81,17 @@ fun AddToLogMenu(logViewModel: LogViewModel, movie: MovieData, onCreateNewLog: (
                             modifier = Modifier.weight(1F),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Checkbox(
-                                checked = checkedStates[index],
-                                onCheckedChange = { isChecked ->
-                                    checkedStates[index] = isChecked
-                                },
-                                modifier = Modifier.testTag("LOG_CHECKBOX")
-                            )
+//                            Checkbox(
+//                                checked = checkedStates[index],
+//                                onCheckedChange = { isChecked ->
+//                                    checkedStates[index] = isChecked
+//                                },
+//                                modifier = Modifier
+//                                    .testTag("LOG_CHECKBOX")
+//                            )
+                            CircleCheckbox(selected = checkedStates[index], onChecked = {
+                                    isChecked -> checkedStates[index] = isChecked as Boolean
+                            })
                         }
                     }
                 }
@@ -212,5 +220,23 @@ fun AddToLogMenu(logViewModel: LogViewModel, movie: MovieData, onCreateNewLog: (
 
         Spacer(modifier = Modifier.height(10.dp))
 
+    }
+}
+
+@Composable
+fun CircleCheckbox(selected: Boolean, enabled: Boolean = true, onChecked: (Any?) -> Unit) {
+
+    val color = MaterialTheme.colorScheme
+    val imageVector = if (selected) Icons.Filled.CheckCircle else Icons.Outlined.Circle
+    val tint = if (selected) colorResource(id = R.color.sky_blue) else Color.White.copy(alpha = 0.8f)
+    val background = Color.Transparent
+
+    IconButton(onClick = { onChecked(!selected) },
+        modifier = Modifier.offset(x = 4.dp, y = 4.dp),
+        enabled = enabled) {
+
+        Icon(imageVector = imageVector, tint = tint,
+            modifier = Modifier.background(background, shape = CircleShape),
+            contentDescription = "checkbox")
     }
 }
