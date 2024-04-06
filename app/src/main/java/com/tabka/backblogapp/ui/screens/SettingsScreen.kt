@@ -44,6 +44,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.Accept
 import com.tabka.backblogapp.network.models.AlertDialog
@@ -338,6 +340,9 @@ fun SettingsForm(navController: NavController, userData: UserData?,
                         textColor = Color(0xFFDC3545),
                         action = {
                             CoroutineScope(Dispatchers.Main).launch {
+                                val auth = Firebase.auth
+                                auth.signOut()
+                                navController.navigate("login")
                             }
                         }
                     )
