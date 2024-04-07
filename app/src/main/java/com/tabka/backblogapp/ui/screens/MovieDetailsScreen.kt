@@ -75,7 +75,7 @@ private val TAG = "MovieDetailsScreen"
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel(), friendsViewModel: FriendsViewModel) {
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel(), friendsViewModel: FriendsViewModel, isRando: Boolean) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
     Log.d(TAG, "Here")
@@ -85,7 +85,7 @@ fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: St
 
     val hasBackButton = true
 
-    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId, friendsViewModel)
+    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId, friendsViewModel, isRando)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -97,7 +97,8 @@ fun Foundation(
     logViewModel: LogViewModel,
     movieIsWatched: Int,
     logId: String?,
-    friendsViewModel: FriendsViewModel
+    friendsViewModel: FriendsViewModel,
+    isRando: Boolean
 ) {
     val lightGrey = Color(0xFF37414A)
     val darkGrey = Color(0xFF191919)
@@ -152,7 +153,7 @@ fun Foundation(
                             .fillMaxHeight()
                             .background(Brush.verticalGradient(gradientColors)),
                     ) {
-                        MovieInfo(movie, logViewModel, movieIsWatched, logId, friendsViewModel, navController)
+                        MovieInfo(movie, logViewModel, movieIsWatched, logId, friendsViewModel, navController, isRando)
                     }
                 }
             }
@@ -168,7 +169,7 @@ fun Foundation(
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, friendsViewModel: FriendsViewModel, navController: NavController) {
+fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, friendsViewModel: FriendsViewModel, navController: NavController, isRando: Boolean) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -315,75 +316,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                var isClicked by remember { mutableStateOf(false) }
-                if (movieIsWatched == 1 && !isClicked) {
-                    val context = LocalContext.current
-                    val haptic = LocalHapticFeedback.current
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            Toast
-                                .makeText(
-                                    context,
-                                    "Successfully marked movie as watched!",
-                                    Toast.LENGTH_SHORT
-                                )
-                                .show()
-
-                            if (logId != null) {
-                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
-                            }
-                            isClicked = true
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(id = R.color.sky_blue),
-                            disabledContainerColor = Color.LightGray
-                        )
-                    ) {
-                        androidx.compose.material3.Text(
-                            "ADD TO WATCHED",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                else if (movieIsWatched == 2 && !isClicked) {
-                    val context = LocalContext.current
-                    val haptic = LocalHapticFeedback.current
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            Toast
-                                .makeText(
-                                    context,
-                                    "Successfully marked movie as unwatched!",
-                                    Toast.LENGTH_SHORT
-                                )
-                                .show()
-                            if (logId != null) {
-                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
-                            }
-                            isClicked = true
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(id = R.color.sky_blue),
-                            disabledContainerColor = Color.LightGray
-                        )
-                    ) {
-                        androidx.compose.material3.Text(
-                            "ADD TO UNWATCHED",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                else {
+                if (isRando) {
                     Button(
                         onClick = {
                             isSheetOpen = true
@@ -401,6 +334,95 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+                }
+                else {
+                    var isClicked by remember { mutableStateOf(false) }
+                    if (movieIsWatched == 1 && !isClicked) {
+                        val context = LocalContext.current
+                        val haptic = LocalHapticFeedback.current
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Successfully marked movie as watched!",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show()
+
+                                if (logId != null) {
+                                    logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                                }
+                                isClicked = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.sky_blue),
+                                disabledContainerColor = Color.LightGray
+                            )
+                        ) {
+                            androidx.compose.material3.Text(
+                                "ADD TO WATCHED",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else if (movieIsWatched == 2 && !isClicked) {
+                        val context = LocalContext.current
+                        val haptic = LocalHapticFeedback.current
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Successfully marked movie as unwatched!",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show()
+                                if (logId != null) {
+                                    logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                                }
+                                isClicked = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.sky_blue),
+                                disabledContainerColor = Color.LightGray
+                            )
+                        ) {
+                            androidx.compose.material3.Text(
+                                "ADD TO UNWATCHED",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    else {
+                        Button(
+                            onClick = {
+                                isSheetOpen = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.sky_blue),
+                                disabledContainerColor = Color.LightGray
+                            )
+                        ) {
+                            androidx.compose.material3.Text(
+                                "ADD TO LOG",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
