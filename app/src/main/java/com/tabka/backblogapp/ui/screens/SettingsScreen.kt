@@ -94,7 +94,6 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
             LoadingSpinner()
         } else {
             SettingsForm(navController, userData, settingsViewModel::updateUserData,
-                settingsViewModel::syncLocalLogsToDB,
                 settingsViewModel::getLogCount, alertDialogState, setAlertDialogState)
         }
     }
@@ -107,7 +106,6 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
 @Composable
 fun SettingsForm(navController: NavController, userData: UserData?,
                  updateUserData: suspend (Map<String, Any?>, String) -> DataResult<Boolean>,
-                 syncLocalLogsToDB: suspend () -> DataResult<Boolean>,
                  getLogCount: () -> Int, alertDialogState: AlertDialog,
                  setAlertDialogState: (AlertDialog) -> Unit) {
     // Avatar selection button
@@ -256,55 +254,11 @@ fun SettingsForm(navController: NavController, userData: UserData?,
                 fontWeight = FontWeight.Bold)
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Sync local data
-        if (getLogCount() > 0) {
-            Button(onClick = {
-                CoroutineScope(Dispatchers.Default).launch {
-                    when (val result = syncLocalLogsToDB()) {
-                        is DataResult.Success -> {
-                            statusText = "Local logs successfully synced!"
-                            statusColor = Color(0xFF4BB543)
-                            visible = true
-                        }
-                        is DataResult.Failure -> {
-                            val e = result.throwable.message
-                            Log.d("SettingsScreen", "Error syncing logs $e")
-                            statusText = "Error syncing logs."
-                            statusColor = Color(0xFFCC0000)
-                            visible = true
-                        }
-                    }
-                }
-            },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.sky_blue),
-                    disabledContainerColor = Color.Gray
-                ),
-                modifier = Modifier
-                    .height(55.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .testTag("SYNC_LOGS_BUTTON")
-            )
-            {
-                Text(
-                    "SYNC LOGS TO DB",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.testTag("SYNC_LOGS_TEXT")
-                )
-            }
-        }
-
         Spacer(modifier = Modifier.height(20.dp))
-
-        //Spacer(modifier = Modifier.height(20.dp))
 
         // Blocked Users Button
         Button(onClick = {
-                         navController.navigate("blocked_users")
+            navController.navigate("blocked_users")
         },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,

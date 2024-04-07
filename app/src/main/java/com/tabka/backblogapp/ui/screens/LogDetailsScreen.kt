@@ -45,7 +45,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
@@ -137,7 +136,7 @@ fun LogDetailsScreen(
 
     Log.d(TAG, "Movies: $movies")
 
-    // Watched Moviess
+    // Watched Movies
     val watchedMovieState = logDetailsViewModel.watchedMovies.observeAsState()
     val watchedMovies = watchedMovieState.value ?: emptyMap()
 
@@ -232,6 +231,7 @@ fun LogDetailsScreen(
                                 navController,
                                 pageTitle,
                                 movies,
+                                watchedMovies,
                                 isOwner,
                                 isCollaborator,
                                 collaborators,
@@ -367,23 +367,6 @@ fun DetailBar(
             }
         }
 
-        // Number of Movies with Slide Animation
-        /*        AnimatedVisibility(
-                    visible = isOwnerVisible,
-                    enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
-                    fadeIn(animationSpec = tween(1000)),
-                    exit = fadeOut(animationSpec = tween(
-                        durationMillis = 3000,
-                        //easing = LinearOutSlowInEasing
-                        )
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(start = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("$movieCount Movies", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    }
-                }*/
-
         Crossfade(
             targetState = if (isOwnerVisible) movieCount else null,
             modifier = Modifier.padding(start = 8.dp),
@@ -413,26 +396,6 @@ fun DetailBar(
                 }
             }
         }
-        /*        AnimatedVisibility(
-                    visible = isOwnerVisible,
-                    enter = slideInHorizontally(initialOffsetX = { -it }) + slideInHorizontally(initialOffsetX = { -it }) +
-                            fadeIn(animationSpec = tween(1000)),
-                    exit = fadeOut(animationSpec = tween(
-                        durationMillis = 3000))
-                ) {
-                    Crossfade(targetState = movieCount, label = "") { targetCount ->
-                        Column(
-                            modifier = Modifier.padding(start = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                "$targetCount Movies",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }*/
         if (isSheetOpen) {
             ModalBottomSheet(
                 sheetState = sheetState,
@@ -669,6 +632,7 @@ fun LogButtons(
     navController: NavHostController,
     logName: String,
     movies: Map<String, MinimalMovieData>,
+    watchedMovies: Map<String, MinimalMovieData>,
     isOwner: Boolean,
     isCollaborator: Boolean,
     collaborators: List<UserData>,
@@ -703,11 +667,9 @@ fun LogButtons(
 
             Row(modifier = Modifier.weight(1F)) {
                 // Collaborators Icon
-                //if (isOwner) {
                 Column(
                     modifier = Modifier
                         .weight(1F)
-                        /*.width(60.dp)*/
                         .fillMaxHeight()
                         .padding(end = 10.dp),
                     horizontalAlignment = Alignment.Start,
@@ -732,7 +694,6 @@ fun LogButtons(
                             modifier = Modifier
                                 .fillMaxSize()
                         ) {
-                            Log.d(TAG, "Collaborators at top function: $collaborators")
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth(),
@@ -970,6 +931,7 @@ fun LogButtons(
                                         isCollaborator,
                                         logName,
                                         movies,
+                                        watchedMovies,
                                         logDetailsViewModel,
                                         logViewModel
                                     )
@@ -1560,6 +1522,7 @@ fun EditSheetContent(
     isCollaborator: Boolean,
     logName: String,
     movies: Map<String, MinimalMovieData>,
+    watchedMovies: Map<String, MinimalMovieData>,
     logDetailsViewModel: LogDetailsViewModel,
     logViewModel: LogViewModel
 ) {
@@ -1603,6 +1566,7 @@ fun EditSheetContent(
         Spacer(modifier = Modifier.height(60.dp))
 
         val editedMovies = remember { mutableStateOf(movies.values.toList()) }
+        val editedWatchedMovies = remember { mutableStateOf(watchedMovies.values.toList()) }
 
         // Box holding the list of movies
         Box(
@@ -1610,20 +1574,55 @@ fun EditSheetContent(
                 .fillMaxHeight()
                 .weight(1f)
         ) {
-            val state = rememberReorderableLazyListState(onMove = { from, to ->
-                Log.d(TAG, "Gotta move!")
+            val movieState = rememberReorderableLazyListState(onMove = { from, to ->
                 editedMovies.value = editedMovies.value.toMutableList().apply {
                     add(to.index, removeAt(from.index))
                 }
             })
+
+            // Movies
             LazyColumn(
-                state = state.listState,
+                state = movieState.listState,
                 modifier = Modifier
-                    .reorderable(state)
-                    .detectReorderAfterLongPress(state)
+                    .reorderable(movieState)
+                    .detectReorderAfterLongPress(movieState)
             ) {
                 items(editedMovies.value, { it.id ?: 0 }) { movie ->
-                    ReorderableItem(state, key = movie.id) { isDragging ->
+                    ReorderableItem(movieState, key = movie.id) { isDragging ->
+                        val elevation = animateDpAsState(if (isDragging) 16.dp else 0.dp)
+                        Column(
+                            modifier = Modifier
+                                .shadow(elevation.value)
+                        ) {
+                            EditLogEntry(movie)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Box holding the list of watched movies
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
+        ) {
+
+            val watchedMovieState = rememberReorderableLazyListState(onMove = { from, to ->
+                editedWatchedMovies.value = editedWatchedMovies.value.toMutableList().apply {
+                    add(to.index, removeAt(from.index))
+                }
+            })
+
+            // Watched Movies
+            LazyColumn(
+                state = watchedMovieState.listState,
+                modifier = Modifier
+                    .reorderable(watchedMovieState)
+                    .detectReorderAfterLongPress(watchedMovieState)
+            ) {
+                items(editedWatchedMovies.value, { it.id ?: 0 }) { movie ->
+                    ReorderableItem(watchedMovieState, key = movie.id) { isDragging ->
                         val elevation = animateDpAsState(if (isDragging) 16.dp else 0.dp)
                         Column(
                             modifier = Modifier
