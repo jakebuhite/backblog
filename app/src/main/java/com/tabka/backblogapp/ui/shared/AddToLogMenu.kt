@@ -218,7 +218,7 @@ fun AddToLogMenu(logViewModel: LogViewModel, movie: MovieData, onCreateNewLog: (
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        //Spacer(modifier = Modifier.height(10.dp))
 
     }
 }

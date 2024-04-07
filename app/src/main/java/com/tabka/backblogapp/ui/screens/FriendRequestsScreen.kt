@@ -303,7 +303,7 @@ fun AddLogModalBottomSheet(
                     enabled = friendsUsername.isNotEmpty()
                 ) {
                     Text(
-                        "Create",
+                        "ADD FRIEND",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -334,7 +334,7 @@ fun AddLogModalBottomSheet(
                     ),
                 ) {
                     Text(
-                        "Cancel",
+                        "CANCEL",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )

@@ -380,6 +380,10 @@ fun AddFriendOrBlockDialog(
                         }
                     }
                 },
+                    modifier = Modifier
+                        .height(55.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(id = R.color.sky_blue),
                         disabledContainerColor = Color.Gray
