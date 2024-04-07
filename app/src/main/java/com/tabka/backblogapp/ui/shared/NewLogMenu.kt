@@ -88,7 +88,8 @@ fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, i
     Spacer(modifier = Modifier.height(20.dp))
 
     Row(
-        modifier = Modifier.padding(start = 50.dp, end = 15.dp),
+        //modifier = Modifier.padding(start = 50.dp, end = 15.dp),
+        modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
