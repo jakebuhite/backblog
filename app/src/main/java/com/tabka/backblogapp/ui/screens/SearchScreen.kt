@@ -150,7 +150,7 @@ fun BrowseCategories(navController: NavController) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
-            .height(210.dp)
+            .height(200.dp)
     ) {
         items(genreList2) { genre ->
             Category(navController, genre)
