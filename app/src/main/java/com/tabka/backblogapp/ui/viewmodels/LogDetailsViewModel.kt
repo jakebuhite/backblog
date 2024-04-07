@@ -3,6 +3,7 @@ package com.tabka.backblogapp.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -100,19 +101,20 @@ open class LogDetailsViewModel(
     }
 
     private fun updateMovies(newList: Map<String, MinimalMovieData>) {
-        Log.d(tag, "Old movies: ${movies.value}")
-        movies.value = emptyMap()
         movies.value = newList
-        Log.d(tag, "Updated movies: ${movies.value}")
+        if (movies.value != null) {
+            for (movie in movies.value!!) {
+                if (watchedMovies.value?.get(movie.key) != null) {
+                    val mutableMovies = watchedMovies.value?.toMutableMap() ?: mutableMapOf()
+                    mutableMovies.remove(movie.key)
+                    updateWatchedMovies(mutableMovies)
+                }
+            }
+        }
     }
 
     private fun updateWatchedMovies(newList: Map<String, MinimalMovieData>) {
-        Log.d(tag, "Old watched movies: ${watchedMovies.value}")
-
-        watchedMovies.value = emptyMap()
         watchedMovies.value = newList
-        Log.d(tag, "New watched movies: ${watchedMovies.value}")
-
     }
 
     private fun updateIsOwner(userIsOwner: Boolean) {
@@ -394,6 +396,17 @@ open class LogDetailsViewModel(
         return userId in collaborators
     }
 
+    suspend fun leaveLog() {
+        if (auth.currentUser?.uid == null) {
+            return
+        }
+
+        val currentUser = auth.currentUser?.uid!!
+        viewModelScope.launch {
+            logRepository.removeCollaborators(logId, listOf(currentUser))
+        }
+    }
+
     private suspend fun initLogListener() {
         if (auth.currentUser?.uid == null) {
             return
@@ -409,10 +422,10 @@ open class LogDetailsViewModel(
 
                 if (value?.exists() == true) {
                     val log: LogData = Json.decodeFromString(Json.encodeToString(value.data.toJsonElement()))
-                    updateIsOwner(userId == log.owner?.userId)
-                    updateIsCollaborator(isCollaborator())
                     viewModelScope.launch {
                         updateLogData(log)
+                        updateIsOwner(userId == log.owner?.userId)
+                        updateIsCollaborator(isCollaborator())
                     }
                 } else {
                     // Document was likely to be deleted

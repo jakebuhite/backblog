@@ -142,7 +142,6 @@ fun WatchNextCard(
     logViewModel: LogViewModel
 ) {
 
-    //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val movie = logViewModel.movie.collectAsState().value
     LaunchedEffect(priorityLog.movieIds?.firstOrNull()) {
         priorityLog.movieIds?.firstOrNull()?.let { movieId ->
