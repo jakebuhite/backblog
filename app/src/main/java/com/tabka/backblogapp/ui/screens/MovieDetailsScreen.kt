@@ -1,7 +1,9 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,18 +16,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Checkbox
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -41,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,14 +67,13 @@ import com.tabka.backblogapp.network.models.tmdb.MovieData
 import com.tabka.backblogapp.ui.shared.AddToLogMenu
 import com.tabka.backblogapp.ui.shared.NewLogMenu
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
-import com.tabka.backblogapp.ui.viewmodels.LogDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
-import kotlinx.coroutines.launch
 
 private val TAG = "MovieDetailsScreen"
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel(), friendsViewModel: FriendsViewModel) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
@@ -92,6 +88,7 @@ fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: St
     Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId, friendsViewModel)
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Foundation(
     navController: NavController,
@@ -168,7 +165,8 @@ fun Foundation(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, friendsViewModel: FriendsViewModel) {
     Column(
@@ -182,7 +180,6 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp),
-                /*verticalAlignment = Alignment.CenterVertically*/
             ) {
                 // Poster
                 Column(
@@ -203,11 +200,6 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                         Box(
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            /*       Image(
-                                       painter = painterResource(id = R.drawable.creator),
-                                       contentDescription = null,
-                                       contentScale = ContentScale.Crop,
-                                   )*/
                             val imageBaseURL =
                                 "https://image.tmdb.org/t/p/w500/${movie.posterPath}"
                             Image(
@@ -232,9 +224,6 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                     Row {
                         // Rating
                         Column {
-                            /* androidx.compose.material3.Text(
-                                }, style = MaterialTheme.typography.bodySmall,
-                            )*/
                             val usRelease =
                                 movie.releaseDates?.results?.find { it.iso31661 == "US" }
                             /*val usRating =
@@ -311,7 +300,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
 
             val allLogs by logViewModel.allLogs.collectAsState()
             val scope = rememberCoroutineScope()
-            val sheetState = rememberModalBottomSheetState(/*skipPartiallyExpanded = false*/)
+            val sheetState = rememberModalBottomSheetState()
             var isSheetOpen by rememberSaveable {
                 mutableStateOf(false)
             }
@@ -341,33 +330,9 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                 )
                                 .show()
 
-                            /*val movieId = movie.id.toString()
-
-                            val removedMovieData =
-                                logDetailsViewModel.movies.value?.let { movies ->
-                                    val updatedMovies = movies.toMutableMap().apply {
-                                        remove(movieId)
-                                    }
-                                    logDetailsViewModel.movies.value = updatedMovies
-                                    movies[movieId] // Get the removed movie data to add it to movies
-                                }
-
-                            removedMovieData?.let { movieData ->
-                                val currentMovies =
-                                    logDetailsViewModel.watchedMovies.value ?: mapOf()
-                                val updatedMovies = currentMovies.toMutableMap().apply {
-                                    this[movieId] = movieData
-                                }
-                                logDetailsViewModel.watchedMovies.value = updatedMovies
-                            }
                             if (logId != null) {
                                 logViewModel.markMovieAsWatched(logId, movie.id.toString())
                             }
-
-                            if (logId != null) {
-                                Log.d("THIS IS THE LOG ID:", logId.toString())
-                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
-                            }*/
                             isClicked = true
                         },
                         modifier = Modifier
@@ -399,28 +364,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                                 )
                                 .show()
                             if (logId != null) {
-                                Log.d("THIS IS THE LOG ID:", logId.toString())
-                                /*logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
-                                val watchedMovieId = movie.id.toString()
-*/
-                              /*  val removedMovieData =
-                                    logDetailsViewModel.watchedMovies.value?.let { watchedMovies ->
-                                        val updatedWatchedMovies =
-                                            watchedMovies.toMutableMap().apply {
-                                                remove(watchedMovieId)
-                                            }
-                                        logDetailsViewModel.watchedMovies.value =
-                                            updatedWatchedMovies
-                                        watchedMovies[watchedMovieId] // Get the removed movie data to add it to movies
-                                    }
-
-                                removedMovieData?.let { movieData ->
-                                    val currentMovies = logDetailsViewModel.movies.value ?: mapOf()
-                                    val updatedMovies = currentMovies.toMutableMap().apply {
-                                        this[watchedMovieId] = movieData
-                                    }
-                                    logDetailsViewModel.movies.value = updatedMovies
-                                }*/
+                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
                             }
                             isClicked = true
                         },

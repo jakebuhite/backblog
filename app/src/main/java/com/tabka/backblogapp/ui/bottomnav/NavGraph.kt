@@ -47,7 +47,6 @@ import com.tabka.backblogapp.ui.viewmodels.SettingsViewModel
 fun BottomNavGraph(navController: NavHostController) {
     val friendsViewModel = FriendsViewModel()
     val movieDetailsViewModel = MovieDetailsViewModel()
-    val logDetailsViewModel = LogDetailsViewModel()
 
     LaunchedEffect(true) {
         friendsViewModel.getFriends()
@@ -75,7 +74,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "home_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel, logDetailsViewModel, movieDetailsViewModel)
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel, LogDetailsViewModel(backStackEntry.arguments?.getString("logId") ?: ""), movieDetailsViewModel)
             }
 
             composable(
@@ -141,7 +140,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 route = "public_log_details_{logId}",
                 arguments = listOf(navArgument("logId") { type = NavType.StringType })
             ) { backStackEntry ->
-                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel, logDetailsViewModel, movieDetailsViewModel)
+                LogDetailsScreen(navController, backStackEntry.arguments?.getString("logId"), friendsViewModel, logViewModel, LogDetailsViewModel(backStackEntry.arguments?.getString("logId") ?: ""), movieDetailsViewModel)
             }
 
             composable(

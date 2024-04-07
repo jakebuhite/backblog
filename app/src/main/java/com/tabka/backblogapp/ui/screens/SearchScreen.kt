@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -208,74 +205,6 @@ fun Category(navController: NavController, genre: Pair<Pair<String, Int>, Int>) 
                     .align(Alignment.Center)
                     .wrapContentHeight(align = Alignment.CenterVertically)
             )
-        }
-    }
-}
-
-@Composable
-fun FriendsAdded() {
-    Row(modifier = Modifier.fillMaxSize()) {
-        Text(
-            "Friends Recently Added", style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.testTag("FRIENDS_RECENTLY_ADDED_TITLE")
-        )
-    }
-
-    Spacer(modifier = Modifier.height(15.dp))
-
-    LazyRow(modifier = Modifier.fillMaxWidth()) {
-        items(4) {
-            FriendMovie()
-        }
-    }
-}
-
-@Composable
-fun FriendMovie() {
-    Column(modifier = Modifier.padding(end = 10.dp)) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Card(
-                    modifier = Modifier
-                        .height(160.dp)
-                        .width(120.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Transparent
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-                )
-                {
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.creator),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-
-                Text(
-                    text = "The Creator",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .wrapContentWidth(align = Alignment.CenterHorizontally)
-                )
-            }
         }
     }
 }

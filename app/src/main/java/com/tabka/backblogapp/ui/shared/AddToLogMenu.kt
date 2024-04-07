@@ -1,5 +1,6 @@
 package com.tabka.backblogapp.ui.shared
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,6 +49,7 @@ import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 @Composable
 fun AddToLogMenu(logViewModel: LogViewModel, movie: MovieData, onCreateNewLog: () -> Unit, onCloseAddMenu: () -> Unit) {
     val allLogs by logViewModel.allLogs.collectAsState()
+    Log.d("AddToLogMenu", "${(allLogs?.size ?: 0)} Logs found.")
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 

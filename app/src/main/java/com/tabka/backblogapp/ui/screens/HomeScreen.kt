@@ -12,7 +12,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -59,7 +58,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
@@ -195,7 +193,7 @@ fun WatchNextCard(
 
 @Composable
 fun PriorityLogTitle(logName: String) {
-    Row() {
+    Row {
         Text(
             "From $logName",
             style = MaterialTheme.typography.titleSmall,
@@ -243,8 +241,6 @@ fun NextMovie(navController: NavController, image: String?, movieId: Int?, prior
     }
 }
 
-
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NextMovieInfo(
     movieId: Int?,
@@ -267,7 +263,7 @@ fun NextMovieInfo(
         )
         {
             // Title
-            Row() {
+            Row {
                 Text(
                     text = title ?: "", style = MaterialTheme.typography.headlineMedium,
                     maxLines = 1,
@@ -279,8 +275,8 @@ fun NextMovieInfo(
                 )
             }
 
-            Row() {
-                Column() {
+            Row {
+                Column {
                     usRating?.ifEmpty { "Not Rated" }?.let {
                         Text(
                             text = it,
@@ -293,8 +289,7 @@ fun NextMovieInfo(
                 Spacer(modifier = Modifier.width(5.dp))
 
                 // Release Date
-                Column(
-                ) {
+                Column {
                     Text(
                         text = releaseDate?.substring(0, 4) ?: "",
                         style = MaterialTheme.typography.bodySmall,
@@ -368,7 +363,7 @@ fun NextMovieInfo(
 // This function then calls ListLogs, which will list each log the user has
 @SuppressLint("MutableCollectionMutableState")
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyLogsSection(
     navController: NavHostController,
@@ -378,7 +373,6 @@ fun MyLogsSection(
     friendsViewModel: FriendsViewModel,
     isLoggedIn: Boolean
 ) {
-    //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
@@ -410,7 +404,6 @@ fun MyLogsSection(
         ) {
             var isClicked by remember { mutableStateOf(false) }
             val haptic = LocalHapticFeedback.current
-            val scaleFactor = if (isClicked) 1.1f else 1f
             Image(
                 imageVector = Icons.Default.LibraryAdd,
                 contentDescription = null,
@@ -682,7 +675,7 @@ fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLog
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.weight(1F))
-        Row() {
+        Row {
             Image(
                 painter = painterResource(id = R.drawable.nologs),
                 contentDescription = "No logs",
@@ -690,7 +683,7 @@ fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLog
             )
         }
         Spacer(modifier = Modifier.height(40.dp))
-        Row() {
+        Row {
             Text(
                 "You have no logs",
                 style = MaterialTheme.typography.headlineSmall,
@@ -698,7 +691,7 @@ fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLog
             )
         }
         Spacer(modifier = Modifier.height(5.dp))
-        Row() {
+        Row {
             Text(
                 "Create one below to get started.",
                 style = MaterialTheme.typography.bodyLarge,
@@ -742,7 +735,7 @@ fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLog
                 containerColor = colorResource(id = R.color.sky_blue)
             )
         ) {
-            androidx.compose.material3.Text(
+            Text(
                 "CREATE NEW LOG",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
