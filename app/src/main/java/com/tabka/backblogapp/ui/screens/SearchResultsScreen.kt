@@ -425,7 +425,7 @@ fun MovieResult(
                     logViewModel.loadLogs()
                 }, onCloseClick = {
                     isNewLogSheetOpen = false
-                })
+                }, navController)
             }
         }
     }

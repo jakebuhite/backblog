@@ -127,7 +127,7 @@ fun HomeScreen(
             MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel, isLoggedIn)
         } else {
             Spacer(modifier = Modifier.height(150.dp))
-            NoLogs(friendsViewModel, logViewModel, isLoggedIn)
+            NoLogs(friendsViewModel, logViewModel, isLoggedIn, navController)
         }
         /*Spacer(Modifier.height(40.dp))
         MyLogsSection(navController, allLogs, scrollState, logViewModel, friendsViewModel)*/
@@ -440,7 +440,7 @@ fun MyLogsSection(
                     logViewModel.loadLogs()
             }, onCloseClick = {
                 isSheetOpen = false
-            })
+            }, navController)
         }
     }
 
@@ -456,7 +456,8 @@ fun MyLogsSection(
 fun NewLogCollaborator(
     friend: UserData,
     collaboratorsList: SnapshotStateList<String?>,
-    currentCollab: Boolean
+    currentCollab: Boolean,
+    navController: NavController
 ) {
     Row(
         modifier = Modifier.padding(bottom = 10.dp),
@@ -668,7 +669,7 @@ fun LogEntry(navController: NavHostController, logId: String, logName: String, p
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLoggedIn: Boolean) {
+fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLoggedIn: Boolean, navController: NavController) {
     Column(
         modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -718,7 +719,7 @@ fun NoLogs(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLog
                     logViewModel.loadLogs()
                 }, onCloseClick = {
                     isSheetOpen = false
-                })
+                }, navController)
             }
         }
 

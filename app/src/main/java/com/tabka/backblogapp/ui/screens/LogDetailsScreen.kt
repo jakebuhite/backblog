@@ -241,7 +241,8 @@ fun LogDetailsScreen(
                                 alertDialogState,
                                 setAlertDialogState,
                                 logId,
-                                movieDetailsViewModel
+                                movieDetailsViewModel,
+                                owner
                             )
                         }
                         Spacer(modifier = Modifier.height(20.dp))
@@ -470,22 +471,18 @@ fun DetailBar(
                     )
                 }
 
-                // Collaborators Heading
-                if (collaboratorsList.isEmpty()) {
-                    Spacer(modifier = Modifier.height(75.dp))
-                } else {
-                    Spacer(modifier = Modifier.height(15.dp))
-                    // Current collaborators sections
+                if (isOwner) {
+                    Spacer(modifier = Modifier.height(10.dp))
                     LazyRow(
                         modifier = Modifier
                             .padding(start = 24.dp)
+                            .fillMaxWidth()
                             .testTag("COLLABS_LIST_ADD_SHEET")
                     ) {
                         items(collaboratorsList.size) { index ->
                             val userId = collaboratorsList[index]
                             Log.d(TAG, "Current userId of collab: $userId")
                             val friend = userList.value.find { it.userId == userId }
-
 
                             Image(
                                 painter = painterResource(
@@ -497,15 +494,14 @@ fun DetailBar(
                                 modifier = Modifier
                                     .size(60.dp)
                                     .padding(end = 5.dp)
-                                    .clickable(onClick = { navController.navigate("friends_page_${userId ?: ""}") })
+                                    .clickable(onClick = { navController.navigate("friends_page_${userId ?: ""}")
+                                        isCollabSheetOpen = false})
+                                    .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
                             )
                         }
                     }
-                }
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                if (isOwner) {
                     // Add Collaborators Heading
                     Row(modifier = Modifier.padding(start = 14.dp)) {
                         Text(
@@ -522,12 +518,18 @@ fun DetailBar(
                             items(sortedUserList.size) { index ->
                                 val friend = sortedUserList[index]
                                 if (collaboratorsList.contains(friend.userId)) {
-                                    NewLogCollaborator(friend, collaboratorsList, true)
+                                    NewLogCollaborator(
+                                        friend,
+                                        collaboratorsList,
+                                        true,
+                                        navController
+                                    )
                                 } else {
                                     NewLogCollaborator(
                                         friend,
                                         collaboratorsList,
-                                        false
+                                        false,
+                                        navController
                                     )
                                 }
                             }
@@ -619,6 +621,106 @@ fun DetailBar(
                         }
                         Spacer(modifier = Modifier.height(50.dp))
                     }
+                } else {
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp)
+                        .padding(top = 10.dp)
+                        .clickable(onClick = { navController.navigate("friends_page_${owner.userId ?: ""}")
+                            isCollabSheetOpen = false})
+                    ) {
+                        Column(modifier = Modifier.weight(1F)) {
+                            Image(
+                                painter = painterResource(
+                                    id = getAvatarResourceId(
+                                        owner.avatarPreset ?: 1
+                                    ).second
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Username
+                        Column(
+                            modifier = Modifier
+                                .weight(3F)
+                                .height(60.dp),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            androidx.compose.material3.Text(
+                                owner.username ?: "",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.testTag("NEW_LOG_COLLABORATOR_USERNAME")
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Divider(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        color = Color.Gray
+                    )
+
+                    // Collaborators Heading
+                    if (collaboratorsList.isEmpty()) {
+                        Spacer(modifier = Modifier.height(75.dp))
+                    } else {
+                        Spacer(modifier = Modifier.height(15.dp))
+                        // Current collaborators sections
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(start = 24.dp)
+                                .testTag("COLLABS_LIST_ADD_SHEET")
+                        ) {
+                            items(collaboratorsList.size) { index ->
+                                val collaborator = collaborators[index]
+
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(onClick = { navController.navigate("friends_page_${collaborator.userId ?: ""}")
+                                        isCollabSheetOpen = false })
+                                ) {
+                                    Column(modifier = Modifier.weight(1F)) {
+                                        Image(
+                                            painter = painterResource(
+                                                id = getAvatarResourceId(
+                                                    collaborator.avatarPreset ?: 1
+                                                ).second
+                                            ),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(60.dp)
+                                                .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
+                                        )
+                                    }
+
+                                    // Username
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(3F)
+                                            .height(60.dp),
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        androidx.compose.material3.Text(
+                                            collaborator.username ?: "",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            modifier = Modifier.testTag("NEW_LOG_COLLABORATOR_USERNAME")
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }
@@ -642,7 +744,8 @@ fun LogButtons(
     alertDialogState: AlertDialog,
     setAlertDialogState: (AlertDialog) -> Unit,
     logId: String,
-    movieDetailsViewModel: MovieDetailsViewModel
+    movieDetailsViewModel: MovieDetailsViewModel,
+    owner: UserData
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var sheetContent by remember { mutableStateOf<@Composable ColumnScope.() -> Unit>({}) }
@@ -746,22 +849,18 @@ fun LogButtons(
                                 )
                             }
 
-                            // Collaborators Heading
-                            if (collaboratorsList.isEmpty()) {
-                                Spacer(modifier = Modifier.height(75.dp))
-                            } else {
-                                Spacer(modifier = Modifier.height(15.dp))
-                                // Current collaborators sections
+                            if (isOwner) {
+                                Spacer(modifier = Modifier.height(10.dp))
                                 LazyRow(
                                     modifier = Modifier
                                         .padding(start = 24.dp)
+                                        .fillMaxWidth()
                                         .testTag("COLLABS_LIST_ADD_SHEET")
                                 ) {
                                     items(collaboratorsList.size) { index ->
                                         val userId = collaboratorsList[index]
                                         Log.d(TAG, "Current userId of collab: $userId")
                                         val friend = userList.value.find { it.userId == userId }
-
 
                                         Image(
                                             painter = painterResource(
@@ -773,15 +872,13 @@ fun LogButtons(
                                             modifier = Modifier
                                                 .size(60.dp)
                                                 .padding(end = 5.dp)
-                                                .clickable(onClick = { navController.navigate("friends_page_${userId ?: ""}") })
+                                                .clickable(onClick = { navController.navigate("friends_page_${userId ?: ""}")
+                                                    isCollabSheetOpen = false})
+                                                .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
                                         )
                                     }
                                 }
-                            }
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            if (isOwner) {
+                                Spacer(modifier = Modifier.height(10.dp))
                                 // Add Collaborators Heading
                                 Row(modifier = Modifier.padding(start = 14.dp)) {
                                     Text(
@@ -801,13 +898,15 @@ fun LogButtons(
                                                 NewLogCollaborator(
                                                     friend,
                                                     collaboratorsList,
-                                                    true
+                                                    true,
+                                                    navController
                                                 )
                                             } else {
                                                 NewLogCollaborator(
                                                     friend,
                                                     collaboratorsList,
-                                                    false
+                                                    false,
+                                                    navController
                                                 )
                                             }
                                         }
@@ -899,6 +998,106 @@ fun LogButtons(
                                     }
                                     Spacer(modifier = Modifier.height(50.dp))
                                 }
+                            } else {
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 24.dp)
+                                    .padding(top = 10.dp)
+                                    .clickable(onClick = { navController.navigate("friends_page_${owner.userId ?: ""}")
+                                        isCollabSheetOpen = false })
+                                ) {
+                                    Column(modifier = Modifier.weight(1F)) {
+                                        Image(
+                                            painter = painterResource(
+                                                id = getAvatarResourceId(
+                                                    owner.avatarPreset ?: 1
+                                                ).second
+                                            ),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(60.dp)
+                                                .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Username
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(3F)
+                                            .height(60.dp),
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        androidx.compose.material3.Text(
+                                            owner.username ?: "",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            modifier = Modifier.testTag("NEW_LOG_COLLABORATOR_USERNAME")
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Divider(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                    color = Color.Gray
+                                )
+
+                                // Collaborators Heading
+                                if (collaboratorsList.isEmpty()) {
+                                    Spacer(modifier = Modifier.height(75.dp))
+                                } else {
+                                    Spacer(modifier = Modifier.height(15.dp))
+                                    // Current collaborators sections
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .padding(start = 24.dp)
+                                            .testTag("COLLABS_LIST_ADD_SHEET")
+                                    ) {
+                                        items(collaboratorsList.size) { index ->
+                                            val collaborator = collaborators[index]
+
+                                            Row(modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable(onClick = { navController.navigate("friends_page_${collaborator.userId ?: ""}")
+                                                isCollabSheetOpen = false})
+                                            ) {
+                                                Column(modifier = Modifier.weight(1F)) {
+                                                    Image(
+                                                        painter = painterResource(
+                                                            id = getAvatarResourceId(
+                                                                collaborator.avatarPreset ?: 1
+                                                            ).second
+                                                        ),
+                                                        contentDescription = null,
+                                                        modifier = Modifier
+                                                            .size(60.dp)
+                                                            .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
+                                                    )
+                                                }
+
+                                                // Username
+                                                Column(
+                                                    modifier = Modifier
+                                                        .weight(3F)
+                                                        .height(60.dp),
+                                                    verticalArrangement = Arrangement.Center
+                                                ) {
+                                                    androidx.compose.material3.Text(
+                                                        collaborator.username ?: "",
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        modifier = Modifier.testTag("NEW_LOG_COLLABORATOR_USERNAME")
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(20.dp))
                             }
                         }
                     }
@@ -1420,9 +1619,9 @@ fun CollaboratorsSheetContent(
             items(sortedUserList.size) { index ->
                 val friend = sortedUserList[index]
                 if (collaboratorsList.contains(friend.userId)) {
-                    NewLogCollaborator(friend, collaboratorsList, true)
+                    NewLogCollaborator(friend, collaboratorsList, true, navController)
                 } else {
-                    NewLogCollaborator(friend, collaboratorsList, false)
+                    NewLogCollaborator(friend, collaboratorsList, false, navController)
                 }
             }
         }

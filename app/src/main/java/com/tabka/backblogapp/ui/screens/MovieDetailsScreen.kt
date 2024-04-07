@@ -152,7 +152,7 @@ fun Foundation(
                             .fillMaxHeight()
                             .background(Brush.verticalGradient(gradientColors)),
                     ) {
-                        MovieInfo(movie, logViewModel, movieIsWatched, logId, friendsViewModel)
+                        MovieInfo(movie, logViewModel, movieIsWatched, logId, friendsViewModel, navController)
                     }
                 }
             }
@@ -168,7 +168,7 @@ fun Foundation(
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, friendsViewModel: FriendsViewModel) {
+fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, friendsViewModel: FriendsViewModel, navController: NavController) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -450,7 +450,8 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                         logViewModel.loadLogs()
                     }, onCloseClick = {
                         isNewLogSheetOpen = false
-                    })
+                    },
+                        navController)
                 }
             }
 
