@@ -97,6 +97,26 @@ class FriendRepository(
         return DataResult.Success(requests)
     }
 
+    suspend fun getFriendRequests(userId: String, friendId: String): DataResult<List<FriendRequestData>> {
+        val requests: MutableList<FriendRequestData> = mutableListOf()
+        try {
+            val snapshot = db.collection("friend_requests")
+                .whereEqualTo("target_id", userId)
+                .whereEqualTo("sender_id", friendId)
+                .whereEqualTo("is_complete", false).get().await()
+            val snapshot1 = db.collection("friend_requests")
+                .whereEqualTo("target_id", friendId)
+                .whereEqualTo("sender_id", userId)
+                .whereEqualTo("is_complete", false).get().await()
+            requests.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
+            requests.addAll(snapshot1.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
+        } catch (e: Exception) {
+            Log.w(tag, "Error getting friend requests", e)
+            DataResult.Failure(e)
+        }
+        return DataResult.Success(requests)
+    }
+
     suspend fun getLogRequests(userId: String): DataResult<List<LogRequestData>> {
         val requests: MutableList<LogRequestData> = mutableListOf()
         try {
@@ -109,6 +129,26 @@ class FriendRepository(
             DataResult.Failure(e)
         }
 
+        return DataResult.Success(requests)
+    }
+
+    suspend fun getLogRequests(userId: String, friendId: String): DataResult<List<FriendRequestData>> {
+        val requests: MutableList<FriendRequestData> = mutableListOf()
+        try {
+            val snapshot = db.collection("log_requests")
+                .whereEqualTo("target_id", userId)
+                .whereEqualTo("sender_id", friendId)
+                .whereEqualTo("is_complete", false).get().await()
+            val snapshot1 = db.collection("log_requests")
+                .whereEqualTo("target_id", friendId)
+                .whereEqualTo("sender_id", userId)
+                .whereEqualTo("is_complete", false).get().await()
+            requests.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
+            requests.addAll(snapshot1.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
+        } catch (e: Exception) {
+            Log.w(tag, "Error getting friend requests", e)
+            DataResult.Failure(e)
+        }
         return DataResult.Success(requests)
     }
 
@@ -223,6 +263,103 @@ class FriendRepository(
         }
     }
 
+    suspend fun blockUser(userId: String, blockedId: String, isFriend: Boolean): DataResult<Boolean> {
+        return try {
+            // Add to blocked
+            db.collection("users").document(userId)
+                .update(mapOf("blocked.${blockedId}" to true)).await()
+
+            // Remove from friends list (both)
+            if (isFriend) {
+                when(val removeUser = removeFriend(userId, blockedId)) {
+                    is DataResult.Failure -> throw removeUser.throwable
+                    is DataResult.Success -> {
+                        when(val removeBlocked = removeFriend(blockedId, userId)) {
+                            is DataResult.Failure -> throw removeBlocked.throwable
+                            is DataResult.Success -> Unit
+                        }
+                    }
+                }
+            }
+
+            // Cancel any pending friend/log requests
+            val logReqs = getLogRequests(userId, blockedId)
+            val friendReqs = getFriendRequests(userId, blockedId)
+
+            if (logReqs is DataResult.Failure) { throw logReqs.throwable }
+            if (friendReqs is DataResult.Failure) { throw friendReqs.throwable }
+
+            for (req in (logReqs as DataResult.Success).item) {
+                val reqId = req.requestId ?: continue
+                when(val result = updateLogRequest(reqId, false)) {
+                    is DataResult.Failure -> throw result.throwable
+                    is DataResult.Success -> Unit
+                }
+            }
+
+            for (req in (friendReqs as DataResult.Success).item) {
+                val reqId = req.requestId ?: continue
+                when(val result = updateFriendRequest(reqId, false)) {
+                    is DataResult.Failure -> throw result.throwable
+                    is DataResult.Success -> Unit
+                }
+            }
+
+            // Get matching logs
+            val logRepo = LogRepository(db, auth)
+            val logs = logRepo.getMatchingLogs(userId, blockedId)
+
+            if (logs is DataResult.Failure) { throw logs.throwable }
+            if ((logs as DataResult.Success).item.isEmpty()) {
+                DataResult.Success(true)
+            }
+
+            val logUpdates: MutableList<Map<String, Any>> = mutableListOf()
+            for (log in logs.item) {
+                if (log.owner?.userId == userId) {
+                    logUpdates.add(mapOf(
+                        "log_id" to log.logId as Any,
+                        "collaborators" to FieldValue.arrayRemove(blockedId),
+                        "order.${blockedId}" to FieldValue.delete()
+                    ))
+                } else if (log.owner?.userId == blockedId) {
+                    logUpdates.add(mapOf(
+                        "log_id" to log.logId as Any,
+                        "collaborators" to FieldValue.arrayRemove(userId),
+                        "order.${userId}" to FieldValue.delete()
+                    ))
+                } else {
+                    // Check if blocker and blockee are collaborators in the log
+                    val collaborators = log.collaborators ?: mutableListOf()
+                    if (collaborators.contains(userId) && collaborators.contains(blockedId)) {
+                        logUpdates.add(mapOf(
+                            "log_id" to log.logId as Any,
+                            "collaborators" to FieldValue.arrayRemove(arrayOf(userId, blockedId)),
+                            "order.${blockedId}" to FieldValue.delete(),
+                            "order.${userId}" to FieldValue.delete(),
+                        ))
+                    }
+                }
+            }
+
+            return logRepo.updateLogs(logUpdates)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating user document", e)
+            DataResult.Failure(e)
+        }
+    }
+
+    suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
+        return try {
+            val userRef = db.collection("users").document(userId)
+            userRef.update("friends.$friendId", true).await()
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            println("Error updating user document $e")
+            DataResult.Failure(e)
+        }
+    }
+
     suspend fun removeFriend(userId: String, friendId: String): DataResult<Boolean> {
         return try {
             val userRef = db.collection("users").document(userId)
@@ -240,46 +377,6 @@ class FriendRepository(
             DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error removing friend", e)
-            DataResult.Failure(e)
-        }
-    }
-
-    // TODO Ensure blocker is removed from logs involving this user (excluding ones he owns)
-    //  Blocked user must also be removed from the logs that the user above owns
-    suspend fun blockUser(userId: String, blockedId: String, isFriend: Boolean): DataResult<Boolean> {
-        return try {
-            // Add to blocked
-            db.collection("users").document(userId)
-                .update(mapOf("blocked.${blockedId}" to true)).await()
-
-            // Remove from friends list (both)
-            if (isFriend) {
-                when(val removeUser = removeFriend(userId, blockedId)) {
-                    is DataResult.Failure -> DataResult.Failure(removeUser.throwable)
-                    is DataResult.Success -> {
-                        when(val removeBlocked = removeFriend(blockedId, userId)) {
-                            is DataResult.Failure -> DataResult.Failure(removeBlocked.throwable)
-                            is DataResult.Success -> DataResult.Success(true)
-                        }
-                    }
-                }
-            }
-
-            Log.d(tag, "User successfully blocked!")
-            DataResult.Success(true)
-        } catch (e: Exception) {
-            Log.w(tag, "Error updating user document", e)
-            DataResult.Failure(e)
-        }
-    }
-
-    suspend fun addFriendToUser(userId: String, friendId: String): DataResult<Boolean> {
-        return try {
-            val userRef = db.collection("users").document(userId)
-            userRef.update("friends.$friendId", true).await()
-            DataResult.Success(true)
-        } catch (e: Exception) {
-            println("Error updating user document $e")
             DataResult.Failure(e)
         }
     }
