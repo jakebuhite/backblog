@@ -15,10 +15,6 @@ import com.tabka.backblogapp.util.FirebaseError
 import com.tabka.backblogapp.util.FirebaseExceptionType
 import com.tabka.backblogapp.util.NetworkError
 import com.tabka.backblogapp.util.NetworkExceptionType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
 open class SettingsViewModel(
@@ -67,29 +63,6 @@ open class SettingsViewModel(
 
     open fun getLogCount(): Int {
         return logLocalRepository.getLogCount()
-    }
-
-    open suspend fun syncLocalLogsToDB(): DataResult<Boolean> = coroutineScope {
-        try {
-            val logs = logLocalRepository.getLogs()
-
-            val userId = auth.currentUser!!.uid
-            logs.map { log ->
-                async(Dispatchers.IO) {
-                    logRepository.addLog(log.name!!, userId, log.owner?.priority!!, log.creationDate!!, log.movieIds!!, log.watchedIds!!)
-                }
-            }.awaitAll()
-
-            // Now delete logs
-            if (logs.isNotEmpty()) {
-                logLocalRepository.clearLogs()
-            }
-
-            DataResult.Success(true)
-        } catch (e: Exception) {
-            Log.d(tag, "Error: $e")
-            DataResult.Failure(e)
-        }
     }
 
     private suspend fun isCorrectPassword(password: String): DataResult<Boolean> {
