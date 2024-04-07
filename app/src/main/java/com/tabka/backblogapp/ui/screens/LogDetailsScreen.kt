@@ -494,8 +494,10 @@ fun DetailBar(
                                 modifier = Modifier
                                     .size(60.dp)
                                     .padding(end = 5.dp)
-                                    .clickable(onClick = { navController.navigate("friends_page_${userId ?: ""}")
-                                        isCollabSheetOpen = false})
+                                    .clickable(onClick = {
+                                        navController.navigate("friends_page_${userId ?: ""}")
+                                        isCollabSheetOpen = false
+                                    })
                                     .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
                             )
                         }
@@ -622,12 +624,15 @@ fun DetailBar(
                         Spacer(modifier = Modifier.height(50.dp))
                     }
                 } else {
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp)
-                        .padding(top = 10.dp)
-                        .clickable(onClick = { navController.navigate("friends_page_${owner.userId ?: ""}")
-                            isCollabSheetOpen = false})
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 24.dp)
+                            .padding(top = 10.dp)
+                            .clickable(onClick = {
+                                navController.navigate("friends_page_${owner.userId ?: ""}")
+                                isCollabSheetOpen = false
+                            })
                     ) {
                         Column(modifier = Modifier.weight(1F)) {
                             Image(
@@ -663,7 +668,9 @@ fun DetailBar(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Divider(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                         color = Color.Gray
                     )
 
@@ -681,10 +688,13 @@ fun DetailBar(
                             items(collaboratorsList.size) { index ->
                                 val collaborator = collaborators[index]
 
-                                Row(modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(onClick = { navController.navigate("friends_page_${collaborator.userId ?: ""}")
-                                        isCollabSheetOpen = false })
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(onClick = {
+                                            navController.navigate("friends_page_${collaborator.userId ?: ""}")
+                                            isCollabSheetOpen = false
+                                        })
                                 ) {
                                     Column(modifier = Modifier.weight(1F)) {
                                         Image(
@@ -872,8 +882,10 @@ fun LogButtons(
                                             modifier = Modifier
                                                 .size(60.dp)
                                                 .padding(end = 5.dp)
-                                                .clickable(onClick = { navController.navigate("friends_page_${userId ?: ""}")
-                                                    isCollabSheetOpen = false})
+                                                .clickable(onClick = {
+                                                    navController.navigate("friends_page_${userId ?: ""}")
+                                                    isCollabSheetOpen = false
+                                                })
                                                 .testTag("NEW_LOG_COLLABORATOR_AVATAR"),
                                         )
                                     }
@@ -999,12 +1011,15 @@ fun LogButtons(
                                     Spacer(modifier = Modifier.height(50.dp))
                                 }
                             } else {
-                                Row(modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 24.dp)
-                                    .padding(top = 10.dp)
-                                    .clickable(onClick = { navController.navigate("friends_page_${owner.userId ?: ""}")
-                                        isCollabSheetOpen = false })
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 24.dp)
+                                        .padding(top = 10.dp)
+                                        .clickable(onClick = {
+                                            navController.navigate("friends_page_${owner.userId ?: ""}")
+                                            isCollabSheetOpen = false
+                                        })
                                 ) {
                                     Column(modifier = Modifier.weight(1F)) {
                                         Image(
@@ -1040,7 +1055,9 @@ fun LogButtons(
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 Divider(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
                                     color = Color.Gray
                                 )
 
@@ -1058,10 +1075,13 @@ fun LogButtons(
                                         items(collaboratorsList.size) { index ->
                                             val collaborator = collaborators[index]
 
-                                            Row(modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable(onClick = { navController.navigate("friends_page_${collaborator.userId ?: ""}")
-                                                isCollabSheetOpen = false})
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable(onClick = {
+                                                        navController.navigate("friends_page_${collaborator.userId ?: ""}")
+                                                        isCollabSheetOpen = false
+                                                    })
                                             ) {
                                                 Column(modifier = Modifier.weight(1F)) {
                                                     Image(
@@ -1268,17 +1288,17 @@ fun LogList(
 
     // Extra height is for the "Watched Movies" header and the spacer
     val extraHeight = if (watchedMoviesList.isNotEmpty()) 100.dp else 0.dp
-    val colHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + extraHeight
+    val watchedColHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + extraHeight
+    val unwatchedColHeight: Dp = (80 * (movies.size)).dp
 
-    LazyColumn(
-        userScrollEnabled = false,
-        modifier = Modifier
-            .height(colHeight)
-            .testTag("MOVIES_LIST")
-    ) {
-        Log.d(TAG, "Movies: ${movies.values}\nWatched movies: ${watchedMovies.values}")
-
-        if (moviesList.isNotEmpty()) {
+    if (moviesList.isNotEmpty()) {
+        LazyColumn(
+            userScrollEnabled = false,
+            modifier = Modifier
+                .height(unwatchedColHeight)
+                .testTag("MOVIES_LIST")
+        ) {
+            Log.d(TAG, "Movies: ${movies.values}\nWatched movies: ${watchedMovies.values}")
             items(moviesList, key = { it.id ?: 0 }) { movie ->
 
                 val addToWatched = SwipeAction(
@@ -1332,8 +1352,14 @@ fun LogList(
                 }
             }
         }
-
-        if (watchedMoviesList.isNotEmpty()) {
+    }
+    if (watchedMoviesList.isNotEmpty()) {
+        LazyColumn(
+            userScrollEnabled = false,
+            modifier = Modifier
+                .height(watchedColHeight)
+                .testTag("MOVIES_LIST")
+        ) {
             item {
                 Spacer(modifier = Modifier.height(50.dp))
                 RequestHeader(title = "Watched Movies")
@@ -1391,7 +1417,14 @@ fun LogList(
                                 )
                             )
                     ) {
-                        MovieEntry(navController, watchedMovie, logId, collaboratorsList, true, isRando)
+                        MovieEntry(
+                            navController,
+                            watchedMovie,
+                            logId,
+                            collaboratorsList,
+                            true,
+                            isRando
+                        )
                     }
                 } else {
                     MovieEntry(navController, watchedMovie, logId, collaboratorsList, true, isRando)
