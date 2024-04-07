@@ -127,9 +127,9 @@ fun BrowseCategories(navController: NavController) {
 
     val genreList2 = listOf(
         ("Crime" to 80 to R.drawable.crime),
-        ("Drama" to 18 to R.drawable.horror),
-        ("Family" to 10751 to R.drawable.horror),
-        ("Fantasy" to 14 to R.drawable.horror)
+        ("Drama" to 18 to R.drawable.drama),
+        ("Family" to 10751 to R.drawable.family),
+        ("Fantasy" to 14 to R.drawable.fantasy)
     )
 
 
