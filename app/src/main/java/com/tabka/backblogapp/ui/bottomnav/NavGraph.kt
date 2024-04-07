@@ -74,10 +74,10 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(
-                route = "home_movie_details_{movieId}_{logId}_{movieIsWatched}",
-                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("logId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType})
+                route = "home_movie_details_{movieId}_{logId}_{movieIsWatched}_{isRando}",
+                arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("logId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType}, navArgument("isRando") { type = NavType.BoolType})
             ) { backStackEntry ->
-                backStackEntry.arguments?.let { MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), backStackEntry.arguments?.getString("logId"), logViewModel, it.getInt("movieIsWatched"), movieDetailsViewModel, friendsViewModel) }
+                backStackEntry.arguments?.let { MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), backStackEntry.arguments?.getString("logId"), logViewModel, it.getInt("movieIsWatched"), movieDetailsViewModel, friendsViewModel, it.getBoolean("isRando")) }
             }
         }
 
@@ -105,7 +105,7 @@ fun BottomNavGraph(navController: NavHostController) {
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType }, navArgument("movieIsWatched") { type = NavType.IntType })
             ) { backStackEntry ->
                 backStackEntry.arguments?.let {
-                    MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel, it.getInt("movieIsWatched"), movieDetailsViewModel, friendsViewModel
+                    MovieDetailsScreen(navController, backStackEntry.arguments?.getString("movieId"), null, logViewModel, it.getInt("movieIsWatched"), movieDetailsViewModel, friendsViewModel, isRando = true
                     )
                 }
             }

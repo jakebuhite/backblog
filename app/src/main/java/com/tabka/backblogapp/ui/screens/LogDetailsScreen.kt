@@ -1325,10 +1325,10 @@ fun LogList(
                                 )
                             )
                     ) {
-                        MovieEntry(navController, movie, logId, collaboratorsList, false)
+                        MovieEntry(navController, movie, logId, collaboratorsList, false, isRando)
                     }
                 } else {
-                    MovieEntry(navController, movie, logId, collaboratorsList, false)
+                    MovieEntry(navController, movie, logId, collaboratorsList, false, isRando)
                 }
             }
         }
@@ -1391,10 +1391,10 @@ fun LogList(
                                 )
                             )
                     ) {
-                        MovieEntry(navController, watchedMovie, logId, collaboratorsList, true)
+                        MovieEntry(navController, watchedMovie, logId, collaboratorsList, true, isRando)
                     }
                 } else {
-                    MovieEntry(navController, watchedMovie, logId, collaboratorsList, true)
+                    MovieEntry(navController, watchedMovie, logId, collaboratorsList, true, isRando)
 
                 }
             }
@@ -1408,7 +1408,8 @@ fun MovieEntry(
     movie: MinimalMovieData,
     logId: String,
     collaboratorsList: List<UserData>,
-    isWatched: Boolean
+    isWatched: Boolean,
+    isRando: Boolean
 ) {
 
     Row(modifier = Modifier
@@ -1420,7 +1421,7 @@ fun MovieEntry(
             } else {
                 1
             }
-            navController.navigate("home_movie_details_${movie.id}_${logId}_${movieIsWatched}")
+            navController.navigate("home_movie_details_${movie.id}_${logId}_${movieIsWatched}_${isRando}")
         }
         .testTag("MOVIE_ENTRY"),
         verticalAlignment = Alignment.CenterVertically,
