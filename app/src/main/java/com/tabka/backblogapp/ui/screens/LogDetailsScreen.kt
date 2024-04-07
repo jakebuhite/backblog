@@ -1777,11 +1777,8 @@ fun EditSheetContent(
                                         text = "Leave",
                                         textColor = Color(0xFFDC3545),
                                         action = {
-                                            /*CoroutineScope(Dispatchers.Main).launch {
-                                                val asyncJob =
-                                                    logDetailsViewModel.deleteLog()
-                                                asyncJob?.join()
-
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                logDetailsViewModel.leaveLog()
                                                 logViewModel.loadLogs()
                                                 navController.navigate("home")
                                                 Toast.makeText(
@@ -1789,7 +1786,7 @@ fun EditSheetContent(
                                                     "Successfully deleted $logName!",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-                                            }*/
+                                            }
                                         }
                                     )
                                 )

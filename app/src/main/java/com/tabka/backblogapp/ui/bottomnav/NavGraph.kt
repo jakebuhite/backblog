@@ -7,7 +7,6 @@
 package com.tabka.backblogapp.ui.bottomnav
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,14 +50,11 @@ fun BottomNavGraph(navController: NavHostController) {
     LaunchedEffect(true) {
         friendsViewModel.getFriends()
     }
-    //val logDetailsViewModel = LogDetailsViewModel()
     val logViewModel = LogViewModel()
     val settingsViewModel = SettingsViewModel()
     val profileViewModel = ProfileViewModel()
 
-    Log.d("Something", "PLEASE LOG SOMETHING")
     val auth = Firebase.auth
-    //auth.signOut()
 
     NavHost(
         navController = navController,
