@@ -68,9 +68,6 @@ fun BaseScreen(
                     .verticalScroll(scrollState)
             ) {
                 Spacer(modifier = Modifier.height(76.dp))
-                /*Spacer(modifier = Modifier.height(36.dp))
-                BackButton(navController, isBackButtonVisible)
-                Spacer(modifier = Modifier.height(20.dp))*/
                 PageTitle(title)
                 content(scrollState)
                 Spacer(modifier = Modifier.height(70.dp))
@@ -97,9 +94,8 @@ fun BackButton(navController: NavController, visible: Boolean) {
         }
     }
 
-    val isVisible = visible
     AnimatedVisibility(
-        visible = isVisible,
+        visible = visible,
         enter = fadeIn(animationSpec = tween(1000)),
         exit = fadeOut(animationSpec = tween(1000))
     ) {
@@ -140,13 +136,6 @@ fun BackgroundGradient() {
     // Define the gradient colors
     val lightGrey = Color(0xFF37414A)
     val darkGrey = Color(0xFF191919)
-    val midColor = Color(0xFF292E33)
-
-    val bottomMidColor = Color(0xFF232629)
-    val topMidColor = Color(0xFF2F373E)
-
-  /*  val gradientColors = listOf(lightGrey, topMidColor, otherColor, bottomMidColor, darkGrey)*/
-
     val gradientColors = listOf(lightGrey, darkGrey)
 
     // Create a vertical gradient brush

@@ -52,10 +52,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -73,7 +71,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -181,7 +178,7 @@ fun LogDetailsScreen(
 
     // Get data
     LaunchedEffect(Unit) {
-        logDetailsViewModel.getLogData(logId!!)
+        //logDetailsViewModel.getLogData(logId!!)
     }
 
 
@@ -666,7 +663,7 @@ fun DetailBar(
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogButtons(
     navController: NavHostController,
@@ -1552,7 +1549,6 @@ fun CollaboratorsSheetContent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EditSheetContent(
     navController: NavHostController,
@@ -1923,11 +1919,3 @@ fun EditLogEntry(movie: MinimalMovieData) {
         }
     }
 }
-
-/*
-@Composable
-fun AddMovieMenu(navController: NavHostController, logViewModel: LogViewModel, logId: String) {
-    Column(modifier = Modifier.padding(top = 40.dp, start = 12.dp, end = 12.dp)) {
-        SearchBar(navController, logViewModel, isLogMenu = true, logId)
-    }
-}*/

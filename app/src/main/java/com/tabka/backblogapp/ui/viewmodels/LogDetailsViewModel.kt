@@ -8,6 +8,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import com.tabka.backblogapp.network.ApiClient
 import com.tabka.backblogapp.network.models.LogData
@@ -18,6 +19,7 @@ import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.network.repository.UserRepository
 import com.tabka.backblogapp.util.DataResult
+import com.tabka.backblogapp.util.toJsonElement
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
@@ -28,8 +30,11 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 open class LogDetailsViewModel(
+    val logId: String,
     private val db: FirebaseFirestore = Firebase.firestore,
     val auth: FirebaseAuth = Firebase.auth,
     private val localRepository: LogLocalRepository = LogLocalRepository(),
@@ -55,6 +60,15 @@ open class LogDetailsViewModel(
     open val collaboratorsList: MutableLiveData<List<UserData>> = MutableLiveData()
 
     open val isLoading: MutableLiveData<Boolean> = MutableLiveData()
+
+    // Listeners
+    private var logListener: ListenerRegistration? = null
+
+    init {
+        viewModelScope.launch {
+            initLogListener()
+        }
+    }
 
     private suspend fun updateLogData(newLog: LogData) {
         withContext(dispatcher) {
@@ -129,7 +143,6 @@ open class LogDetailsViewModel(
 
 
     private suspend fun getUserData(isOwner: Boolean) {
-
         val userIds: Collection<String> = if (isOwner) {
             // If isOwner is true, create a list containing only the owner's userId
             listOfNotNull(logData.value?.owner?.userId)
@@ -379,5 +392,48 @@ open class LogDetailsViewModel(
         val collaborators = logData.value?.collaborators ?: mutableListOf()
 
         return userId in collaborators
+    }
+
+    private suspend fun initLogListener() {
+        if (auth.currentUser?.uid == null) {
+            return
+        }
+        val userId = auth.currentUser?.uid!!
+
+        logListener = db.collection("logs").document(logId)
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    Log.d(tag, error.localizedMessage ?: "Error with snapshot listener")
+                    return@addSnapshotListener
+                }
+
+                if (value?.exists() == true) {
+                    val log: LogData = Json.decodeFromString(Json.encodeToString(value.data.toJsonElement()))
+                    updateIsOwner(userId == log.owner?.userId)
+                    updateIsCollaborator(isCollaborator())
+                    viewModelScope.launch {
+                        updateLogData(log)
+                    }
+                } else {
+                    // Document was likely to be deleted
+                    logData.value = LogData(
+                        logId = null,
+                        name = null,
+                        creationDate = null,
+                        lastModifiedDate = null,
+                        isVisible = null,
+                        owner = null,
+                        collaborators = null,
+                        order = null,
+                        movieIds = null,
+                        watchedIds = null
+                    )
+                    updateIsOwner(false)
+                    updateIsCollaborator(false)
+                    updateMovies(mapOf())
+                    updateWatchedMovies(mapOf())
+                    updateCollaboratorsList(listOf())
+                }
+            }
     }
 }
