@@ -1292,7 +1292,7 @@ fun LogList(
 
     // Extra height is for the "Watched Movies" header and the spacer
     val extraHeight = if (watchedMoviesList.isNotEmpty()) 100.dp else 0.dp
-    val watchedColHeight: Dp = (80 * (movies.size + watchedMovies.size)).dp + extraHeight
+    val watchedColHeight: Dp = (80 * (watchedMovies.size)).dp + extraHeight
     val unwatchedColHeight: Dp = (80 * (movies.size)).dp
 
     if (moviesList.isNotEmpty()) {
