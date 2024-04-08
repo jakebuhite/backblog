@@ -449,6 +449,7 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                 ) {
                     AddToLogMenu(logViewModel = logViewModel, movie, onCreateNewLog = {
                         isNewLogSheetOpen = true
+                        isSheetOpen = false
                     }, onCloseAddMenu = {
                         isSheetOpen = false
                     })
