@@ -402,6 +402,7 @@ fun MovieResult(
                 if (movieDetail != null) {
                     AddToLogMenu(logViewModel = logViewModel, movie = movieDetail, onCreateNewLog = {
                         isNewLogSheetOpen = true
+                        isSheetOpen = false
                     }, onCloseAddMenu = {
                         isSheetOpen = false
                     })
