@@ -177,10 +177,6 @@ fun LogDetailsScreen(
     }
 
     // Get data
-    LaunchedEffect(log) {
-        //logDetailsViewModel.getLogData(logId!!)
-    }
-
     if (!isOwner && !isCollaborator && log?.isVisible == false) {
         navController.navigate("home")
     }
@@ -1910,12 +1906,17 @@ fun EditSheetContent(
                                         val filteredMovies = editedMovies.value.filterNot { movie ->
                                             movie.id in moviesToDelete
                                         }
+                                        val filteredWatchedMovies = editedWatchedMovies.value.filterNot { movie ->
+                                            movie.id in moviesToDelete
+                                        }
                                         editedMovies.value = filteredMovies
+                                        editedWatchedMovies.value = filteredWatchedMovies
 
                                         CoroutineScope(Dispatchers.Main).launch {
                                             logDetailsViewModel.updateLog(
                                                 editedLogName,
                                                 editedMovies.value,
+                                                editedWatchedMovies.value
                                             )
                                             logViewModel.loadLogs()
                                             logViewModel.resetMovie()
