@@ -253,4 +253,29 @@ open class ProfileViewModel(
             }
         }
     }
+
+    open suspend fun unBlockUser(blockedId: String): Boolean {
+        val userId = auth.currentUser?.uid ?: return false
+        when(val result = friendRepository.unBlockUser(userId, blockedId)) {
+            is DataResult.Failure -> {
+                Log.d(tag, "Error: ${result.throwable}")
+                return false
+            }
+            is DataResult.Success -> Unit
+        }
+        return true
+    }
+
+    open suspend fun getBlockedUsers(): List<UserData> {
+        val userId = auth.currentUser?.uid ?: return emptyList()
+        when(val result = friendRepository.getBlockedUsers(userId)) {
+            is DataResult.Failure -> {
+                Log.d(tag, "Error: ${result.throwable}")
+            }
+            is DataResult.Success -> {
+                return result.item
+            }
+        }
+        return emptyList()
+    }
 }

@@ -174,12 +174,14 @@ fun LogDetailsScreen(
         alertDialogState = dialog
     }
 
-
     // Get data
-    LaunchedEffect(Unit) {
+    LaunchedEffect(log) {
         //logDetailsViewModel.getLogData(logId!!)
     }
 
+    if (!isOwner && !isCollaborator && log?.isVisible == false) {
+        navController.navigate("home")
+    }
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
 

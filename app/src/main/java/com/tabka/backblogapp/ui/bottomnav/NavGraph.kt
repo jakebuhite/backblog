@@ -129,7 +129,7 @@ fun BottomNavGraph(navController: NavHostController) {
             }
 
             composable(route = "blocked_users") {
-                BlockedUsersScreen(navController)
+                BlockedUsersScreen(navController, profileViewModel::getBlockedUsers, profileViewModel::unBlockUser)
             }
 
             composable(

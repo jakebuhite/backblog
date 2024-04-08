@@ -178,6 +178,32 @@ class FriendRepository(
         }
     }
 
+    suspend fun getBlockedUsers(userId: String): DataResult<List<UserData>> {
+        val usersCollection = db.collection("users")
+
+        try {
+            val userDocument = usersCollection.document(userId).get().await()
+
+            @Suppress("UNCHECKED_CAST")
+            val blockedMap = userDocument.data?.get("blocked") as Map<String, Boolean>?
+            val blockedIds = blockedMap?.keys ?: emptySet()
+
+            val blockedUserDataList = mutableListOf<UserData>()
+
+            for (blockedId in blockedIds) {
+                val friendDocument = usersCollection.document(blockedId).get().await()
+
+                val friendUserData = Json.decodeFromString<UserData>(Json.encodeToString(friendDocument.data.toJsonElement()))
+
+                blockedUserDataList.add(friendUserData)
+            }
+
+            return DataResult.Success(blockedUserDataList.toList())
+        } catch (e: Exception) {
+            return DataResult.Failure(e)
+        }
+    }
+
     suspend fun updateFriendRequest(friendRequestId: String, isAccepted: Boolean): DataResult<Boolean> {
         return try {
             val reqRef = db.collection("friend_requests").document(friendRequestId)
@@ -343,6 +369,19 @@ class FriendRepository(
             }
 
             return logRepo.updateLogs(logUpdates)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating user document", e)
+            DataResult.Failure(e)
+        }
+    }
+
+    suspend fun unBlockUser(userId: String, blockedId: String): DataResult<Boolean> {
+        return try {
+            // Remove from blocked
+            db.collection("users").document(userId)
+                .update(mapOf("blocked.${blockedId}" to FieldValue.delete())).await()
+
+            return DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error updating user document", e)
             DataResult.Failure(e)
