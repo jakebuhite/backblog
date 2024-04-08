@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,10 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
@@ -122,22 +119,37 @@ fun BrowseCategories(navController: NavController) {
         }*/
 
     val genreList = listOf(
-        ("Action" to 28),
-        ("Adventure" to 12),
-        ("Animation" to 16),
-        ("Comedy" to 35),
-        ("Crime" to 80),
-        ("Drama" to 18),
-        ("Family" to 10751),
-        ("Fantasy" to 14)
+        ("Action" to 28 to R.drawable.action),
+        ("Adventure" to 12 to R.drawable.adventure),
+        ("Animation" to 16 to R.drawable.animation),
+        ("Comedy" to 35 to R.drawable.comedy)
+    )
+
+    val genreList2 = listOf(
+        ("Crime" to 80 to R.drawable.crime),
+        ("Drama" to 18 to R.drawable.drama),
+        ("Family" to 10751 to R.drawable.family),
+        ("Fantasy" to 14 to R.drawable.fantasy)
     )
 
 
-    LazyHorizontalGrid(
-        rows = GridCells.Fixed(2),
-        modifier = Modifier.height(250.dp)
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = Modifier.height(210.dp)
     ) {
         items(genreList) { genre ->
+            Category(navController, genre)
+        }
+    }
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = Modifier
+            .height(200.dp)
+    ) {
+        items(genreList2) { genre ->
             Category(navController, genre)
         }
     }
@@ -145,13 +157,13 @@ fun BrowseCategories(navController: NavController) {
 
 
 @Composable
-fun Category(navController: NavController, genre: Pair<String, Int>) {
+fun Category(navController: NavController, genre: Pair<Pair<String, Int>, Int>) {
     Card(
         modifier = Modifier
-            .height(70.dp)
+            .height(100.dp)
             .width(185.dp)
             .padding(end = 10.dp, bottom = 10.dp)
-            .clickable { navController.navigate("category_results_${genre.second}_${genre.first}") },
+            .clickable { navController.navigate("category_results_${genre.first.second}_${genre.first.first}") },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -165,7 +177,7 @@ fun Category(navController: NavController, genre: Pair<String, Int>) {
                 .fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.creator),
+                painter = painterResource(id = genre.second),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -183,7 +195,7 @@ fun Category(navController: NavController, genre: Pair<String, Int>) {
 
             // Text overlay
             Text(
-                text = genre.first,
+                text = genre.first.first,
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.White,
                 textAlign = TextAlign.Center,
@@ -193,74 +205,6 @@ fun Category(navController: NavController, genre: Pair<String, Int>) {
                     .align(Alignment.Center)
                     .wrapContentHeight(align = Alignment.CenterVertically)
             )
-        }
-    }
-}
-
-@Composable
-fun FriendsAdded() {
-    Row(modifier = Modifier.fillMaxSize()) {
-        Text(
-            "Friends Recently Added", style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.testTag("FRIENDS_RECENTLY_ADDED_TITLE")
-        )
-    }
-
-    Spacer(modifier = Modifier.height(15.dp))
-
-    LazyRow(modifier = Modifier.fillMaxWidth()) {
-        items(4) {
-            FriendMovie()
-        }
-    }
-}
-
-@Composable
-fun FriendMovie() {
-    Column(modifier = Modifier.padding(end = 10.dp)) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Card(
-                    modifier = Modifier
-                        .height(160.dp)
-                        .width(120.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Transparent
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-                )
-                {
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.creator),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-
-                Text(
-                    text = "The Creator",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .wrapContentWidth(align = Alignment.CenterHorizontally)
-                )
-            }
         }
     }
 }

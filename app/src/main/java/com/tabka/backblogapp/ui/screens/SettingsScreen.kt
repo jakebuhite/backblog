@@ -2,11 +2,13 @@ package com.tabka.backblogapp.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -16,8 +18,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +44,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.Accept
+import com.tabka.backblogapp.network.models.AlertDialog
+import com.tabka.backblogapp.ui.shared.ShowAlertDialog
+import com.tabka.backblogapp.network.models.Dismiss
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.shared.LoadingSpinner
 import com.tabka.backblogapp.ui.shared.PasswordTextField
@@ -56,6 +66,11 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
     val hasBackButton = true
     val isMovieDetails = false
     val pageTitle = "Settings"
+
+    var alertDialogState by remember { mutableStateOf(AlertDialog()) }
+    val setAlertDialogState = { dialog: AlertDialog ->
+        alertDialogState = dialog
+    }
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
         var userData by remember { mutableStateOf<UserData?>(null) }
@@ -78,21 +93,21 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
         if (isLoading) {
             LoadingSpinner()
         } else {
-            SettingsForm(userData, settingsViewModel::updateUserData,
-                settingsViewModel::syncLocalLogsToDB,
-                settingsViewModel::getLogCount)
+            SettingsForm(navController, userData, settingsViewModel::updateUserData,
+                settingsViewModel::getLogCount, alertDialogState, setAlertDialogState)
         }
     }
+    ShowAlertDialog(alertDialogState, setAlertDialogState)
     Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController, true)
     }
 }
 
 @Composable
-fun SettingsForm(userData: UserData?,
+fun SettingsForm(navController: NavController, userData: UserData?,
                  updateUserData: suspend (Map<String, Any?>, String) -> DataResult<Boolean>,
-                 syncLocalLogsToDB: suspend () -> DataResult<Boolean>,
-                 getLogCount: () -> Int) {
+                 getLogCount: () -> Int, alertDialogState: AlertDialog,
+                 setAlertDialogState: (AlertDialog) -> Unit) {
     // Avatar selection button
     var showDialog by remember { mutableStateOf(false) }
     var selectedAvatar by remember { mutableIntStateOf(userData?.avatarPreset ?: 1) }
@@ -107,23 +122,24 @@ fun SettingsForm(userData: UserData?,
                 painter = painterResource(id = getAvatarResourceId(selectedAvatar).second),
                 contentDescription = "loading spinner",
                 modifier = Modifier
-                    .height(120.dp)
-                    .width(120.dp)
+                    .height(100.dp)
+                    .width(100.dp)
                     .testTag("LOADING_SPINNER_PREVIEW")
             )
             Button(onClick = { showDialog = true },
                 colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFF3891E1)
+                    containerColor = colorResource(id = R.color.sky_blue),
+                    disabledContainerColor = Color.Gray
                 ),
-                shape = RoundedCornerShape(35),
                 modifier = Modifier
-                    .height(70.dp)
-                    .width(200.dp)
-                    .padding(12.dp)
+                    .height(55.dp)
+                    .width(220.dp)
+                    .padding(horizontal = 12.dp)
                     .testTag("CHANGE_AVATAR_BUTTON")
             )
             {
-                Text("Change Avatar", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("CHANGE AVATAR", style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold)
             }
         }
 
@@ -181,46 +197,9 @@ fun SettingsForm(userData: UserData?,
             )
         }
 
-        // Sync local data
-        if (getLogCount() > 0) {
-            Button(onClick = {
-                CoroutineScope(Dispatchers.Default).launch {
-                    when (val result = syncLocalLogsToDB()) {
-                        is DataResult.Success -> {
-                            statusText = "Local logs successfully synced!"
-                            statusColor = Color(0xFF4BB543)
-                            visible = true
-                        }
-                        is DataResult.Failure -> {
-                            val e = result.throwable.message
-                            Log.d("SettingsScreen", "Error syncing logs $e")
-                            statusText = "Error syncing logs."
-                            statusColor = Color(0xFFCC0000)
-                            visible = true
-                        }
-                    }
-                }
-            },
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFF3891E1)
-                ),
-                shape = RoundedCornerShape(35),
-                modifier = Modifier
-                    .height(70.dp)
-                    .width(200.dp)
-                    .padding(12.dp)
-                    .testTag("SYNC_LOGS_BUTTON")
-            )
-            {
-                Text(
-                    "Sync Logs to DB",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.testTag("SYNC_LOGS_TEXT")
-                )
-            }
-        }
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // Update settings button
+        // Save settings button
         Button(onClick = {
             CoroutineScope(Dispatchers.Default).launch {
                 if (password.isNotEmpty()) {
@@ -261,17 +240,87 @@ fun SettingsForm(userData: UserData?,
             }
         },
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3891E1)
+                containerColor = colorResource(id = R.color.sky_blue),
+                disabledContainerColor = Color.Gray
             ),
-            shape = RoundedCornerShape(35),
             modifier = Modifier
-                .height(70.dp)
-                .width(200.dp)
-                .padding(12.dp)
+                .height(55.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
                 .testTag("UPDATE_SETTINGS_BUTTON")
         )
         {
-            Text("Update Settings", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("SAVE SETTINGS", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Blocked Users Button
+        Button(onClick = {
+            navController.navigate("blocked_users")
+        },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .height(55.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .border(
+                    1.dp,
+                    Color(0xFFDC3545),
+                    shape = RoundedCornerShape(30.dp))
+                .testTag("BLOCKED_USERS_BUTTON")
+        )
+        {
+            Text("VIEW BLOCKED USERS", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Log Out Button
+        Button(onClick = {
+            setAlertDialogState(
+                AlertDialog(
+                    isVisible = true,
+                    header = "Log out?",
+                    message = "Are you sure you want to log out?",
+                    dismiss = Dismiss(text = "Cancel"),
+                    accept = Accept(
+                        text = "Log out",
+                        textColor = Color(0xFFDC3545),
+                        action = {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                val auth = Firebase.auth
+                                auth.signOut()
+                                navController.navigate("login")
+                            }
+                        }
+                    )
+                )
+            )
+        },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(35),
+            modifier = Modifier
+                .height(55.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .border(
+                    1.dp,
+                    Color(0xFFDC3545),
+                    shape = RoundedCornerShape(30.dp))
+                .testTag("LOG_OUT_BUTTON")
+        )
+        {
+            Text("LOG OUT", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
         }
     }
 }

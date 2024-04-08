@@ -52,6 +52,7 @@ open class LogViewModel(
     private val _movie = MutableStateFlow<Pair<MovieData?, String>>(null to "")
     open val movie = _movie.asStateFlow()
 
+    // Listeners
     private val authListener = FirebaseAuth.AuthStateListener { _ ->
         Log.d(TAG, "We are here")
         viewModelScope.launch {

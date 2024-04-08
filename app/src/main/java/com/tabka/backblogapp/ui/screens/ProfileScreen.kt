@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Surface
 import androidx.compose.material.Tab
@@ -27,11 +29,12 @@ import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -57,10 +60,14 @@ import androidx.navigation.NavHostController
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.tabka.backblogapp.R
+import com.tabka.backblogapp.network.models.Accept
+import com.tabka.backblogapp.network.models.AlertDialog
+import com.tabka.backblogapp.network.models.Dismiss
 import com.tabka.backblogapp.network.models.LogData
 import com.tabka.backblogapp.network.models.UserData
 import com.tabka.backblogapp.ui.shared.FriendsList
 import com.tabka.backblogapp.ui.shared.PublicLogs
+import com.tabka.backblogapp.ui.shared.ShowAlertDialog
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.ProfileViewModel
 import com.tabka.backblogapp.util.getAvatarResourceId
@@ -94,6 +101,11 @@ fun ProfileScreen(navController: NavHostController, friendId: String?, profileVi
         profileViewModel.clearMessage()
     }
 
+    var alertDialogState by remember { mutableStateOf(AlertDialog()) }
+    val setAlertDialogState = { dialog: AlertDialog ->
+        alertDialogState = dialog
+    }
+
     // Get data
     composableScope.launch {
         profileViewModel.getUserData(friendId ?: "")
@@ -116,8 +128,13 @@ fun ProfileScreen(navController: NavHostController, friendId: String?, profileVi
         addFriend,
         removeFriend,
         blockUser,
-        composableScope
+        composableScope,
+        alertDialogState,
+        setAlertDialogState
     )
+
+    ShowAlertDialog(alertDialogState, setAlertDialogState)
+
     Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
@@ -135,7 +152,9 @@ fun FriendsPageContent(
     onAddFriendSelected: () -> Unit,
     onRemoveFriendSelected: () -> Unit,
     onBlockUserSelected: () -> Unit,
-    composableScope: CoroutineScope
+    composableScope: CoroutineScope,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit
 ) {
     val scrollState = rememberScrollState()
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -186,7 +205,8 @@ fun FriendsPageContent(
                                           },
                     dismissBottomSheet = { showBottomSheet = false },
                     alreadyFriend = alreadyFriend,
-                    composableScope = composableScope
+                    composableScope = composableScope, alertDialogState,
+                    setAlertDialogState
                 )
             }
             Spacer(modifier = Modifier.height(70.dp))
@@ -288,7 +308,9 @@ fun AddFriendOrBlockDialog(
     onBlockUserSelected: () -> Unit,
     dismissBottomSheet: () -> Unit,
     alreadyFriend: Boolean,
-    composableScope: CoroutineScope
+    composableScope: CoroutineScope,
+    alertDialogState: AlertDialog,
+    setAlertDialogState: (AlertDialog) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -305,20 +327,49 @@ fun AddFriendOrBlockDialog(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (alreadyFriend) {
-                TextButton(onClick = {
-                    composableScope.launch {
-                        onRemoveFriendSelected()
-                        sheetState.hide()
-                    }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            dismissBottomSheet()
-                        }
-                    }
-                }) {
-                    Text("Remove Friend", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, color = Color(0xFFED4337)))
+                Button(onClick = {
+                    setAlertDialogState(
+                        AlertDialog(
+                            isVisible = true,
+                            header = "Remove Friend?",
+                            message = "Are you sure you want to remove this user?",
+                            dismiss = Dismiss(text = "Cancel"),
+                            accept = Accept(
+                                text = "Remove",
+                                textColor = Color(0xFFDC3545),
+                                action = {
+                                    composableScope.launch {
+                                        onRemoveFriendSelected()
+                                        sheetState.hide()
+                                    }.invokeOnCompletion {
+                                        if (!sheetState.isVisible) {
+                                            dismissBottomSheet()
+                                        }
+                                    }
+                                }
+                            )
+                        )
+                    )
+                },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(35),
+                    modifier = Modifier
+                        .height(55.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .border(
+                            1.dp,
+                            Color(0xFFDC3545),
+                            shape = RoundedCornerShape(30.dp)
+                        )) {
+                    Text("REMOVE FRIEND", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
                 }
             } else {
-                TextButton(onClick = {
+                Button(onClick = {
                     composableScope.launch {
                         onAddFriendSelected()
                         sheetState.hide()
@@ -327,8 +378,17 @@ fun AddFriendOrBlockDialog(
                             dismissBottomSheet()
                         }
                     }
-                }) {
-                    Text("Add Friend", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, color = Color(0xFF3891E1)))
+                },
+                    modifier = Modifier
+                        .height(55.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.sky_blue),
+                        disabledContainerColor = Color.Gray
+                    )) {
+                    Text("ADD FRIEND", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -339,17 +399,45 @@ fun AddFriendOrBlockDialog(
                     .background(Color(0xFF303437))
             )
 
-            TextButton(onClick = {
-                composableScope.launch {
-                    onBlockUserSelected()
-                    sheetState.hide()
-                }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        dismissBottomSheet()
-                    }
-                }
-            }) {
-                Text("Block User", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, color = Color.Red))
+            Button(onClick = {
+                setAlertDialogState(
+                    AlertDialog(
+                        isVisible = true,
+                        header = "Block User?",
+                        message = "Are you sure you want to block this user?",
+                        dismiss = Dismiss(text = "Cancel"),
+                        accept = Accept(
+                            text = "Block",
+                            textColor = Color(0xFFDC3545),
+                            action = {
+                                composableScope.launch {
+                                    onBlockUserSelected()
+                                    sheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        dismissBottomSheet()
+                                    }
+                                }
+                            }
+                        )
+                    )
+                )
+            }, colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+                shape = RoundedCornerShape(35),
+                modifier = Modifier
+                    .height(55.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .border(
+                        1.dp,
+                        Color(0xFFDC3545),
+                        shape = RoundedCornerShape(30.dp)
+                    )) {
+                Text("BLOCK USER", style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
             }
             Spacer(modifier = Modifier.height(16.dp))
         }

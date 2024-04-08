@@ -1,7 +1,9 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -9,7 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,14 +30,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Checkbox
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,14 +48,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -78,7 +76,11 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
+import com.tabka.backblogapp.ui.shared.AddToLogMenu
+import com.tabka.backblogapp.ui.shared.NewLogMenu
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 import com.tabka.backblogapp.ui.viewmodels.SearchResultsViewModel
 import kotlinx.coroutines.launch
 
@@ -86,8 +88,9 @@ private val TAG = "SearchResultsScreen"
 val searchResultsViewModel: SearchResultsViewModel = SearchResultsViewModel()
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewModel) {
+fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewModel, friendsViewModel: FriendsViewModel, movieDetailsViewModel: MovieDetailsViewModel) {
     val hasBackButton = true
     val isMovieDetails = false
     val pageTitle = "Results"
@@ -95,20 +98,22 @@ fun SearchResultsScreen(navController: NavHostController, logViewModel: LogViewM
     val logId = null
 
     BaseScreen(navController, hasBackButton, isMovieDetails, pageTitle) {
-        SearchBar(navController, logViewModel, isLogMenu, logId)
+        SearchBar(navController, logViewModel, isLogMenu, logId, friendsViewModel, movieDetailsViewModel)
     }
     Box(modifier = Modifier.offset(x = 16.dp, y = 20.dp)) {
         BackButton(navController = navController, visible = true)
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SearchBar(
     navController: NavHostController,
     logViewModel: LogViewModel,
     isLogMenu: Boolean,
-    logId: String?
+    logId: String?,
+    friendsViewModel: FriendsViewModel,
+    movieDetailsViewModel: MovieDetailsViewModel
 ) {
     var text by rememberSaveable { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -125,7 +130,7 @@ fun SearchBar(
                 .fillMaxWidth(),
             shape = RoundedCornerShape(5.dp)
         ) {
-            Row() {
+            Row {
                 TextField(
                     value = text,
                     onValueChange = {
@@ -213,7 +218,7 @@ fun SearchBar(
             false -> {
                 Log.d(TAG, "Movie results size: ${movieResults?.size}")
                 if (movieResults?.isNotEmpty() == true) {
-                    Row() {
+                    Row {
                         Box(modifier = Modifier.height(if (isLogMenu) 650.dp else 570.dp)) {
                             LazyColumn(
                                 modifier = Modifier
@@ -230,7 +235,9 @@ fun SearchBar(
                                         halfSheet,
                                         logViewModel,
                                         isLogMenu,
-                                        logId
+                                        logId,
+                                        friendsViewModel,
+                                        movieDetailsViewModel
                                     )
                                 }
                             }
@@ -244,6 +251,7 @@ fun SearchBar(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieResult(
@@ -252,7 +260,9 @@ fun MovieResult(
     halfSheet: String,
     logViewModel: LogViewModel,
     isLogMenu: Boolean,
-    logId: String?
+    logId: String?,
+    friendsViewModel: FriendsViewModel,
+    movieDetailsViewModel: MovieDetailsViewModel
 ) {
     //val logViewModel: LogViewModel = backStackEntry.logViewModel(navController)
     val allLogs by logViewModel.allLogs.collectAsState()
@@ -319,6 +329,11 @@ fun MovieResult(
             mutableStateOf(false)
         }
 
+        var isNewLogSheetOpen by rememberSaveable {
+            mutableStateOf(false)
+        }
+        val newLogSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
         val context = LocalContext.current
         var isClicked by remember { mutableStateOf(false) }
         val haptic = LocalHapticFeedback.current
@@ -362,185 +377,55 @@ fun MovieResult(
             }
         }
 
+        val movieDetail = movieDetailsViewModel.movie.collectAsState().value
 
         if (isSheetOpen) {
             ModalBottomSheet(
                 sheetState = sheetState,
                 onDismissRequest = { isSheetOpen = false },
+                dragHandle = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        BottomSheetDefaults.DragHandle()
+                        Text("Add to Log", style = MaterialTheme.typography.headlineMedium)
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Divider(thickness = 1.dp, color = Color(0xFF303437))
+                    }
+                },
                 containerColor = colorResource(id = R.color.bottomnav),
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("ADD_MOVIE_TO_LOG_POPUP")
             ) {
-
-                //val allLogs = logViewModel.allLogs.collectAsState().value
-                if (allLogs != null) {
-                    val checkedStates =
-                        remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 20.dp)
-                    ) {
-                        Text(
-                            "Add to Log",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(5.dp))
-
-                    Box(modifier = Modifier.height(150.dp)) {
-                        LazyColumn(
-                            modifier = Modifier.padding(start = 20.dp)
-                        ) {
-                            items(allLogs!!.size) { index ->
-                                val log = allLogs!![index]
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(3F)) {
-                                        Text(
-                                            log.name!!,
-                                            color = Color.White,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
-                                    Column(
-                                        modifier = Modifier.weight(1F),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Checkbox(
-                                            checked = checkedStates[index],
-                                            onCheckedChange = { isChecked ->
-                                                checkedStates[index] = isChecked
-                                            },
-                                            modifier = Modifier.testTag("LOG_CHECKBOX")
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    /*Button(
-                        onClick = {
-                            // Use the checkedStates list to find out which checkboxes are checked
-                            val checkedItems = allLogs!!.indices.filter { checkedStates[it] }
-                            Log.d(TAG, "Checked Items: $checkedItems")
-                            for (checkedItem in checkedItems) {
-                                val log = allLogs!![checkedItem]
-
-                                logViewModel.addMovieToLog(log.logId, movie.id.toString())
-                                logViewModel.loadLogs()
-                                /*Log.d(TAG, allLogs)*/
-                            }
-                        },
-                        modifier = Modifier.testTag("ADD_TO_LOG_BUTTON")
-                    ) {
-                        Text(
-                            "Add to Log",
-                            color = Color.White
-                        )
-                    }*/
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 14.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Divider(thickness = 1.dp, color = Color(0xFF303437))
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        var isAnyChecked by remember { mutableStateOf(false) }
-                        isAnyChecked = checkedStates.any { it }
-                        val buttonText = if (isAnyChecked) "Add to Log" else "Create New Log"
-                        // Add Button
-                        androidx.compose.material3.Button(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(60.dp)
-                                .padding(horizontal = 24.dp)
-                                .testTag("ADD_TO_LOG_BUTTON"),
-                            onClick = {
-                                // Use the checkedStates list to find out which checkboxes are checked
-                                if (isAnyChecked) {
-                                    val checkedItems =
-                                        allLogs!!.indices.filter { checkedStates[it] }
-                                    Log.d(TAG, "Checked Items: $checkedItems")
-                                    for (checkedItem in checkedItems) {
-                                        val log = allLogs!![checkedItem]
-
-                                        logViewModel.addMovieToLog(log.logId, movie.id.toString())
-                                        /*Log.d(TAG, allLogs)*/
-                                    }
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            "Movie added to log!",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                        .show()
-                                    isSheetOpen = false
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(id = R.color.sky_blue),
-                                disabledContainerColor = Color.LightGray
-                            )
-                        ) {
-                            Text(
-                                /*"Add"*/
-                                buttonText,
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        // Cancel Button
-                        androidx.compose.material3.Button(
-                            onClick = {
-                                isSheetOpen = false
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(60.dp)
-                                .padding(horizontal = 24.dp)
-                                .background(color = Color.Transparent)
-                                .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent
-                            ),
-                        ) {
-                            androidx.compose.material3.Text(
-                                "Cancel",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
+                if (movieDetail != null) {
+                    AddToLogMenu(logViewModel = logViewModel, movie = movieDetail, onCreateNewLog = {
+                        isNewLogSheetOpen = true
+                    }, onCloseAddMenu = {
+                        isSheetOpen = false
+                    })
                 }
+            }
+        }
+
+        val isLoggedIn by logViewModel.isLoggedIn.collectAsState()
+
+        if (isNewLogSheetOpen) {
+            ModalBottomSheet(
+                sheetState = newLogSheetState,
+                onDismissRequest = { isNewLogSheetOpen = false },
+                containerColor = colorResource(id = R.color.bottomnav),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("CREATE_NEW_LOG_SEARCH_POPUP")
+            ) {
+                NewLogMenu(friendsViewModel = friendsViewModel, logViewModel, isLoggedIn, onCreateClick = {
+                    isNewLogSheetOpen = false
+                    logViewModel.loadLogs()
+                }, onCloseClick = {
+                    isNewLogSheetOpen = false
+                }, navController)
             }
         }
     }

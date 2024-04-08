@@ -214,6 +214,12 @@ open class FriendsViewModel(
                 }
 
                 val targetId = user.userId ?: ""
+                if (userData.value?.blocked?.containsKey(targetId) == true ||
+                    user.blocked?.containsKey(userId) == true) {
+                    updateMessage("User not found!")
+                    return@launch
+                }
+
                 val targetRequests = friendRepository.getFriendRequests(targetId)
                 if (targetRequests is DataResult.Failure) {
                     throw targetRequests.throwable

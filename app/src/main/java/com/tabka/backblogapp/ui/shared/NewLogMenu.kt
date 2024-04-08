@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.ui.screens.NewLogCollaborator
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
@@ -67,7 +68,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, isLoggedIn: Boolean, onCreateClick: () -> Unit,
-               onCloseClick: () -> Unit) {
+               onCloseClick: () -> Unit, navController: NavController) {
     var logName by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     var logIsVisible by remember { mutableStateOf(false) }
@@ -88,7 +89,8 @@ fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, i
     Spacer(modifier = Modifier.height(20.dp))
 
     Row(
-        modifier = Modifier.padding(start = 50.dp, end = 15.dp),
+        //modifier = Modifier.padding(start = 50.dp, end = 15.dp),
+        modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -204,9 +206,9 @@ fun NewLogMenu(friendsViewModel: FriendsViewModel, logViewModel: LogViewModel, i
                 items(sortedUserList.size) { index ->
                     val friend = sortedUserList[index]
                     if (currentCollab.contains(friend.userId)) {
-                        NewLogCollaborator(friend, collaboratorsList, true)
+                        NewLogCollaborator(friend, collaboratorsList, true, navController)
                     } else {
-                        NewLogCollaborator(friend, collaboratorsList, false)
+                        NewLogCollaborator(friend, collaboratorsList, false, navController)
                     }
                 }
             }

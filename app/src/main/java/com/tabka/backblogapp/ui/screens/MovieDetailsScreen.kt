@@ -1,7 +1,9 @@
 package com.tabka.backblogapp.ui.screens
 
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,18 +16,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Checkbox
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -41,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,15 +64,18 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieData
+import com.tabka.backblogapp.ui.shared.AddToLogMenu
+import com.tabka.backblogapp.ui.shared.NewLogMenu
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
 import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
-import kotlinx.coroutines.launch
 
 private val TAG = "MovieDetailsScreen"
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel()) {
+fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: String?, logViewModel: LogViewModel, movieIsWatched: Int, movieDetailsViewModel: MovieDetailsViewModel = viewModel(), friendsViewModel: FriendsViewModel, isRando: Boolean) {
     val movie = movieDetailsViewModel.movie.collectAsState().value
 
     Log.d(TAG, "Here")
@@ -85,9 +85,10 @@ fun MovieDetailsScreen(navController: NavController, movieId: String?, logId: St
 
     val hasBackButton = true
 
-    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId)
+    Foundation(navController, hasBackButton, movie, logViewModel, movieIsWatched, logId, friendsViewModel, isRando)
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Foundation(
     navController: NavController,
@@ -95,7 +96,9 @@ fun Foundation(
     movie: MovieData?,
     logViewModel: LogViewModel,
     movieIsWatched: Int,
-    logId: String?
+    logId: String?,
+    friendsViewModel: FriendsViewModel,
+    isRando: Boolean
 ) {
     val lightGrey = Color(0xFF37414A)
     val darkGrey = Color(0xFF191919)
@@ -150,7 +153,7 @@ fun Foundation(
                             .fillMaxHeight()
                             .background(Brush.verticalGradient(gradientColors)),
                     ) {
-                        MovieInfo(movie, logViewModel, movieIsWatched, logId)
+                        MovieInfo(movie, logViewModel, movieIsWatched, logId, friendsViewModel, navController, isRando)
                     }
                 }
             }
@@ -163,9 +166,10 @@ fun Foundation(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?) {
+fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int, logId: String?, friendsViewModel: FriendsViewModel, navController: NavController, isRando: Boolean) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -177,7 +181,6 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp),
-                /*verticalAlignment = Alignment.CenterVertically*/
             ) {
                 // Poster
                 Column(
@@ -198,11 +201,6 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                         Box(
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            /*       Image(
-                                       painter = painterResource(id = R.drawable.creator),
-                                       contentDescription = null,
-                                       contentScale = ContentScale.Crop,
-                                   )*/
                             val imageBaseURL =
                                 "https://image.tmdb.org/t/p/w500/${movie.posterPath}"
                             Image(
@@ -227,9 +225,6 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                     Row {
                         // Rating
                         Column {
-                            /* androidx.compose.material3.Text(
-                                }, style = MaterialTheme.typography.bodySmall,
-                            )*/
                             val usRelease =
                                 movie.releaseDates?.results?.find { it.iso31661 == "US" }
                             /*val usRating =
@@ -306,86 +301,22 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
 
             val allLogs by logViewModel.allLogs.collectAsState()
             val scope = rememberCoroutineScope()
-            val sheetState = rememberModalBottomSheetState(/*skipPartiallyExpanded = false*/)
+            val sheetState = rememberModalBottomSheetState()
             var isSheetOpen by rememberSaveable {
                 mutableStateOf(false)
             }
+
+            var isNewLogSheetOpen by rememberSaveable {
+                mutableStateOf(false)
+            }
+            val newLogSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
             // Add to Log button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                var isClicked by remember { mutableStateOf(false) }
-                if (movieIsWatched == 1 && !isClicked) {
-                    val context = LocalContext.current
-                    val haptic = LocalHapticFeedback.current
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            Toast
-                                .makeText(
-                                    context,
-                                    "Successfully marked movie as watched!",
-                                    Toast.LENGTH_SHORT
-                                )
-                                .show()
-                            if (logId != null) {
-                                Log.d("THIS IS THE LOG ID:", logId.toString())
-                                logViewModel.markMovieAsWatched(logId, movie.id.toString())
-                            }
-                            isClicked = true
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(id = R.color.sky_blue),
-                            disabledContainerColor = Color.LightGray
-                        )
-                    ) {
-                        androidx.compose.material3.Text(
-                            "ADD TO WATCHED",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                else if (movieIsWatched == 2 && !isClicked) {
-                    val context = LocalContext.current
-                    val haptic = LocalHapticFeedback.current
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            Toast
-                                .makeText(
-                                    context,
-                                    "Successfully marked movie as unwatched!",
-                                    Toast.LENGTH_SHORT
-                                )
-                                .show()
-                            if (logId != null) {
-                                Log.d("THIS IS THE LOG ID:", logId.toString())
-                                logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
-                            }
-                            isClicked = true
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(id = R.color.sky_blue),
-                            disabledContainerColor = Color.LightGray
-                        )
-                    ) {
-                        androidx.compose.material3.Text(
-                            "ADD TO UNWATCHED",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                else {
+                if (isRando) {
                     Button(
                         onClick = {
                             isSheetOpen = true
@@ -403,6 +334,95 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+                }
+                else {
+                    var isClicked by remember { mutableStateOf(false) }
+                    if (movieIsWatched == 1 && !isClicked) {
+                        val context = LocalContext.current
+                        val haptic = LocalHapticFeedback.current
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Successfully marked movie as watched!",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show()
+
+                                if (logId != null) {
+                                    logViewModel.markMovieAsWatched(logId, movie.id.toString())
+                                }
+                                isClicked = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.sky_blue),
+                                disabledContainerColor = Color.LightGray
+                            )
+                        ) {
+                            androidx.compose.material3.Text(
+                                "ADD TO WATCHED",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else if (movieIsWatched == 2 && !isClicked) {
+                        val context = LocalContext.current
+                        val haptic = LocalHapticFeedback.current
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Successfully marked movie as unwatched!",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show()
+                                if (logId != null) {
+                                    logViewModel.unmarkMovieAsWatched(logId, movie.id.toString())
+                                }
+                                isClicked = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.sky_blue),
+                                disabledContainerColor = Color.LightGray
+                            )
+                        ) {
+                            androidx.compose.material3.Text(
+                                "ADD TO UNWATCHED",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    else {
+                        Button(
+                            onClick = {
+                                isSheetOpen = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.sky_blue),
+                                disabledContainerColor = Color.LightGray
+                            )
+                        ) {
+                            androidx.compose.material3.Text(
+                                "ADD TO LOG",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -427,176 +447,33 @@ fun MovieInfo(movie: MovieData?, logViewModel: LogViewModel, movieIsWatched: Int
                         .fillMaxSize()
                         .testTag("ADD_MOVIE_TO_LOG_POPUP")
                 ) {
-                    //val allLogs = logViewModel.allLogs.collectAsState().value
-                    if (allLogs != null) {
-                        val checkedStates =
-                            remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
+                    AddToLogMenu(logViewModel = logViewModel, movie, onCreateNewLog = {
+                        isNewLogSheetOpen = true
+                    }, onCloseAddMenu = {
+                        isSheetOpen = false
+                    })
+                }
+            }
 
-                        /*Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 20.dp)
-                        ) {
-                            Text(
-                                "Add to Log",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+            val isLoggedIn by logViewModel.isLoggedIn.collectAsState()
 
-                        Spacer(modifier = Modifier.height(5.dp))*/
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Box(/*modifier = Modifier.weight(5f)*/ modifier = Modifier.heightIn(min = 50.dp, max = 150.dp)) {
-                            LazyColumn(
-                                modifier = Modifier.padding(start = 20.dp)
-                            ) {
-                                items(allLogs!!.size) { index ->
-                                    val log = allLogs!![index]
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(modifier = Modifier.weight(3F)) {
-                                            Text(
-                                                log.name!!,
-                                                color = Color.White,
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
-                                        }
-                                        Column(
-                                            modifier = Modifier.weight(1F),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Checkbox(
-                                                checked = checkedStates[index],
-                                                onCheckedChange = { isChecked ->
-                                                    checkedStates[index] = isChecked
-                                                },
-                                                modifier = Modifier.testTag("LOG_CHECKBOX")
-                                            )
-                                        }
-                                    }
-                                    /*  Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(modifier = Modifier.weight(3F)) {
-                                            Text(
-                                                log.name!!,
-                                                color = Color.White,
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
-                                        }
-                                        Column(
-                                            modifier = Modifier.weight(1F),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Checkbox(
-                                                checked = checkedStates[index],
-                                                onCheckedChange = { isChecked ->
-                                                    checkedStates[index] = isChecked
-                                                },
-                                                modifier = Modifier.testTag("LOG_CHECKBOX")
-                                            )
-                                        }
-                                    }*/
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-
-//                        Spacer(modifier = Modifier.weight(1f))
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                /*.offset {
-                                    IntOffset(
-                                        x = 0,
-                                        y = -sheetState
-                                            .requireOffset()
-                                            .toInt()
-                                    )
-                                }*/
-                                .background(color = Color(0xFF232323))
-                        ) {
-                            Column(modifier = Modifier.background(color = Color(0xFF232323))) {
-                                Divider(thickness = 1.dp, color = Color(0xFF303437))
-
-                                Spacer(modifier = Modifier.height(15.dp))
-
-                                // Add Button
-                                Button(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(60.dp)
-                                        .padding(horizontal = 24.dp)
-                                        .testTag("ADD_TO_LOG_BUTTON"),
-                                    onClick = {
-                                        // Use the checkedStates list to find out which checkboxes are checked
-                                        val checkedItems =
-                                            allLogs!!.indices.filter { checkedStates[it] }
-                                        Log.d(TAG, "Checked Items: $checkedItems")
-                                        for (checkedItem in checkedItems) {
-                                            val log = allLogs!![checkedItem]
-
-                                            logViewModel.addMovieToLog(
-                                                log.logId,
-                                                movie.id.toString()
-                                            )
-                                            /*Log.d(TAG, allLogs)*/
-                                        }
-                                        /*isSheetOpen = false*/
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(id = R.color.sky_blue),
-                                        disabledContainerColor = Color.LightGray
-                                    )
-                                ) {
-                                    Text(
-                                        "Add",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                // Cancel Button
-                                Button(
-                                    onClick = {
-                                        /*isSheetOpen = false*/
-                                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                            if (!sheetState.isVisible) isSheetOpen = false
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(60.dp)
-                                        .padding(horizontal = 24.dp)
-                                        .background(color = Color.Transparent)
-                                        .border(
-                                            1.dp,
-                                            Color(0xFF9F9F9F),
-                                            shape = RoundedCornerShape(30.dp)
-                                        ),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Transparent,
-                                        disabledContainerColor = Color.Transparent
-                                    ),
-                                ) {
-                                    androidx.compose.material3.Text(
-                                        "Cancel",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-
-                                /*Spacer(modifier = Modifier.height(100.dp))*/
-                                /*Spacer(modifier = Modifier.weight(1f))*/
-                            }
-                        }
-                    }
+            if (isNewLogSheetOpen) {
+                ModalBottomSheet(
+                    sheetState = newLogSheetState,
+                    onDismissRequest = {
+                        isNewLogSheetOpen = false },
+                    containerColor = colorResource(id = R.color.bottomnav),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("CREATE_NEW_LOG_SEARCH_POPUP")
+                ) {
+                    NewLogMenu(friendsViewModel = friendsViewModel, logViewModel, isLoggedIn, onCreateClick = {
+                        isNewLogSheetOpen = false
+                        logViewModel.loadLogs()
+                    }, onCloseClick = {
+                        isNewLogSheetOpen = false
+                    },
+                        navController)
                 }
             }
 

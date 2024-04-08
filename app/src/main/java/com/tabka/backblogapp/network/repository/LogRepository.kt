@@ -25,7 +25,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-
 class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: FirebaseAuth = Firebase.auth) {
     private val tag = "LogRepo"
 
@@ -172,6 +171,46 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: Fi
         }
     }
 
+    suspend fun getMatchingLogs(userId: String, friendId: String): DataResult<List<LogData>> {
+        return try {
+            coroutineScope {
+                // Query logs based on the owner_id field
+                val logRef = db.collection("logs")
+                val logs: MutableList<LogData> = mutableListOf()
+
+                val userOwned = async {
+                    try {
+                        val snapshot = logRef.whereEqualTo("owner.user_id", userId).whereArrayContains("collaborators", friendId).get().await()
+                        logs.addAll(snapshot.documents.map { doc -> Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement())) })
+                    } catch (e: Exception) {
+                        Log.w(tag, "Error receiving logs document (userOwned)", e)
+                        throw e
+                    }
+                }
+
+                val userCollab = async {
+                    try {
+                        val snapshot = logRef.whereArrayContains("collaborators", userId).get().await()
+                        logs.addAll(snapshot.documents.map { doc ->
+                            Json.decodeFromString(Json.encodeToString(doc.data.toJsonElement()))
+                        })
+                    } catch (e: Exception) {
+                        Log.w(tag, "Error receiving logs document (userCollab)", e)
+                        throw e
+                    }
+                }
+
+                userOwned.await()
+                userCollab.await()
+
+                DataResult.Success(logs)
+            }
+        } catch (e: Exception) {
+            Log.w(tag, "Error fetching logs", e)
+            DataResult.Failure(e)
+        }
+    }
+
     suspend fun updateLog(logId: String, updateData: Map<String, Any?>): DataResult<Boolean> {
         Log.d(tag, "Update Log: $updateData")
         try {
@@ -191,6 +230,23 @@ class LogRepository(val db: FirebaseFirestore = Firebase.firestore, val auth: Fi
             }
 
             Log.d(tag, "Log successfully updated!")
+            return DataResult.Success(true)
+        } catch (e: Exception) {
+            Log.w(tag, "Error updating log", e)
+            return DataResult.Failure(FirebaseError(FirebaseExceptionType.FAILED_TRANSACTION))
+        }
+    }
+
+    suspend fun updateLogs(updates: List<Map<String, Any?>>): DataResult<Boolean> {
+        try {
+            for (update in updates) {
+                val logId: String = update["log_id"] as String
+                when (val result = updateLog(logId, update)) {
+                    is DataResult.Success -> Unit
+                    is DataResult.Failure -> throw result.throwable
+                }
+
+            }
             return DataResult.Success(true)
         } catch (e: Exception) {
             Log.w(tag, "Error updating log", e)

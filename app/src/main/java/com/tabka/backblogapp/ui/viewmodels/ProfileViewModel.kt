@@ -29,6 +29,7 @@ open class ProfileViewModel(
 
     // User Info
     open val userData: MutableLiveData<UserData> = MutableLiveData()
+    open val user: MutableLiveData<UserData> = MutableLiveData()
 
     // Log Info
     open val publicLogData: MutableLiveData<List<LogData>> = MutableLiveData()
@@ -48,6 +49,10 @@ open class ProfileViewModel(
         userData.value = user
     }
 
+    private fun updateUser(newUser: UserData) {
+        user.value = newUser
+    }
+
     private fun updateLogData(logData: List<LogData>) {
         publicLogData.value = logData
     }
@@ -65,11 +70,21 @@ open class ProfileViewModel(
             try {
                 val user = auth.currentUser?.uid
                 if (user != null) {
+                    // Get friend data
                     val result: DataResult<UserData> = userRepository.getUser(friendId)
                     withContext(Dispatchers.Main) {
                         when (result) {
                             is DataResult.Success -> updateUserData(result.item)
                             is DataResult.Failure -> throw result.throwable
+                        }
+                    }
+
+                    // Get user data as well
+                    val userResult: DataResult<UserData> = userRepository.getUser(user)
+                    withContext(Dispatchers.Main) {
+                        when (userResult) {
+                            is DataResult.Success -> updateUser(userResult.item)
+                            is DataResult.Failure -> throw userResult.throwable
                         }
                     }
                 }
@@ -103,10 +118,17 @@ open class ProfileViewModel(
     open suspend fun getFriends(friendId: String) {
         viewModelScope.launch {
             try {
-                val user = auth.currentUser?.uid
-                if (user != null) {
+                val userId = auth.currentUser?.uid
+                if (userId != null) {
                     val result = friendRepository.getFriends(friendId)
-                    updateFriends(result)
+
+                    // No blocked users should appear
+                    val updatedFriends = result.filter {
+                        it.blocked?.containsKey(userId) == false &&
+                                user.value?.blocked?.containsKey(it.userId) == false
+                    }
+
+                    updateFriends(updatedFriends)
                 }
             } catch (e: Exception) {
                 Log.d(tag, "Error: $e")
@@ -230,5 +252,30 @@ open class ProfileViewModel(
                 }
             }
         }
+    }
+
+    open suspend fun unBlockUser(blockedId: String): Boolean {
+        val userId = auth.currentUser?.uid ?: return false
+        when(val result = friendRepository.unBlockUser(userId, blockedId)) {
+            is DataResult.Failure -> {
+                Log.d(tag, "Error: ${result.throwable}")
+                return false
+            }
+            is DataResult.Success -> Unit
+        }
+        return true
+    }
+
+    open suspend fun getBlockedUsers(): List<UserData> {
+        val userId = auth.currentUser?.uid ?: return emptyList()
+        when(val result = friendRepository.getBlockedUsers(userId)) {
+            is DataResult.Failure -> {
+                Log.d(tag, "Error: ${result.throwable}")
+            }
+            is DataResult.Success -> {
+                return result.item
+            }
+        }
+        return emptyList()
     }
 }

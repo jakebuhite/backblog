@@ -6,6 +6,8 @@
 //
 package com.tabka.backblogapp.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -30,10 +32,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
+import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
+import com.tabka.backblogapp.ui.viewmodels.MovieDetailsViewModel
 
 @Composable
-fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogViewModel, genreId: String?, genreName: String?) {
+fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogViewModel, genreId: String?, genreName: String?, friendsViewModel: FriendsViewModel, movieDetailsViewModel: MovieDetailsViewModel) {
     val hasBackButton = true
     val isMovieDetails = false
     val pageTitle = "Results - $genreName"
@@ -76,7 +80,7 @@ fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogVie
                 }
 
                 false -> {
-                    MovieResults(navController, logViewModel, isLogMenu, logId)
+                    MovieResults(navController, logViewModel, isLogMenu, logId, friendsViewModel, movieDetailsViewModel)
                 }
             }
             }
@@ -86,8 +90,9 @@ fun CategoryResultsScreen(navController: NavHostController, logViewModel: LogVie
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MovieResults(navController: NavHostController, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?) {
+fun MovieResults(navController: NavHostController, logViewModel: LogViewModel, isLogMenu: Boolean, logId: String?, friendsViewModel: FriendsViewModel, movieDetailsViewModel: MovieDetailsViewModel) {
     val movieResults = searchResultsViewModel.movieResults.collectAsState().value
     val halfSheets = searchResultsViewModel.halfSheet.collectAsState().value
 
@@ -102,7 +107,7 @@ fun MovieResults(navController: NavHostController, logViewModel: LogViewModel, i
                 items(movieResults.size) { index ->
                     val movie = movieResults[index]
                     val halfSheet = halfSheets[movie.id.toString()] ?: ""
-                    MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId)
+                    MovieResult(navController, movie, halfSheet, logViewModel, isLogMenu, logId, friendsViewModel, movieDetailsViewModel)
                 }
             }
         }
