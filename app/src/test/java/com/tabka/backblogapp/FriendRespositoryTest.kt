@@ -10,7 +10,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
-import com.tabka.backblogapp.network.models.FriendRequestData
 import com.tabka.backblogapp.network.repository.FriendRepository
 import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.runBlocking
@@ -24,7 +23,6 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 class FriendRepositoryTest {
