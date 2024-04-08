@@ -62,7 +62,8 @@ class LogDetailsViewModelTest {
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         movieRepository = FakeMovieRepository(firestore)
-        logDetailsViewModel = LogDetailsViewModel(firestore,
+        logDetailsViewModel = LogDetailsViewModel("11",
+            firestore,
             auth,
             logLocalRepository,
             logRepository,
@@ -197,7 +198,8 @@ class LogDetailsViewModelTest {
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        logDetailsViewModel = LogDetailsViewModel(firestore,
+        logDetailsViewModel = LogDetailsViewModel("11",
+            firestore,
             auth,
             logLocalRepository,
             logRepository,
@@ -249,7 +251,8 @@ class LogDetailsViewModelTest {
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        logDetailsViewModel = LogDetailsViewModel(firestore,
+        logDetailsViewModel = LogDetailsViewModel("11",
+            firestore,
             auth,
             logLocalRepository,
             logRepository,
@@ -301,7 +304,8 @@ class LogDetailsViewModelTest {
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        logDetailsViewModel = LogDetailsViewModel(firestore,
+        logDetailsViewModel = LogDetailsViewModel("11",
+            firestore,
             auth,
             logLocalRepository,
             logRepository,

@@ -101,19 +101,38 @@ open class LogDetailsViewModel(
 
     private fun updateMovies(newList: Map<String, MinimalMovieData>) {
         movies.value = newList
-        if (movies.value != null) {
-            for (movie in movies.value!!) {
-                if (watchedMovies.value?.get(movie.key) != null) {
-                    val mutableMovies = watchedMovies.value?.toMutableMap() ?: mutableMapOf()
-                    mutableMovies.remove(movie.key)
-                    updateWatchedMovies(mutableMovies)
-                }
-            }
+        // Force refresh for sort
+        if (movies.value?.isNotEmpty() == true) {
+            val movieId = movies.value?.keys?.last() ?: return
+            val movieData = movies.value?.get(movieId) ?: return
+            val newMovies = movies.value?.toMutableMap() ?: mutableMapOf()
+            newMovies.remove(movieId)
+
+            // Update
+            movies.value = newMovies
+
+            // Revert back to original
+            newMovies[movieId] = movieData
+            movies.value = newMovies
         }
     }
 
     private fun updateWatchedMovies(newList: Map<String, MinimalMovieData>) {
         watchedMovies.value = newList
+        // Force refresh for sort
+        if (watchedMovies.value?.isNotEmpty() == true) {
+            val movieId = watchedMovies.value?.keys?.last() ?: return
+            val movieData = watchedMovies.value?.get(movieId) ?: return
+            val newMovies = watchedMovies.value?.toMutableMap() ?: mutableMapOf()
+            newMovies.remove(movieId)
+
+            // Update
+            watchedMovies.value = newMovies
+
+            // Revert back to original
+            newMovies[movieId] = movieData
+            watchedMovies.value = newMovies
+        }
     }
 
     private fun updateIsOwner(userIsOwner: Boolean) {
@@ -171,6 +190,10 @@ open class LogDetailsViewModel(
         if (!isOwner) {
             updateCollaboratorsList(collabList)
         }
+    }
+
+    open fun getUserId(): String? {
+        return auth.currentUser?.uid
     }
 
     open fun getLogData(logId: String) {
@@ -317,7 +340,7 @@ open class LogDetailsViewModel(
 
 
 
-    fun updateLog(newLogName: String, editedMovies: List<MinimalMovieData>) {
+    fun updateLog(newLogName: String, editedMovies: List<MinimalMovieData>, editedWatchedMovies: List<MinimalMovieData>) {
         Log.d(tag, "Update log! ${editedMovies.map { it.id }}")
         val logId = logData.value?.logId!!
 
@@ -325,6 +348,7 @@ open class LogDetailsViewModel(
         val newLogData = mapOf(
             "name" to newLogName,
             "movie_ids" to editedMovies.map { it.id.toString() },
+            "watched_ids" to editedWatchedMovies.map { it.id.toString() }
         )
 
         val currentUser = auth.currentUser
@@ -419,6 +443,7 @@ open class LogDetailsViewModel(
 
     private suspend fun initLogListener() {
         if (auth.currentUser?.uid == null) {
+            getLogData(logId)
             return
         }
         val userId = auth.currentUser?.uid!!
