@@ -63,7 +63,7 @@ open class FriendsViewModel(
                     //onResult(DataResult.Failure(e))
                     return@addSnapshotListener
                 }
-                Log.d("FRTEST", "SOMETHING HAPPENED")
+                Log.d("TESTING", "Friend request coming through!")
                 viewModelScope.launch {
                     getFriendRequests()
                 }
@@ -77,7 +77,6 @@ open class FriendsViewModel(
                 if (e != null) {
                     return@addSnapshotListener
                 }
-                Log.d("FRTEST", "SOMETHING HAPPENED to LOG REQUESTS")
                 viewModelScope.launch {
                     getLogRequests()
                 }
@@ -91,7 +90,6 @@ open class FriendsViewModel(
                 if (e != null) {
                     return@addSnapshotListener
                 }
-                Log.d("FRTEST", "SOMETHING HAPPENED to LOG REQUESTS")
                 viewModelScope.launch {
                     getFriends()
                 }

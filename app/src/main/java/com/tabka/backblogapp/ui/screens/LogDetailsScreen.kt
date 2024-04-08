@@ -70,8 +70,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -1801,6 +1803,7 @@ fun EditSheetContent(
         Spacer(modifier = Modifier.height(60.dp))
 
         val editedMovies = remember { mutableStateOf(movies.values.toList()) }
+        val moviesToDelete = remember { mutableStateListOf<String>() }
         val editedWatchedMovies = remember { mutableStateOf(watchedMovies.values.toList()) }
 
         // Box holding the list of movies
@@ -1863,7 +1866,7 @@ fun EditSheetContent(
                             modifier = Modifier
                                 .shadow(elevation.value)
                         ) {
-                            EditLogEntry(movie) // Your custom item UI
+                            EditLogEntry(movie, moviesToDelete)
                         }
                     }
                 }
@@ -1904,10 +1907,15 @@ fun EditSheetContent(
                                 accept = Accept(
                                     text = "Save",
                                     action = {
+                                        val filteredMovies = editedMovies.value.filterNot { movie ->
+                                            movie.id in moviesToDelete
+                                        }
+                                        editedMovies.value = filteredMovies
+
                                         CoroutineScope(Dispatchers.Main).launch {
                                             logDetailsViewModel.updateLog(
                                                 editedLogName,
-                                                editedMovies.value
+                                                editedMovies.value,
                                             )
                                             logViewModel.loadLogs()
                                             logViewModel.resetMovie()
@@ -2013,12 +2021,15 @@ fun EditSheetContent(
                                         textColor = Color(0xFFDC3545),
                                         action = {
                                             CoroutineScope(Dispatchers.Main).launch {
-                                                logDetailsViewModel.leaveLog()
+                                                val asyncJob =
+                                                    logDetailsViewModel.leaveLog()
+                                                asyncJob?.join()
+
                                                 logViewModel.loadLogs()
                                                 navController.navigate("home")
                                                 Toast.makeText(
                                                     context,
-                                                    "Successfully deleted $logName!",
+                                                    "Successfully left $logName!",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             }
@@ -2087,10 +2098,13 @@ fun EditSheetContent(
 
 
 @Composable
-fun EditLogEntry(movie: MinimalMovieData) {
+fun EditLogEntry(movie: MinimalMovieData, moviesToDelete: SnapshotStateList<String>) {
+
+
     Row(
         modifier = Modifier
-            .padding(bottom = 10.dp),
+            .padding(bottom = 10.dp)
+            .alpha(if (movie.id in moviesToDelete) 0.3f else 1f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -2106,7 +2120,15 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
-                    .testTag("REMOVE_MOVIE_ICON"),
+                    .testTag("REMOVE_MOVIE_ICON")
+                    .clickable {
+                        if (!moviesToDelete.contains(movie.id)) {
+                            moviesToDelete.add(movie.id.toString())
+                        } else {
+                            moviesToDelete.remove(movie.id.toString())
+                        }
+
+                    },
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }

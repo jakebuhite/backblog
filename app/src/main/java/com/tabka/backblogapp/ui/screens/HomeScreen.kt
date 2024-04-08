@@ -587,6 +587,7 @@ fun DisplayLogsWithDrag(
                 ) {
                     var painter by remember { mutableStateOf<Painter?>(null) }
                     var movieData by remember { mutableStateOf<Pair<MovieData?, String>>(null to "") }
+                    //var movieData = Pair<MovieData?, String>(null, "")
                     val movieId = log.movieIds?.firstOrNull()
 
                     LaunchedEffect(log.logId, movieId) {

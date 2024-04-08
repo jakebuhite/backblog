@@ -19,6 +19,7 @@ import com.tabka.backblogapp.network.repository.LogRepository
 import com.tabka.backblogapp.network.repository.MovieRepository
 import com.tabka.backblogapp.util.DataResult
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,8 +59,36 @@ open class LogViewModel(
             loadLogs()
         }
     }
+
+    private fun logsListener() {
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("logs")
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.d(TAG, "ERROR: $e")
+                    //onResult(DataResult.Failure(e))
+                    return@addSnapshotListener
+                }
+                Log.d(TAG, "Logs was changed")
+                // Check all collaborators
+                snapshots?.documents?.forEach { document ->
+                    val collaborators = document["collaborators"] as? List<String> ?: listOf()
+                    if (auth.currentUser?.uid in collaborators) {
+                        Log.d(TAG, "Load the logs again!")
+                        viewModelScope.launch(Dispatchers.Main) {
+                            loadLogs()
+                        }
+
+                    }
+                }
+        }
+    }
+
+
     init {
         auth.addAuthStateListener(authListener)
+        logsListener()
     }
 
     fun loadLogs() {
