@@ -1832,7 +1832,7 @@ fun EditSheetContent(
                             modifier = Modifier
                                 .shadow(elevation.value)
                         ) {
-                            EditLogEntry(movie)
+                            EditLogEntry(movie, moviesToDelete)
                         }
                     }
                 }
