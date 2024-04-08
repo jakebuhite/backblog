@@ -3,7 +3,6 @@ package com.tabka.backblogapp.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -407,7 +406,7 @@ open class LogDetailsViewModel(
         return userId in collaborators
     }
 
-    suspend fun leaveLog() {
+/*    suspend fun leaveLog() {
         if (auth.currentUser?.uid == null) {
             return
         }
@@ -416,7 +415,7 @@ open class LogDetailsViewModel(
         viewModelScope.launch {
             logRepository.removeCollaborators(logId, listOf(currentUser))
         }
-    }
+    }*/
 
     private suspend fun initLogListener() {
         if (auth.currentUser?.uid == null) {
