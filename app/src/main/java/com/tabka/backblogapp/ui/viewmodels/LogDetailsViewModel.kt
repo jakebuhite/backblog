@@ -302,6 +302,7 @@ open class LogDetailsViewModel(
     }
 
 
+
     fun updateLog(newLogName: String, editedMovies: List<MinimalMovieData>) {
         Log.d(tag, "Update log! ${editedMovies.map { it.id }}")
         val logId = logData.value?.logId!!
@@ -372,6 +373,16 @@ open class LogDetailsViewModel(
             localRepository.deleteLog(logId)
             null
         }
+    }
+
+    open suspend fun leaveLog(): Job? {
+        val logId = logData.value?.logId!!
+        val currentUser = auth.currentUser
+        return if (currentUser != null) {
+            viewModelScope.launch {
+                logRepository.removeCollaborators(logId, listOf(currentUser.uid))
+            }
+        } else null
     }
 
     fun isCollaborator(): Boolean {

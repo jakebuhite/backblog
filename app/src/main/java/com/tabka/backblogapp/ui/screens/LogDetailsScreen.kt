@@ -50,7 +50,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.Button
@@ -70,8 +69,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -1102,6 +1103,7 @@ fun EditSheetContent(
         Spacer(modifier = Modifier.height(60.dp))
 
         val editedMovies = remember { mutableStateOf(movies.values.toList()) }
+        val moviesToDelete = remember { mutableStateListOf<String>() }
 
         // Box holding the list of movies
         Box(
@@ -1128,7 +1130,7 @@ fun EditSheetContent(
                             modifier = Modifier
                                 .shadow(elevation.value)
                         ) {
-                            EditLogEntry(movie) // Your custom item UI
+                            EditLogEntry(movie, moviesToDelete)
                         }
                     }
                 }
@@ -1169,10 +1171,15 @@ fun EditSheetContent(
                                 accept = Accept(
                                     text = "Save",
                                     action = {
+                                        val filteredMovies = editedMovies.value.filterNot { movie ->
+                                            movie.id in moviesToDelete
+                                        }
+                                        editedMovies.value = filteredMovies
+
                                         CoroutineScope(Dispatchers.Main).launch {
                                             logDetailsViewModel.updateLog(
                                                 editedLogName,
-                                                editedMovies.value
+                                                editedMovies.value,
                                             )
                                             logViewModel.loadLogs()
                                             logViewModel.resetMovie()
@@ -1264,6 +1271,61 @@ fun EditSheetContent(
                             color = Color(0xFFDC3545)
                         )
                     }
+                } else {
+                    // Delete Button
+                    Button(
+                        onClick = {
+                            setAlertDialogState(
+                                AlertDialog(
+                                    isVisible = true,
+                                    header = "Leave log",
+                                    message = "Are you sure you want to permanently leave this log?",
+                                    dismiss = Dismiss(text = "Cancel"),
+                                    accept = Accept(
+                                        text = "Leave",
+                                        textColor = Color(0xFFDC3545),
+                                        action = {
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                val asyncJob =
+                                                    logDetailsViewModel.leaveLog()
+                                                asyncJob?.join()
+
+                                                logViewModel.loadLogs()
+                                                navController.navigate("home")
+                                                Toast.makeText(
+                                                    context,
+                                                    "Successfully left $logName!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    )
+                                )
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp)
+                            .padding(horizontal = 24.dp)
+                            .background(color = Color.Transparent)
+                            .border(
+                                1.dp,
+                                Color(0xFFDC3545),
+                                shape = RoundedCornerShape(30.dp)
+                            )
+                            .testTag("EDIT_LEAVE_BUTTON"),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        ),
+                    ) {
+                        Text(
+                            "LEAVE LOG",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFDC3545)
+                        )
+                    }
                 }
             }
 
@@ -1301,10 +1363,13 @@ fun EditSheetContent(
 
 
 @Composable
-fun EditLogEntry(movie: MinimalMovieData) {
+fun EditLogEntry(movie: MinimalMovieData, moviesToDelete: SnapshotStateList<String>) {
+
+
     Row(
         modifier = Modifier
-            .padding(bottom = 10.dp),
+            .padding(bottom = 10.dp)
+            .alpha(if (movie.id in moviesToDelete) 0.3f else 1f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -1320,7 +1385,16 @@ fun EditLogEntry(movie: MinimalMovieData) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
-                    .testTag("REMOVE_MOVIE_ICON"),
+                    .testTag("REMOVE_MOVIE_ICON")
+                    .clickable {
+                        if (!moviesToDelete.contains(movie.id)) {
+                            moviesToDelete.add(movie.id.toString())
+                        } else {
+                            moviesToDelete.remove(movie.id.toString())
+                        }
+                        Log.d("DELETEMOVIES", "DELETE MOVIE - Current movies to delete ${moviesToDelete.toList()}")
+
+                    },
                 colorFilter = ColorFilter.tint(color = colorResource(id = R.color.white))
             )
         }
