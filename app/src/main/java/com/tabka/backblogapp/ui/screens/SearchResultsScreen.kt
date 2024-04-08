@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +38,7 @@ import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,6 +80,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.tabka.backblogapp.R
 import com.tabka.backblogapp.network.models.tmdb.MovieSearchResult
 import com.tabka.backblogapp.ui.shared.AddToLogMenu
+import com.tabka.backblogapp.ui.shared.CircleCheckbox
 import com.tabka.backblogapp.ui.shared.NewLogMenu
 import com.tabka.backblogapp.ui.viewmodels.FriendsViewModel
 import com.tabka.backblogapp.ui.viewmodels.LogViewModel
@@ -399,13 +403,176 @@ fun MovieResult(
                     .fillMaxSize()
                     .testTag("ADD_MOVIE_TO_LOG_POPUP")
             ) {
-                if (movieDetail != null) {
-                    AddToLogMenu(logViewModel = logViewModel, movie = movieDetail, onCreateNewLog = {
-                        isNewLogSheetOpen = true
-                        isSheetOpen = false
-                    }, onCloseAddMenu = {
-                        isSheetOpen = false
-                    })
+                if (allLogs != null) {
+                    val checkedStates =
+                        remember { mutableStateListOf<Boolean>().apply { addAll(List(allLogs!!.size) { false }) } }
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    Box(modifier = Modifier.height(150.dp)) {
+                        LazyColumn(
+                            modifier = Modifier.padding(start = 20.dp)
+                        ) {
+                            items(allLogs!!.size) { index ->
+                                val log = allLogs!![index]
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable {
+                                        checkedStates[index] = !checkedStates[index]
+                                    }
+                                ) {
+                                    Column(modifier = Modifier.weight(3F)) {
+                                        androidx.compose.material.Text(
+                                            log.name!!,
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    Column(
+                                        modifier = Modifier.weight(1F),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+//                            Checkbox(
+//                                checked = checkedStates[index],
+//                                onCheckedChange = { isChecked ->
+//                                    checkedStates[index] = isChecked
+//                                },
+//                                modifier = Modifier
+//                                    .testTag("LOG_CHECKBOX")
+//                            )
+                                        CircleCheckbox(selected = checkedStates[index], onChecked = {
+                                                isChecked -> checkedStates[index] = isChecked as Boolean
+                                        })
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Divider(thickness = 1.dp, color = Color(0xFF303437))
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        var isAnyChecked by remember { mutableStateOf(false) }
+                        isAnyChecked = checkedStates.any { it }
+                        // Add Button
+                        if (isAnyChecked) {
+                            androidx.compose.material3.Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(60.dp)
+                                    .padding(horizontal = 24.dp)
+                                    .testTag("ADD_TO_LOG_BUTTON"),
+                                onClick = {
+                                    // Use the checkedStates list to find out which checkboxes are checked
+                                    if (isAnyChecked) {
+                                        val checkedItems =
+                                            allLogs!!.indices.filter { checkedStates[it] }
+                                        //Log.d(com.tabka.backblogapp.ui.screens.TAG, "Checked Items: $checkedItems")
+                                        for (checkedItem in checkedItems) {
+                                            val log = allLogs!![checkedItem]
+
+                                            logViewModel.addMovieToLog(
+                                                log.logId,
+                                                movie.id.toString()
+                                            )
+                                            /*Log.d(TAG, allLogs)*/
+                                        }
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                "Movie added to log!",
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show()
+                                        isSheetOpen = false
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.sky_blue),
+                                    disabledContainerColor = Color.LightGray
+                                )
+                            ) {
+                                androidx.compose.material.Text(
+                                    /*"Add"*/
+                                    "ADD TO LOG",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            androidx.compose.material3.Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(60.dp)
+                                    .padding(horizontal = 24.dp)
+                                    .testTag("CREATE_NEW_LOG_BUTTON"),
+                                onClick = {
+                                    isNewLogSheetOpen = true
+                                    isSheetOpen = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.sky_blue),
+                                    disabledContainerColor = Color.LightGray
+                                )
+                            ) {
+                                androidx.compose.material.Text(
+                                    /*"Add"*/
+                                    "CREATE NEW LOG",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        // Cancel Button
+                        androidx.compose.material3.Button(
+                            onClick = {
+                                isSheetOpen = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .padding(horizontal = 24.dp)
+                                .background(color = Color.Transparent)
+                                .border(1.dp, Color(0xFF9F9F9F), shape = RoundedCornerShape(30.dp)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent
+                            ),
+                        ) {
+                            androidx.compose.material3.Text(
+                                "CANCEL",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    //Spacer(modifier = Modifier.height(10.dp))
+
                 }
             }
         }
