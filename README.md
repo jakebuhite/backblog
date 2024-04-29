@@ -1,23 +1,23 @@
-# BackBlog - Movie-Centric Social Playlist App for Android
+# BackBlog - Movie Social Playlist App for Android
 
 ## Overview
 
-Welcome to BackBlog, your go-to movie-centric social playlist app for Android! BackBlog allows you to create, share, and discover curated playlists of your favorite movies. Whether you are a film enthusiast, a casual viewer, or someone who loves sharing recommendations, BackBlog has you covered.
+Welcome to BackBlog, your go-to movie-centric social playlist app for Android! BackBlog allows you to discover movies and collaborate on playlists with your friends. Whether you are a film enthusiast, a casual viewer, or someone who loves sharing recommendations, BackBlog has you covered.
 
 
 ## Features
 
 ### 1. Create Playlists
 
-Easily create custom playlists of your favorite movies. Whether it's a collection of classics, a themed marathon, or a list of hidden gems, BackBlog lets you curate and organize your movie choices effortlessly.
+Easily create and manage custom playlists of your favorite movies.
 
 ### 2. Discover New Movies
 
-Explore a vast database of movies to discover new titles, genres, and trending films. BackBlog provides recommendations based on your preferences and what others in the community are watching.
+Explore a vast database of movies and discover new titles, genres, and popular films.
 
 ### 3. Social Integration
 
-Connect with friends, fellow movie enthusiasts, and creators. Friend others, view their playlists, and collaborate on shared playlists.
+Connect with friends and fellow movie enthusiasts. Friend others, view their playlists, and collaborate on shared playlists.
 
 
 ## Feedback and Support
